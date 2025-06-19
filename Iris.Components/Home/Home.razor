@@ -1,0 +1,345 @@
+﻿@inherits IrisPageBase
+@page "/"
+@using System.Text.Json
+@using Iris.Components.Brokers
+@using Iris.Components.Theme
+@using Iris.Contracts.Brokers.Models;
+
+<PageTitle>Home</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex gap-4" Style="flex-direction:column;overflow-y:auto;max-height:90dvh;">
+    <MudGrid>
+        <MudItem xs="12" lg="4">
+            <HomeCard>
+                <MudStack Row="true" Class="pb-2">
+                    <MudIcon Icon="@IrisIcons.Connection"></MudIcon>
+                    <MudText Typo="Typo.h6">Connection</MudText>
+                    <MudSpacer />
+                    <RefreshButton
+                        Title="Refresh Connections"
+                        OnClick="RefreshConnections"
+                        />
+                </MudStack>
+                @if (_activeProviders != null)
+                {
+                    if (_activeProviders.Count > 0)
+                    {
+                        <ProviderCarousel @ref="_providerCarousel" ProviderChanged="HandleProviderChange" Providers="@_activeProviders"/>
+                    }
+                    else
+                    {
+                        <MudStack Class="w-100" Justify="Justify.Center" AlignItems="AlignItems.Center" Style="@($"height:300px;")">
+                            <MudIcon Size="MudBlazor.Size.Large" Icon="@IrisIcons.NoConnections" />
+                            <MudText>No Active Connection</MudText>
+                        </MudStack>
+                    }
+                }
+                else
+                {
+                    <ProviderCarouselLoader />
+                }
+            </HomeCard>
+        </MudItem>
+
+        <MudItem xs="12" lg="4">
+            <HomeCard>
+                <MudStack Row="true">
+                    <MudIcon Icon="@IrisIcons.Endpoints" />
+                    <MudText Typo="Typo.h6">Endpoints</MudText>
+                    <MudSpacer />
+                    @*
+                        <SwitchM3 Value="@FilterEndpointsByActiveProvider" T="bool" Color="Color.Success" ThumbIcon="bi-plugin" ThumbOffIcon="bi-plugin-off" ValueChanged="@(async (v) => { FilterEndpointsByActiveProvider = v;
+                                                                                                                                             StateHasChanged(); await Task.Yield();
+                                                                                                                                             await endpointChart.RefreshAsync(); })" />
+                    *@
+                    <RefreshButton Title="Refresh Endpoints" OnClick="RefreshEndpoints" />
+                </MudStack>
+                @if (_endpoints != null && !_loadingEndpoints)
+                {
+                    <ProviderEndpointBarChart @ref="endpointChart" Name="Endpoints" Endpoints="@_endpoints" FilterSelectedProvider="@FilterEndpointsByActiveProvider" SelectedProvider="@_activeProvider?.Address" EndpointFiltersUpdated="EndpointFiltersUpdated" />
+                }
+                else
+                {
+                    <ProviderEndpointBarChartLoader />
+                }
+            </HomeCard>
+        </MudItem>
+
+        <MudItem xs="12" lg="4">
+
+            <HomeCard>
+                <MudStack Row="true">
+                    <MudIcon Icon="@IrisIcons.Connections" />
+                    <MudText Typo="Typo.h6">Connections</MudText>
+                    <MudSpacer />
+                    <IconButton Name="@IrisIcons.AddConnection" Title="Add Connection" ButtonClicked="AddConnectionAsync" />
+                </MudStack>
+
+                @if (_endpoints != null && !_loadingEndpoints)
+                {
+                    @*ToDo - re-evaluate if we need an error guard here*@
+                        <ConnectionDoughnut @ref="connectionChart" Connections="@_endpoints" SelectedConnectionAddress="@_activeProvider?.Address" ConnectionClicked="@((address) => SwitchActiveConnection(address))" AddConnectionClicked="AddConnectionAsync" />
+                }
+                else
+                {
+                    <ConnectionDoughnutLoader />
+                }
+            </HomeCard>
+        </MudItem>
+
+        <MudItem xs="12">
+            @if (_endpoints != null)
+            {
+                <ProviderEndpointCard Loading="@_loadingEndpoints"
+                                      Provider="@_activeProvider"
+                                      Endpoints="@(_endpoints.FindAll(x => x.Address.Contains(_activeProvider?.Address ?? "", StringComparison.OrdinalIgnoreCase)))"
+                                      EndpointFilters="@_endpointFilters"
+                                      FilterRemoved="FilterRemoved"
+                                      FiltersCleared="FiltersCleared"
+                                      FilterToColorLookup="@(endpointChart?.EndpointTypeToColor ?? FilterToColorLookup)" />
+            }
+            else
+            {
+                <ProviderEndpointCardLoader />
+            }
+        </MudItem>
+
+    </MudGrid>
+
+</MudContainer>
+
+@code {
+    [Inject] public IBrokerService BrokerClient { get; set; } = default!;
+    
+    [Inject]
+    public IDialogService DialogService { get; set; } = default!;
+
+    private List<EndpointDetails>? _endpoints { get; set; }
+
+    private List<SupportedProvider>? _supportedProviders { get; set; }
+
+    private List<Provider>? _activeProviders { get; set; }
+
+    private Provider? _activeProvider;
+
+    private bool _loadingEndpoints = false;
+
+    private StandaloneCodeEditor _editor { get; set; } = default!;
+
+    private IReadOnlyCollection<string> _endpointFilters = default!;
+    
+    private ConnectionDoughnut connectionChart = default!;
+
+    private ProviderEndpointBarChart endpointChart = default!;
+
+    private ProviderCarousel _providerCarousel = default!;
+
+    public override string Identifier => "Home";
+
+    protected bool FilterEndpointsByActiveProvider { get; set; } = false;
+
+    protected Dictionary<string, string> FilterToColorLookup { get; set; } = new();
+
+    private Func<List<EndpointDetails>, List<Provider>> EndpointsToProviders = (endpoints) =>
+    {
+        var providers = new List<Provider>();
+
+        if (endpoints.Count < 1)
+            return new();
+
+        var providerGroupings = endpoints.GroupBy(x => x.Address);
+
+        foreach (var grouping in providerGroupings)
+        {
+            providers.Add(new()
+            {
+                Address = grouping.Key,
+                Name = grouping.First().Provider,
+                Endpoints = grouping.Count(),
+            });
+        };
+        return providers;
+    };
+
+    private Func<List<EndpointDetails>, Provider, List<EndpointDetails>> ActiveEndpoints = (endpoints, provider) =>
+    {
+        if (endpoints == null || endpoints?.Count < 1)
+            return new();
+
+        if (string.IsNullOrWhiteSpace(provider?.Address))
+            return endpoints ?? new();
+
+        return endpoints?.Where(x => x.Address.Equals(provider.Address, StringComparison.OrdinalIgnoreCase)).ToList() ?? new();
+    };
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSupportedProviders();
+        await LoadActiveProviders();
+        await LoadEndpoints();
+        StateHasChanged();
+    }
+
+    private async Task LoadEndpoints()
+    {
+        _loadingEndpoints = true;
+        StateHasChanged();
+        _endpoints = await BrokerClient.GetEndpointsAsync();
+        _loadingEndpoints = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadSupportedProviders()
+    {
+        _supportedProviders = await BrokerClient.GetSupportedProvidersAsync();
+        StateHasChanged();
+    }
+
+    private async Task LoadActiveProviders()
+    {
+        _activeProviders = await BrokerClient.GetProvidersAsync();
+        var p = _activeProviders.FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(p?.Address))
+        {
+            _activeProvider = new Provider()
+            {
+                Address = p.Address,
+                Name = p.Name,
+                Endpoints = p.Endpoints,
+                Transport = p.TransportDisplay
+            };
+            StateHasChanged();
+        }
+    }
+
+    protected async Task SwitchActiveConnection(string address, bool newConnection = false)
+    {
+        int endpoints = _endpoints?.Where(x => x.Address.Equals(address)).Count() ?? 0;
+        var endpoint = _endpoints?.FirstOrDefault(x => x.Address.Equals(address));
+
+        if (endpoint == null)
+            return;
+
+        _activeProvider = _activeProviders?.FirstOrDefault(x => x.Address.Equals(address));
+
+        if (_activeProvider == null && !newConnection)
+            return;
+        
+        _activeProvider ??= new Provider()
+        {
+            Address = address,
+            Endpoints = endpoints,
+            Name = endpoint.Provider,
+            Transport = endpoint.Provider
+        };
+
+        if (newConnection)
+        {
+            _activeProviders?.Add(_activeProvider);
+            StateHasChanged();            
+        }
+        
+        if (FilterEndpointsByActiveProvider)
+            await endpointChart.RefreshAsync();
+
+        int index = -1;
+        var p = EndpointsToProviders(_endpoints!);
+        for (int i = 0; i < p.Count; i++)
+        {
+            if (p.ElementAt(i).Address.Equals(address, StringComparison.OrdinalIgnoreCase))
+            {
+                index = i;
+                break;
+            }
+        }
+
+        if (index > -1)
+            _providerCarousel.Carousel.MoveTo(index);
+    }
+
+    protected async Task AddConnectionAsync()
+    {
+        var parameters = new DialogParameters { { "SupportedProviders", _supportedProviders! } };
+
+        var dialogRef = await DialogService.ShowAsync<AddConnectionDialog>("Add New Connection", parameters: parameters, new DialogOptions()
+        {
+            MaxWidth = MaxWidth.Medium
+        });
+
+        var result = await dialogRef.Result;
+
+        if(result is { Canceled: false, Data: not null })
+            await HandleConnectionResultAsync((Result<CreateConnection.CreateConnectionResponse>)result.Data);
+    }
+
+    protected async Task HandleConnectionResultAsync(Result<CreateConnection.CreateConnectionResponse> result)
+    {
+        HandleResult<CreateConnection.CreateConnectionResponse>(result,
+            success: x => "Successfully added connection",
+            failure: x => result.Message);
+
+        if (!result.Error)
+        {
+            if (result.Value?.Endpoints != null)
+                _endpoints?.AddRange(result.Value.Endpoints);
+
+            await SwitchActiveConnection(result?.Value?.Address ?? "", true);
+
+            await Task.Yield();
+
+            await connectionChart.Refresh();
+
+            await endpointChart.RefreshAsync();
+        }
+
+        StateHasChanged();
+    }
+
+    protected async Task HandleProviderChange(Provider active)
+    {
+        _activeProvider = active;
+
+        await Task.Yield();
+
+        await SwitchActiveConnection(active.Address);
+    }
+
+    public async Task EndpointFiltersUpdated(IEnumerable<string> endpointFilters)
+    {
+        _endpointFilters = endpointFilters?.ToList() ?? new();
+        StateHasChanged();
+
+        await Task.Yield();
+    }
+
+    public async Task FilterRemoved(string filter)
+    {
+        await endpointChart.RemoveFilterAsync(filter);
+        StateHasChanged();
+
+        await Task.Yield();
+    }
+
+    public async Task FiltersCleared()
+    {
+        await endpointChart.ClearFiltersAsync();
+        StateHasChanged();
+
+        await Task.Yield();
+        StateHasChanged();
+    }
+
+    protected async Task RefreshConnections()
+    {
+        await BrokerClient.RefreshDataAsync();
+        await LoadActiveProviders();
+        if (!string.IsNullOrWhiteSpace(_activeProvider?.Address))
+            await SwitchActiveConnection(_activeProvider.Address);
+    }
+
+    protected async Task RefreshEndpoints()
+    {
+        await BrokerClient.RefreshDataAsync();
+        await LoadEndpoints();
+    }
+}

@@ -1,0 +1,22 @@
+﻿.top-row {
+    height: 3.5rem;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.navbar-brand {
+    font-size: 1.1rem;
+}
+
+.bottom-row {
+    position: absolute;
+    bottom: 0;
+    padding-bottom: 10px;
+    width: 100%;
+    padding-right: 28px;
+    padding-left: 28px;
+    line-height: 2rem;
+}
+
+.icon-menu-arrow {
+    float: right;
+}

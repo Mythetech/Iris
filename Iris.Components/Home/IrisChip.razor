@@ -1,0 +1,83 @@
+﻿<div @onmouseover="IncreaseOpacity" @onmouseout="ResetOpacity">
+    <MudChip @ref="_chip"
+             T="string"
+             Disabled="@Active"
+             Class="iris-chip"
+             Size="MudBlazor.Size.Medium"
+             Style="@($"color:rgb({Color});background-color:rgba({Color}, {Opacity});--mud-ripple-color:rgb({Color});")"
+             Variant="Variant.Text"
+             Icon="@Icon"
+             Color="@MudBlazor.Color.Inherit"
+             @bind-Selected="@_selected"
+             OnClose="@OnClose"
+             OnClick="@(async () => await OnClick.InvokeAsync(Text))">
+        @DisplayText(Text)
+    </MudChip>
+</div>
+
+@code {
+    [Parameter]
+    public string Icon { get; set; } = default!;
+
+    [Parameter]
+    public string Color { get; set; } = "";
+
+    [Parameter]
+    public string Text { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<string> OnClick { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback OnClose { get; set; } = default!;
+
+    [Parameter]
+    public bool Active { get; set; } = false;
+
+    private bool _selected { get; set; }
+
+    public async Task ClickAsync()
+    {
+        _selected = !_selected;
+        await _chip.OnClick.InvokeAsync();
+    }
+
+    public Task ClearAsync()
+    {
+        _selected = false;
+        return Task.CompletedTask;
+    }
+
+    public MudChip<string> _chip = default!;
+
+    private double Opacity { get; set; } = 0.3;
+
+    private void IncreaseOpacity()
+    {
+        Opacity = 0.4;
+    }
+
+    private void ResetOpacity()
+    {
+        Opacity = 0.3;
+    }
+
+    private string DisplayText(string s)
+    {
+        var display = s.Replace("https:", "").Replace("http:", "").Replace("//", "");
+
+        if (display.IndexOf(".") > 1)
+        {
+            display = display[0..display.IndexOf(".")];
+        }
+
+        if (display.Length >= 12)
+        {
+            return display[0..9] + "...";
+        }
+
+        return display;
+    }
+
+    public static implicit operator MudChip<string>(IrisChip i) => i._chip;
+}

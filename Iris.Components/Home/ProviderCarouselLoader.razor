@@ -1,0 +1,19 @@
+﻿@using Iris.Components.Theme
+<MudStack Spacing="2">
+    <MudStack Row="true">
+        <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Circle" Width="50px" Height="50px" />
+        <MudStack Spacing="1">
+            <MudText Typo="Typo.body1">Provider</MudText>
+            <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Width="285px" Height="20px" />
+        </MudStack>
+    </MudStack>
+    <MudStack Spacing="1">
+        <MudText Typo="Typo.subtitle1">Address</MudText>
+        <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Width="350px" Height="20px" />
+    </MudStack>
+    <PrimaryDivider />
+    <MudStack Row="true" Class="pl-4">
+        <MudIcon Size="Size.Small" Icon="@IrisIcons.Endpoints" />
+        <MudSkeleton Class="loading-box-shadow mt-1" SkeletonType="SkeletonType.Circle" Width="18px" Height="18px" />
+    </MudStack>
+</MudStack>

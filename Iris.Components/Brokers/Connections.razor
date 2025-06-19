@@ -1,0 +1,156 @@
+@page "/Connections"
+@using Iris.Components.Brokers
+@using Iris.Components.Shared.Toolbar
+@inherits IrisPageBase
+
+
+<MudStack>
+    @*
+    <IrisCard Title="Connections" HeaderIcon="@IrisIcons.Connections">
+        <ToolbarContent>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="btn-sm" OnClick="AddConnectionAsync">
+                <MudIcon Icon="@IrisIcons.AddConnection" Size="Size.Small"/>
+                <span class="px-2">Add Connection</span>
+            </MudButton>
+        </ToolbarContent>
+
+        <ChildContent>
+            <MudDataGrid Items="@Providers" T="Provider" Hover="true" Class="iris-table" ColumnResizeMode="ResizeMode.Column">
+                <Columns>
+                    <TemplateColumn CellClass="grid-icon-col">
+                        <CellTemplate>
+                            <MudIcon Icon="@($"icon-{context.Item!.Name}")"/>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x!.Name" Title="Name"/>
+                    <PropertyColumn Property="x => x!.Address" Title="Address"/>
+                    <TemplateColumn CellClass="grid-icon-col">
+                        <CellTemplate>
+                            <span style="width:30px;float:right;">
+                                <IconButton Class="icon-btn-danger" Style="background-color:transparent;" Name="@IrisIcons.Delete" Title="Delete Connection" ButtonClicked="@(() => DeleteConnectionAsync(context.Item))"/>
+                            </span>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <NoRecordsContent>
+                    <MudStack Class="w-100" Justify="Justify.Center" AlignItems="AlignItems.Center" Style="@($"height:300px;")">
+                        <MudIcon Size="MudBlazor.Size.Large" Icon="@IrisIcons.NoConnections"/>
+                        <MudText>No Connections</MudText>
+                        <MudText>Iris connects to your message broker and performs automatic endpoint discovery. After that you will be enabled to send messages to your broker.</MudText>
+                    </MudStack>
+                </NoRecordsContent>
+            </MudDataGrid>
+        </ChildContent>
+    </IrisCard>
+    *@
+    <IrisToolBar>
+        <MudStack Row="true" AlignItems="AlignItems.Center"  Class="mud-width-full">
+            <MudIcon Size="MudBlazor.Size.Small" Icon="@IrisIcons.Connections" />
+            <MudText Typo="Typo.h6">Connections</MudText>
+            <MudSpacer/>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="btn-sm" OnClick="AddConnectionAsync">
+                <MudIcon Icon="@IrisIcons.AddConnection" Size="Size.Small"/>
+                <span class="px-2">Add Connection</span>
+            </MudButton>
+        </MudStack>
+        
+    </IrisToolBar>
+    @if (Providers.Count < 1)
+    {
+        <MudStack Class="w-100" Justify="Justify.Center" AlignItems="AlignItems.Center" Style="@($"height:300px;")">
+            <MudIcon Size="MudBlazor.Size.Large" Icon="@IrisIcons.NoConnections"/>
+            <MudText>No Connections</MudText>
+            <MudText>Iris connects to your message broker and performs automatic endpoint discovery. After that you will be enabled to send messages to your broker.</MudText>
+        </MudStack>
+    }
+    else
+    {
+        <MudGrid>
+        @foreach (var provider in Providers)
+        {
+            <MudItem xs="6" sm="4" lg="4" xl="3">
+                <ConnectionCard Provider="@provider" OnDelete="DeleteConnectionAsync" />
+            </MudItem>
+        }
+        </MudGrid>
+    }
+</MudStack>
+
+
+@code {
+    [Inject] protected IBrokerService BrokerService { get; set; } = default!;
+    
+    [Inject] protected IDialogService DialogService { get; set; } = default!;
+
+    private List<Provider> Providers { get; set; } = new();
+
+    private List<SupportedProvider> SupportedProviders { get; set; } = new();
+    
+    public override string Identifier => "Connections";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Providers = await BrokerService.GetProvidersAsync();
+        SupportedProviders = await BrokerService.GetSupportedProvidersAsync();
+
+        await base.OnInitializedAsync();
+    }
+
+    protected async Task AddConnectionAsync()
+    {
+        var parameters = new DialogParameters { { "SupportedProviders", SupportedProviders } };
+
+        var dialogRef = await DialogService.ShowAsync<AddConnectionDialog>("Add New Connection", parameters: parameters, new DialogOptions()
+        {
+            MaxWidth = MaxWidth.Medium
+        });
+
+        var result = await dialogRef.Result;
+
+        if(result is { Canceled: false, Data: Result<CreateConnection.CreateConnectionResponse> data })
+            await HandleConnectionResultAsync(data);
+    }
+
+    protected async Task DeleteConnectionAsync(Provider provider)
+    {
+        var parameters = new DialogParameters { { "Provider", provider } };
+
+        var dialogRef = await DialogService.ShowAsync<DeleteConnectionModal>("Delete Connection", parameters: parameters, new DialogOptions()
+        {
+            MaxWidth = MaxWidth.Medium
+        });
+
+        var result = await dialogRef.Result;
+            
+        if(result is { Canceled: false, Data: Result<DeleteConnection.DeleteConnectionResponse> data})
+            await HandleConnectionDeletedResultAsync(data);
+    }
+
+    protected async Task HandleConnectionResultAsync(Result<CreateConnection.CreateConnectionResponse> result)
+    {
+        HandleResult<CreateConnection.CreateConnectionResponse>(result,
+            success: x => "Successfully added connection",
+            failure: x => result.Message);
+
+        await BrokerService.RefreshDataAsync();
+
+        Providers = await BrokerService.GetProvidersAsync();
+
+        StateHasChanged();
+        
+    }
+
+    protected async Task HandleConnectionDeletedResultAsync(Result<DeleteConnection.DeleteConnectionResponse> result)
+    {
+        HandleResult<DeleteConnection.DeleteConnectionResponse>(result,
+            success: x => "Successfully deleted connection",
+            failure: x => result.Message);
+
+        await BrokerService.RefreshDataAsync();
+
+        Providers = await BrokerService.GetProvidersAsync();
+
+        StateHasChanged();
+        
+    }
+}

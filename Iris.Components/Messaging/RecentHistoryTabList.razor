@@ -1,0 +1,114 @@
+@using System.Text.Json
+@using Iris.Components.History
+@using Iris.Components.Templates
+@using Iris.Contracts.Audit
+@using Iris.Contracts.Audit.Models
+@using Iris.Contracts.Templates.Models
+@using Color = MudBlazor.Color
+@using Size = MudBlazor.Size
+@using Iris.Components.Brokers
+@using Iris.Contracts.Messaging.Models
+@implements IDisposable
+@inherits DynamicTabView
+
+<MudStack>
+    @if (HistoryState.History == null || _loading)
+    {
+        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <MudText Typo="Typo.subtitle1">Loading...</MudText>
+        </MudStack>
+    }
+    else
+    {
+        <MudStack Row="true" Class="mb-2">
+            <MudIcon Size="Size.Small" Icon="@IrisIcons.History" />
+            <MudText Typo="Typo.subtitle1">Recent History</MudText>
+        </MudStack>
+        @foreach (var history in Filter(HistoryState.History))
+        {
+            history.EventParameters ??= new Dictionary<string, object>();
+            
+            history.EventParameters.TryGetValue("Provider", out var provider); 
+            <MudStack Row="true" Class="mud-width-full" AlignItems="AlignItems.Center">
+
+            <MudTooltip Color="Color.Transparent" RootClass="d-flex gap-3 text-truncate">
+                <ChildContent>
+                        <ProviderIcon Provider="@provider?.ToString()" />
+                        <MudText>@(history.EventParameters.TryGetValue("Address", out var address) ? address : history.Source)</MudText>
+                        <MudText>@(provider ?? "--")</MudText>
+                        <MudText>@(history.EventParameters.TryGetValue("Endpoint", out var endpoint) ? endpoint : "--")</MudText>
+                </ChildContent>
+                   
+                <TooltipContent>
+                    <IrisCard>
+                        <StandaloneHistoryJson History="@history" />
+                    </IrisCard>
+                </TooltipContent>
+            </MudTooltip>
+            <MudSpacer/>
+            <IconButton Name="@IrisIcons.Send" Title="Re-Send" ButtonClicked="(async () => await ResendMessage(history))"/>
+            </MudStack>
+    }
+    }
+</MudStack>
+@code {
+    [Parameter] public DynamicTabView Instance { get; set; } = default!;
+    
+    [Inject] public HistoryState HistoryState { get; set; } = default!;
+
+    [Inject] public MessageState MessageState { get; set; } = default!;
+
+    [Inject] public IMessageService MessageService { get; set; } = default!;
+    
+    private bool _loading = false;
+    
+    protected override void OnInitialized()
+    {
+        HistoryState.OnHistoryStateChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        HistoryState.OnHistoryStateChange -= StateHasChanged;
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        var history = await HistoryState.GetUserHistoryAsync();
+        
+        _loading = false;
+        StateHasChanged();
+    }
+
+    protected List<HistoryRecord> Filter(IEnumerable<HistoryRecord> records)
+    {
+        return records
+            .Where(x => x.Action.Equals(Actions.MessageSent))
+            .OrderByDescending(x => x.Timestamp)
+            .ToList();
+    }
+
+    private async Task ResendMessage(HistoryRecord history)
+    {
+        
+        var message = new Message()
+        {
+            Address = history.EventParameters["Address"]?.ToString(),
+            MessageType = history.EventParameters["Endpoint"]?.ToString(),
+            Data = history.EventParameters["Message"]?.ToString(),
+            Headers = JsonSerializer.Deserialize<Dictionary<string, string>>(history.EventParameters["Headers"].ToString()) ?? new(),
+            Properties = JsonSerializer.Deserialize<Dictionary<string, string>>(history.EventParameters["Properties"].ToString()) ?? new(),
+            GenerateIrisHeaders = MessageState.SendIrisHeader
+        };
+
+        await MessageService.SendMessageAsync(message);
+    }
+
+    public override string Name { get; set; } = "Recent";
+    public override Type ComponentType { get; set; } = typeof(RecentHistoryTabList);
+    
+}

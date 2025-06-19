@@ -1,0 +1,10 @@
+<MudIcon Class="@GetIconClass()" Size="@Size" />
+
+@code {
+    [Parameter] public string Provider { get; set; } = "";
+
+    [Parameter] public Size Size { get; set; } = Size.Small;
+
+    private string GetIconClass()
+        => $"icon-{Provider?.ToLower()}";
+}

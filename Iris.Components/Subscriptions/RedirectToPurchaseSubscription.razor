@@ -1,0 +1,11 @@
+﻿@inject NavigationManager NavigationManager
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (NavigationManager.Uri.Contains("subscription-activation", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        NavigationManager.NavigateTo("/Subscription-Activation", true);
+    }
+}

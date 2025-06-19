@@ -1,0 +1,42 @@
+﻿@inherits IrisBaseComponent
+<MudCard Outlined="true" Class="@($"glassmorphic box-shadow-primary pa-4 {Class}")" Style="@($"background:color-mix(in srgb, var(--mud-palette-surface) 90%, transparent);height:{Height};{Style}")">
+    <MudStack Row="true" Class="@HeaderClass" AlignItems="AlignItems.Center" >
+        @if (!string.IsNullOrWhiteSpace(HeaderIcon))
+        {
+            <MudIcon Size="MudBlazor.Size.Small" Icon="@HeaderIcon" />
+        }
+
+        <MudText Typo="Typo.h5">@Title</MudText>
+
+        <MudSpacer />
+        @ToolbarContent
+    </MudStack>
+
+    @ChildContent
+</MudCard>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment ToolbarContent { get; set; } = default!;
+
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public string HeaderIcon { get; set; } = "";
+
+    [Parameter]
+    public string BodyStyle { get; set; } = "";
+
+    [Parameter]
+    public string BodyClass { get; set; } = "";
+
+    [Parameter] public string HeaderClass { get; set; } = "mb-2";
+
+    [Parameter]
+    public string Height { get; set; } = "auto";
+}
+

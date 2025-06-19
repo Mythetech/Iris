@@ -1,0 +1,15 @@
+﻿@inherits IrisBaseComponent
+
+<MudCard Outlined="true" Class="@($"glassmorphic box-shadow-primary pa-4 {Class}")" Style="@($"background:rgba(0,0,0,0.9);height:{Height};{Style};min-width:350px;")">
+    @ChildContent
+</MudCard>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter]
+    public string Height { get; set; } = "300px";
+
+}
+

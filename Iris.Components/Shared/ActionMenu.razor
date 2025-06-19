@@ -1,0 +1,64 @@
+﻿@using Iris.Components.Theme
+@inject IJSRuntime JSRuntime
+
+<div @onclick:stopPropagation="true">
+    <MudTooltip Text="Actions">
+        <MudIcon Class="icon-hover" Icon="@IrisIcons.MoreOptions" @onclick="ShowMenu" Style="cursor:pointer;" />
+    </MudTooltip>
+    <MudMenu @ref="_dropdown" >
+            @foreach (var item in Actions)
+            {
+                <MudMenuItem Class="d-flex" OnClick="@(async () => await ActionSelected.InvokeAsync(item))">
+                    @item.Text 
+                    <FlexSpacer/> 
+                    <MudIcon Icon="@item.Icon"></MudIcon>
+                </MudMenuItem>
+            }
+    </MudMenu>
+</div>
+
+@code {
+    public class ActionMenuModel
+    {
+        public string Icon { get; set; } = "";
+        public string Text { get; set; } = "";
+    }
+
+    private MudMenu _dropdown { get; set; } = default!;
+
+    [Parameter]
+    public List<ActionMenuModel> Actions { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<ActionMenuModel> ActionSelected { get; set; } = default!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("addClickListener", DotNetObjectReference.Create(this));
+        }
+    }
+
+    [JSInvokable]
+    public async Task HandleClickOutside()
+    {
+        await _dropdown.CloseMenuAsync();
+    }
+
+    protected async Task ShowMenu(MouseEventArgs args)
+    {
+        await Task.Delay(25);
+        await _dropdown.OpenMenuAsync(args);
+    }
+
+    protected async Task HideMenu()
+    {
+        await _dropdown.CloseMenuAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await JSRuntime.InvokeVoidAsync("removeClickListener");
+    }
+}

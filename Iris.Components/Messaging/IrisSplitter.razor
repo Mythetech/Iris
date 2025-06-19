@@ -1,0 +1,37 @@
+﻿@inherits IrisBaseComponent
+@if (!string.IsNullOrWhiteSpace(Style))
+{
+    <style>
+            @Style
+    </style>
+}
+<style>
+    split-panels::part(median) {
+        border-radius: 0.25em;
+        box-shadow: 0 0 0.3em 0.1em var(--iris-primary);
+    }
+</style>
+<Microsoft.Fast.Components.FluentUI.FluentSplitter Class="@($"mud-height-full {Class}")"
+                                                   BarSize="BarSize"
+                                                   Panel1="Panel1"
+                                                   Panel2="Panel2"
+                                                   Panel1MinSize="15%"
+                                                   Panel2MinSize="15%"
+                                                   Orientation="SplitterOrientation"
+                                                   Style="--neutral-stroke-rest: rgb(0 0 0 / 70%); --neutral-stroke-hover: rgb(66 165 245 / 50%); --neutral-stroke-active: rgb(66 165 245 / 100%); --neutral-stroke-strong-rest:rgb(255 255 255 / 0%)">
+
+</Microsoft.Fast.Components.FluentUI.FluentSplitter>
+
+@code {
+    [Parameter]
+    public RenderFragment Panel1 { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment Panel2 { get; set; } = default!;
+
+    [Parameter]
+    public Microsoft.Fast.Components.FluentUI.Orientation SplitterOrientation { get; set; } = Microsoft.Fast.Components.FluentUI.Orientation.Vertical;
+
+    [Parameter]
+    public int BarSize { get; set; } = 3;
+}

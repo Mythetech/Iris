@@ -1,0 +1,107 @@
+@inherits IrisBaseComponent
+
+<MudPaper Class="@Class" Outlined="false" Style="@($"background:rgba(0,0,0,0.9);height:100%")">
+    <MudDropContainer Class="mud-height-full" Style="@Style" @ref="_dropContainer" T="DynamicTabView" 
+                      Items="@Items" 
+                      ItemsSelector="@ItemsSelector"
+                      ItemsClassSelector="@((view, s) => "p-2")"
+                      ItemDropped="HandleDropEvent" 
+                      ApplyDropClassesOnDragStarted="true" 
+                      CanDropClass="iris-rainbow-shadow">
+    <ChildContent>
+        @ChildContent
+    </ChildContent>
+    <ItemRenderer>
+       
+            @if (context.BadgeCount != null)
+            {
+             <MudLink
+                    Color="@(context.IsActive ? Color.Primary : Color.Inherit)"
+                    Underline="Underline.None"
+                       OnClick="(() => HandleItemActivated(context))">
+             <MudBadge Origin="Origin.TopRight" Color="@(context.IsActive ? Color.Primary : Color.Tertiary)" Content="@context.BadgeCount" BadgeClass="@(context.IsActive ? "boxshadow-primary" : "")">
+                 @context.Name
+             </MudBadge>
+             </MudLink>
+
+        }
+            else
+            {
+                <MudLink
+                    Color="@(context.IsActive ? Color.Primary : Color.Inherit)"
+                    Underline="Underline.None"
+                    OnClick="(() => HandleItemActivated(context))">
+                @context.Name
+                </MudLink>
+
+                 }
+    </ItemRenderer>
+    </MudDropContainer>
+</MudPaper>
+
+@code {
+    [Parameter] public string Identifier { get; set; } = $"tabdropzone-{Guid.NewGuid().ToString()[0..7]}";
+
+    [Parameter] public List<DynamicTabView> Items { get; set; } = default!;
+    
+    [Parameter] public Func<DynamicTabView, string, bool> ItemsSelector { get; set; } = default!;
+
+    [Parameter] public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter] public RenderFragment<DynamicTabView> ItemRenderer { get; set; } = default!;
+
+    [Parameter] public EventCallback DropEventHandled { get; set; } = default!;
+
+    private MudDropContainer<DynamicTabView>? _dropContainer = default!;
+
+    protected async Task HandleDropEvent(MudItemDropInfo<DynamicTabView> args)
+    {
+        var previousZone = args.Item.AreaIdentifier;
+        
+        args.Item.AreaIdentifier = args.DropzoneIdentifier;
+        args.Item.AreaIndex = args.IndexInZone;
+        
+        ActivateInternal(args.Item, true, previousZone);
+
+        if (DropEventHandled.HasDelegate)
+            await DropEventHandled.InvokeAsync();
+        
+        StateHasChanged();
+    }
+
+    public void Refresh()
+    {
+        _dropContainer?.Refresh();
+    }
+
+    protected void ActivateInternal(DynamicTabView item, bool forceActive = false, string previousZone = "")
+    {
+        if (item.IsActive && !forceActive)
+        {
+            item.IsActive = false;
+            return;
+        }
+
+        foreach (var tab in Items.Where(x => x.AreaIdentifier.Equals(item.AreaIdentifier) && x.IsActive))
+        {
+            tab.IsActive = false;
+        }
+
+        item.IsActive = true;
+        
+        if(!string.IsNullOrWhiteSpace(previousZone) && !Items.Any(x => x.AreaIdentifier.Equals(previousZone) && x.IsActive))
+        {
+            var tabToActivate = Items.Where(x => x.AreaIdentifier.Equals(previousZone)).OrderByDescending(x => x.AreaIndex).FirstOrDefault();
+            if (tabToActivate != null)
+                tabToActivate.IsActive = true;
+        }
+        
+        _dropContainer?.Refresh();
+        StateHasChanged();
+    }
+
+    protected void HandleItemActivated(DynamicTabView item)
+    {
+        ActivateInternal(item, true);
+    }
+}

@@ -1,0 +1,98 @@
+﻿@using Iris.Components.Theme
+<HomeCard Class="overflow-visible" Height="auto">
+    <MudStack Row="true" Class="pb-4" AlignItems="AlignItems.Center">
+        <MudIcon Icon="@($"icon-{Provider?.Name}")" />
+        <MudText Typo="Typo.h6">@Provider?.Address</MudText>
+        <MudSpacer />
+        @if (EndpointFilters?.Count > 0)
+        {
+            @foreach (var filter in EndpointFilters)
+            {
+                @if (FilterToColorLookup.ContainsKey(filter))
+                {
+                    <IrisChip Color="@FilterToColorLookup[filter]" OnClose="async () => await FilterRemoved.InvokeAsync(filter)" Text="@filter" />
+                }
+                else
+                {
+                    <MudChip T="string" Variant="Variant.Text" Color="Color.Default" OnClose="async () => await FilterRemoved.InvokeAsync(filter)">@filter</MudChip>
+                }
+            }
+
+            <DeleteButton T="bool" Title="Clear Filters" ItemDeleted="FiltersCleared" />
+        }
+    </MudStack>
+
+    <MudDataGrid RowClick="HandleRowClick" RowsPerPage="5" Items="@FilterEndpoints(Endpoints)" T="EndpointDetails" Hover="true" Dense="true" Class="iris-table" Loading="@Loading" ColumnResizeMode="ResizeMode.Column">
+        <Columns>
+            <PropertyColumn Property="x => x!.Name" Title="Name" />
+            <PropertyColumn Property="x => x!.Type" Title="Type" />
+            <TemplateColumn CellClass="grid-icon-col text-align-right">
+                <CellTemplate>
+                    <GridActionsMenu OnSendClicked="@(() => HandleSendClicked(context.Item!))" />
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+        <PagerContent>
+            <MudDataGridPager T="EndpointDetails" />
+        </PagerContent>
+        <NoRecordsContent>
+            <MudStack Class="w-100" Justify="Justify.Center" AlignItems="AlignItems.Center" Style="@($"height:245px;")">
+                <MudIcon Size="MudBlazor.Size.Large" Icon="@IrisIcons.NoEndpoints" />
+                <MudText>No Endpoints</MudText>
+            </MudStack>
+        </NoRecordsContent>
+    </MudDataGrid>
+</HomeCard>
+
+@code {
+    [Inject]
+    protected NavigationManager NavigationManager { get; set; } = default!;
+
+    [Parameter]
+    public List<EndpointDetails> Endpoints { get; set; } = new();
+
+    [Parameter]
+    public Provider? Provider { get; set; } = default!;
+
+    [Parameter]
+    public bool Loading { get; set; } = false;
+
+    [Parameter]
+    public IReadOnlyCollection<string> EndpointFilters { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<string> FilterRemoved { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback FiltersCleared { get; set; } = default!;
+
+    [Parameter]
+    public Dictionary<string, string> FilterToColorLookup { get; set; } = default!;
+
+    private MudDataGrid<EndpointDetails> _grid { get; set; } = default!;
+
+    private void HandleSendClicked(EndpointDetails endpoint)
+    {
+        NavigationManager.NavigateTo($"/Messaging?Provider={endpoint.Address}&Endpoint={endpoint.Name}");
+    }
+
+    private List<EndpointDetails> FilterEndpoints(List<EndpointDetails> e)
+    {
+        if (EndpointFilters == null)
+            return e;
+
+        if (EndpointFilters?.Count < 1)
+            return e;
+
+        return e.Where(x => EndpointFilters!.Any(y => y.Equals(x.Type, StringComparison.OrdinalIgnoreCase))).ToList();
+    }
+
+    private void HandleRowClick(DataGridRowClickEventArgs<EndpointDetails> args)
+    {
+        if (args.MouseEventArgs.Detail == 2)
+        {
+            HandleSendClicked(args.Item);
+        }
+    }
+}
+

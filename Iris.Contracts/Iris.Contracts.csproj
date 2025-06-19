@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<WarningLevel>4</WarningLevel>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Remove="Assemblies\" />
+		<None Remove="Assemblies\Endpoints\" />
+		<None Remove="Assemblies\Models\" />
+		<None Remove="Admin\" />
+		<None Remove="Subscriptions\" />
+		<None Remove="User\" />
+		<None Remove="User\Events\" />
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="Assemblies\" />
+		<Folder Include="Assemblies\Endpoints\" />
+		<Folder Include="Admin\" />
+		<Folder Include="User\" />
+		<Folder Include="User\Events\" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Primitives" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Iris.Contracts.Generators\Iris.Contracts.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+	<PropertyGroup>
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+	</PropertyGroup>
+</Project>

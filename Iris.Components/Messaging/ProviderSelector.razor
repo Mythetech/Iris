@@ -1,0 +1,47 @@
+<MudSelect @ref="select" 
+           bind-Value="@Value"
+           ValueChanged="@ValueChanged"
+           T="Provider" Placeholder="Select Connection" Required="true" Margin="Margin.Dense" Variant="Variant.Text" Clearable="true">
+    @if (Providers != null)
+    {
+        foreach (var context in Providers)
+        {
+            <MudSelectItem T="Provider" Value="@context">
+                <MudStack Row="true">
+                    <MudIcon Style="min-width:24px;" Icon="@($"icon-{context.Name}")" />
+                    @if (!string.IsNullOrWhiteSpace(context.Address))
+                    {
+                        <span class="mud-typography-subtitle2 grey-text text-darken-1">@context.Address</span>
+                    }
+                </MudStack>
+            </MudSelectItem>
+        }
+    }
+</MudSelect>
+
+@code {
+    [Parameter] public List<Provider>? Providers { get; set; }
+
+    [Parameter] public Provider Value { get; set; } = default!;
+
+    [Parameter] public EventCallback<Provider> ValueChanged { get; set; } = default!;
+
+    public async Task SelectOption(Provider option)
+    {
+        await select.SelectOption(option);
+
+        await select.SelectAsync();
+        
+        StateHasChanged();
+    }
+
+    public async Task<bool> Validate()
+    {
+        await select.Validate();
+        return !HasErrors;
+    }
+
+    public bool HasErrors => select?.HasErrors ?? false;
+
+    private MudSelect<Provider> select = default!;
+}

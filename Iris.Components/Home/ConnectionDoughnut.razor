@@ -1,0 +1,191 @@
+﻿@using PSC.Blazor.Components.Chartjs
+@using PSC.Blazor.Components.Chartjs.Models
+@using PSC.Blazor.Components.Chartjs.Models.Common
+@using PSC.Blazor.Components.Chartjs.Models.Doughnut
+@using Iris.Cloud.Client.Shared
+@using static Iris.Cloud.Client.Shared.IrisColors
+@using System.Text.Json
+@using Iris.Components.Theme
+@using Size = MudBlazor.Size
+@inject IJSRuntime JSRuntime
+
+<MudStack Spacing="1" Style="margin-top:-0.5rem;">
+    <MudStack Row="true">
+        <h1>@Connections.Select(x => x.Address).Distinct().Count()</h1>
+        <MudSpacer />
+        @if (Connections.Count > 0)
+        {
+            <Chart Height="@Height" @ref="doughnutChart" Config="_config"/>
+        }
+        else
+        {
+            <MudStack Class="w-75" Justify="Justify.Center" AlignItems="AlignItems.Center" Style="@($"height:{Height.Replace("2", "3")};")">
+                <MudIcon Size="Size.Large" Icon="@IrisIcons.NoConnections" />
+                <MudText>No Connections</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="btn-sm" OnClick="AddConnectionClicked">
+                    <MudIcon Size="Size.Small" Icon="@IrisIcons.AddConnection"></MudIcon>
+                    <span class="px-2">Add Connection</span>
+                </MudButton>
+            </MudStack>
+        }
+        <MudSpacer />
+        <div style="width:26px;"> </div>
+    </MudStack>
+    <MudPaper Class="d-flex bg-transparent flex-nowrap gap-1 overflow-auto" Elevation="0">
+        @foreach (var p in _dataIndexToProviderLookup)
+        {
+            var provider = Connections.FirstOrDefault(x => x.Address.Equals(p.Value, StringComparison.OrdinalIgnoreCase));
+
+            <IrisChip Icon=@($"icon-{provider?.Provider}")
+                      OnClick="HandleConnectionClicked"
+                      Active="@(p.Value.Equals(SelectedConnectionAddress, StringComparison.OrdinalIgnoreCase))"
+                      Color="@(IrisColors[p.Key!])"
+                      Text="@p.Value" />
+        }
+    </MudPaper>
+</MudStack>
+
+
+@code {
+    [Parameter]
+    public List<EndpointDetails> Connections { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<string> ConnectionClicked { get; set; } = default!;
+
+    [Parameter]
+    public string SelectedConnectionAddress { get; set; } = "";
+
+    [Parameter] public EventCallback AddConnectionClicked { get; set; } = default!;
+
+    private string Height { get; set; } = "200px";
+
+    private Chart doughnutChart = default!;
+    private static Random rng = new Random();
+
+    private static string[] IrisColors =
+{
+        _DeepBlue,
+        _Blue,
+        _Cyan,
+        _Purple,
+        _Indigo,
+        _Violet,
+        _Green,
+        _Orange,
+        _Pink,
+};
+
+    private string[] IrisBackgroundColors =
+{
+        Opacity(IrisColors[0], 0.8),
+        Opacity(IrisColors[1], 0.8),
+        Opacity(IrisColors[2], 0.8),
+        Opacity(IrisColors[3], 0.8),
+        Opacity(IrisColors[4], 0.8),
+        Opacity(IrisColors[5], 0.8),
+        Opacity(IrisColors[6], 0.8),
+        Opacity(IrisColors[7], 0.8),
+};
+
+    private string[]? backgroundColors =
+{
+        //"rgba(54, 162, 235, 0.8)",
+        //"rgba(153, 102, 255, 0.8)",
+        "rgba(13,110,253, 0.8)",
+        "rgba(102, 16, 242, 0.8)",
+        "rgba(75, 192, 192, 0.8)",
+        "rgba(255, 99, 132, 0.8)",
+        "rgba(255, 206, 86, 0.8)",
+        "rgba(255, 159, 64, 0.8)",
+    };
+
+    private Dictionary<int, string> _dataIndexToProviderLookup = new();
+
+    private DoughnutChartConfig _config = default!;
+
+    private Random random = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _config = await GetConfig();
+    }
+
+    private async Task<DoughnutChartConfig> GetConfig()
+    {
+        var config = new DoughnutChartConfig()
+        {
+            Options = new Options()
+            {
+                OnClickAsync = HandleClickAsync,
+                Responsive = true,
+                MaintainAspectRatio = false,
+
+                Plugins = new Plugins()
+                {
+                    Legend = new Legend()
+                    {
+                        Display = false,
+                        Position = LegendPosition.Bottom
+                    }
+                }
+            }
+        };
+        config.Data.Labels = Connections.Select(x => $"{x.Address.Replace("https:", "").Replace("/", "")}").Distinct().ToList();
+        config.Data.Datasets = await GetDefaultDataSets(1);
+        return config;
+    }
+
+    private Task<List<DoughnutDataset>> GetDefaultDataSets(int numberOfDatasets)
+    {
+        var datasets = new List<DoughnutDataset>();
+        int total = Connections.Select(x => x.Address).Distinct().Count();
+
+        for (var index = 0; index < numberOfDatasets; index++)
+        {
+            List<decimal?> decimals = new();
+            int dataIndex = 0;
+            foreach (var x in Connections.Select(x => x.Address).Distinct())
+            {
+                _dataIndexToProviderLookup.Add(dataIndex++, x);
+                decimals.Add(Connections.Where(y => y.Address.Equals(x)).Count());
+            }
+
+            datasets.Add(new DoughnutDataset()
+            {
+                Label = "Endpoints",
+                Data = decimals,
+                BackgroundColor = IrisBackgroundColors.ToList(), //backgroundColors.OrderBy(_ => rng.Next()).ToList(),
+                HoverOffset = 2,
+            });
+        }
+
+        return Task.FromResult(datasets);
+    }
+
+    public async ValueTask HandleClickAsync(CallbackGenericContext value)
+    {
+        _dataIndexToProviderLookup.TryGetValue(value.DataIndex, out string? address);
+
+        await HandleConnectionClicked(address!);
+
+        await ValueTask.CompletedTask;
+    }
+
+    public async Task HandleConnectionClicked(string address)
+    {
+        if (!string.IsNullOrWhiteSpace(address) && ConnectionClicked.HasDelegate)
+        {
+            await ConnectionClicked.InvokeAsync(address);
+        }
+    }
+
+    public async Task Refresh()
+
+    {
+        _dataIndexToProviderLookup.Clear();
+        _config = await GetConfig();
+        StateHasChanged();
+    }
+
+}

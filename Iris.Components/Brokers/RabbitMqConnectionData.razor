@@ -1,0 +1,15 @@
+﻿@implements IConnectionDataProvider
+
+<MudTextField Label="Uri" @bind-Value="@Data!.Uri"></MudTextField>
+<MudTextField Label="Username" @bind-Value="@Data!.Username"></MudTextField>
+<MudTextField Label="Password" @bind-Value="@Data!.Password"></MudTextField>
+
+@code {
+    public string ProviderName { get => "rabbitmq"; }
+
+    public ConnectionData Payload { get => Data!; }
+
+    [Parameter]
+    public ConnectionData? Data { get; set; }
+}
+

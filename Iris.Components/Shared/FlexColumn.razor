@@ -1,0 +1,26 @@
+﻿<div class="d-flex flex-column @($"gap-{Gap}") justify-content-@JustifyContent align-items-@AlignItems flex-wrap-@FlexWrap @Class" style="@Style">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter]
+    public int Gap { get; set; } = 3;
+
+    [Parameter]
+    public string JustifyContent { get; set; } = "start";
+
+    [Parameter]
+    public string AlignItems { get; set; } = "start";
+
+    [Parameter]
+    public string FlexWrap { get; set; } = "nowrap";
+
+    [Parameter]
+    public string Class { get; set; } = "";
+
+    [Parameter]
+    public string Style { get; set; } = "";
+}

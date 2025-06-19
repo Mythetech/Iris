@@ -1,0 +1,42 @@
+@using Iris.Contracts.Assemblies.Models
+<MudTreeViewItem @ref="_treeViewItem"
+                 ChildContent="@ChildContent"
+                 Class="iris-json-treeview-item mb-4"
+                 @bind-Expanded="@Expanded"
+                 T="AssemblyData"
+                 Text="@Assembly?.Name"
+                 Icon="@($"icon-size-small mt-n2 bi {Icon}")"
+                 IconColor="@Color.Default"
+                 ExpandButtonIcon="@($"icon-size-xs bi {(Expanded ? "bi-record-circle" : "bi-circle")}")"
+                 ExpandButtonIconColor="@(Expanded ? Color.Primary : Color.Secondary)">
+    <BodyContent>
+        <MudStack Row="true" Class="mud-width-full" Spacing="12" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.body1">@Assembly?.Name</MudText>
+            <MudTooltip Text="Version">
+                <MudChip T="string" Class="m-0" Size="MudBlazor.Size.Medium" Variant="Variant.Text" Color="@Color.Info">@Assembly?.Version</MudChip>
+            </MudTooltip>
+            <MudSpacer />
+            <MudText Typo="Typo.body2" class="text-muted">
+                @Assembly?.ExportedTypes?.Count Types
+            </MudText>
+        </MudStack>
+    </BodyContent>
+</MudTreeViewItem>
+
+@code {
+    [Parameter]
+    public string Icon { get; set; } = "";
+
+    [Parameter] public AssemblyData Assembly { get; set; } = default!;
+
+    [Parameter]
+    public bool Nested { get; set; } = false;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; } = default!;
+
+    protected MudTreeViewItem<AssemblyData> _treeViewItem = default!;
+    
+
+    protected bool Expanded { get; set; } = true;
+}

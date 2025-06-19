@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+	  <WarningLevel>4</WarningLevel>
+	  <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Remove="RabbitMQ\" />
+		<None Remove="Models\" />
+		<None Remove="Extensions\" />
+		<None Remove="Azure\" />
+		<None Remove="Azure\AzureConnector.json" />
+		<None Remove="Amazon\" />
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="RabbitMq\" />
+		<Folder Include="Azure\" />
+		<Folder Include="Amazon\" />
+	</ItemGroup>
+	<ItemGroup>		
+		<PackageReference Include="EasyNetQ.Management.Client" />
+		<PackageReference Include="MassTransit" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+		<PackageReference Include="Azure.Messaging.ServiceBus"  />
+		<PackageReference Include="NServiceBus" />
+		<PackageReference Include="System.Linq.Async"  />
+		<PackageReference Include="AWSSDK.SQS" />
+		<PackageReference Include="Azure.Storage.Queues" />
+		<PackageReference Include="WolverineFx" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Iris.Contracts\Iris.Contracts.csproj" />
+	</ItemGroup>
+</Project>

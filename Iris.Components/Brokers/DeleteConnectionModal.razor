@@ -1,0 +1,57 @@
+﻿@using Iris.Components.Brokers
+@using Iris.Components.Shared.Dividers
+
+<MudDialog Class="glassmorphic-bg pa-4 mud-width-full box-shadow-primary" Style="width:30dvw;">
+<DialogContent>
+    <p>
+        Are you sure you want to delete this connection? This cannot be undone. To access this connection in the future, you will need to re-enter the connection information.
+    </p>
+
+    <PrimaryDivider />
+
+    <MudStack Row="true" AlignItems="AlignItems.End" Justify="Justify.FlexEnd">
+        <MudButton Variant="Variant.Text" OnClick="CloseClicked">
+            Cancel
+        </MudButton>
+
+        <IrisLoadingButton 
+            Color="Color.Error" 
+            OnClick="DeleteAsync" 
+            Loading="@_deleting" 
+            Text="Delete" 
+            LoadingText="Deleting" />
+    </MudStack>
+</DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = default!;
+    
+    [Inject]
+    public IBrokerService BrokerService { get; set; } = default!;
+
+    [Parameter]
+    public Provider Provider { get; set; } = default!;
+
+    private void CloseClicked()
+    {
+        MudDialog.Cancel();
+    }
+    
+    private bool _deleting = false;
+
+    protected async Task DeleteAsync()
+    {
+        _deleting = true;
+
+        var result = await BrokerService.DeleteConnectionAsync(Provider.Address);
+
+        _deleting = false;
+
+        StateHasChanged();
+
+        MudDialog.Close(DialogResult.Ok(result));
+    }
+
+}
+
