@@ -1,0 +1,24 @@
+<MudStack Spacing="1">
+    <MudText Style="align-self: center;" Class="mud-text-secondary">@LayoutName</MudText>
+    <MudStack Row AlignItems="AlignItems.Center">
+        <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="width:100px">Top Zone</MudText>
+        @foreach (var tab in Layout.Where(x => x is { AreaIdentifier: LayoutZones.TopZone }).OrderBy(y => y.AreaIndex))
+        {
+            <MudText>@tab.Name</MudText>
+        }
+    </MudStack>
+    <MudStack Row AlignItems="AlignItems.Center">
+        <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="width:100px">Bottom Zone</MudText>
+        @foreach (var tab in Layout.Where(x => x is { AreaIdentifier: LayoutZones.BottomZone }).OrderBy(y => y.AreaIndex))
+        {
+            <MudText>@tab.Name</MudText>
+        }
+    </MudStack>
+</MudStack>
+
+@code {
+    [Parameter]
+    public List<DynamicTabView> Layout { get; set; }
+
+    [Parameter] public string LayoutName { get; set; } = "Default";
+}

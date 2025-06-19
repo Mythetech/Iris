@@ -1,0 +1,38 @@
+﻿@using Iris.Components.Theme
+@inject IJSRuntime JSRuntime
+
+<div @onclick:stopPropagation="true">
+    <MudMenu Dense="true" >
+        <ActivatorContent>
+            <MudTooltip Text="Actions">
+                <IconButton Color="Color.Default" Name="@IrisIcons.MoreOptions" Style="cursor:pointer;" />
+            </MudTooltip>
+        </ActivatorContent>
+        <ChildContent>
+        @*
+                <DropdownItem Class="d-flex" @onclick="HandleViewClicked">View <FlexSpacer /> <Icon Name="@IconName.Eye"></Icon></DropdownItem>
+            *@
+        <MudMenuItem Class="d-flex w-100" OnClick="HandleSendClicked">
+            <MudStack Row="true">
+                <MudText Class="mr-4">Send</MudText> <MudIcon Icon="@IrisIcons.Send"></MudIcon>
+            </MudStack>
+        </MudMenuItem>
+        </ChildContent>
+    </MudMenu>
+</div>
+
+@code {
+
+    [Parameter] public EventCallback OnViewClicked { get; set; }
+    [Parameter] public EventCallback OnSendClicked { get; set; }
+
+    private async Task HandleViewClicked()
+    {
+        await OnViewClicked.InvokeAsync(null);
+    }
+
+    private async Task HandleSendClicked()
+    {
+        await OnSendClicked.InvokeAsync(null);
+    }
+}

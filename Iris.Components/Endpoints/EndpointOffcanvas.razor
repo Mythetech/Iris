@@ -1,0 +1,48 @@
+﻿@using Iris.Components.Theme
+@using Iris.Components.Brokers
+<MudStack Class="flex-grow-1 pa-8">
+    <MudText Typo="Typo.h6">Endpoint Details</MudText>
+    @if (Endpoint != null)
+    {
+        <MudStack Row="true">
+            <ProviderIcon Provider="@Endpoint.Provider" />
+            <h6>@Endpoint.Name</h6>
+        </MudStack>
+        <MudStack Row="true">
+            <FlexKeyValuePair Key="Address" Value="@Endpoint.Address"/>
+        </MudStack>
+
+        <MudStack Row="true">
+            <FlexKeyValuePair Key="Type" Value="@Endpoint.Type"/>
+        </MudStack>
+
+        <FlexSpacer/>
+        <PrimaryDivider/>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="btn-sm" OnClick="@(() => NavigationManager.NavigateTo($"/Messaging?Provider={Endpoint.Address}&Endpoint={Endpoint.Name}"))">
+                 <MudIcon Size="Size.Small" Class="mr-2" Icon="@IrisIcons.Send"/> Send
+            </MudButton>
+            @*
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="btn-sm">
+                Read <Icon Class="px-2" Name="@IconName.EnvelopeOpen" />
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="btn-sm">
+                View <Icon Class="px-2" Name="@IconName.Eye" />
+            </MudButton>
+        *@
+        </MudStack>
+    }
+    else
+    {
+        <MudText>No endpoint selected</MudText>
+    }
+</MudStack>
+
+@code {
+    [Parameter]
+    public EndpointDetails? Endpoint { get; set; } = default!;
+
+    [Inject]
+    public NavigationManager NavigationManager { get; set; } = default!;
+}
+

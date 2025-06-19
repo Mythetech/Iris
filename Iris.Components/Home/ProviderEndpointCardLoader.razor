@@ -1,0 +1,37 @@
+﻿@using Iris.Components.Theme
+<HomeCard Class="overflow-visible" Height="auto">
+    <MudStack Row="true" Class="pb-4">
+        <MudIcon Icon="@IrisIcons.Endpoints" />
+        <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Width="450px" Height="24px" />
+    </MudStack>
+
+    <MudPaper Class="pa-4 mud-width-full bg-black">
+        <MudGrid>
+            <MudItem xs="1">
+                <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="24px" />
+            </MudItem>
+            <MudItem xs="5">
+                <MudSpacer />
+            </MudItem>
+            <MudItem xs="1">
+                <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="24px" />
+            </MudItem>
+            <MudItem xs="5">
+                <MudSpacer />
+            </MudItem>
+            <PrimaryDivider />
+            @for (int i = 0; i < 6; i++)
+            {
+                <MudItem xs="6">
+                    <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="36px" />
+                </MudItem>
+                <MudItem xs="5">
+                    <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="36px" />
+                </MudItem>
+                <MudItem xs="1">
+                    <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="36px" />
+                </MudItem>
+            }
+        </MudGrid>
+    </MudPaper>
+</HomeCard>

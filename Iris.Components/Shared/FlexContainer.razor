@@ -1,0 +1,39 @@
+﻿<div class="d-flex @Direction @Wrap justify-content-@JustifyContent align-items-@AlignItems align-content-@AlignContent @($"container-{ContainerSize}") @($"gap-{Gap}") @Class"
+     style="min-height:@MinHeight;@Style">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter]
+    public int Gap { get; set; } = 3;
+
+    [Parameter]
+    public string ContainerSize { get; set; } = "lg";
+
+    [Parameter]
+    public string Direction { get; set; } = "flex-row";
+
+    [Parameter]
+    public string Wrap { get; set; } = "nowrap";
+
+    [Parameter]
+    public string JustifyContent { get; set; } = "start";
+
+    [Parameter]
+    public string AlignItems { get; set; } = "stretch";
+
+    [Parameter]
+    public string AlignContent { get; set; } = "stretch";
+
+    [Parameter]
+    public string MinHeight { get; set; } = "80vh";
+
+    [Parameter]
+    public string Class { get; set; } = "";
+
+    [Parameter]
+    public string Style { get; set; } = "";
+}

@@ -1,0 +1,15 @@
+<div class="nav-item px-4">
+    <IrisNavLink Href="@Href" Text="@Text" Icon="@Icon" IconMenuActive="@IconMenuActive" Match="@Match" />
+</div>
+
+@code {
+    [Parameter] public bool IconMenuActive { get; set; } = false;
+
+    [Parameter] public string Href { get; set; } = "";
+
+    [Parameter] public string Icon { get; set; } = "";
+
+    [Parameter] public string Text { get; set; } = "";
+
+    [Parameter] public NavLinkMatch Match { get; set; } = NavLinkMatch.Prefix;
+}

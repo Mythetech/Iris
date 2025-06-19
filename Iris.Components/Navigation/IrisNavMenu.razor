@@ -1,0 +1,65 @@
+﻿@using Iris.Components.Navigation
+@using Iris.Components.Theme
+<MudDrawerContainer Class="mud-height-full">
+    <MudDrawer @bind-Open="@_open" Fixed="false" Elevation="1" Variant="@DrawerVariant.Mini" OpenMiniOnHover="false" MiniWidth="86px">
+        <MudStack Class="mud-height-full mud-width-full" Spacing="0">
+            <div class="top-row ps-3">
+                <MudStack Row="true" Class="px-2" AlignItems="AlignItems.Center">
+                    <MudIcon Icon="icon-iris fs-2 mb-2" Size="MudBlazor.Size.Large"/>
+                    @if (!@IconMenuActive)
+                    {
+                        <a class="iris-font fs-3" href="">Iris</a>
+                    }
+                </MudStack>
+            </div>
+
+            <PrimaryDivider Class="p-0 mt-0"/>
+
+            <MudNavMenu>
+                <nav class="flex-column">
+                    <IrisNavLinkItem Href="" Text="Home" Icon="@IrisIcons.Home" IconMenuActive="@IconMenuActive" Match="NavLinkMatch.All" />
+
+                    <IrisNavLinkItem Href="Messaging" Icon="@IrisIcons.Send" IconMenuActive="@IconMenuActive"/>
+
+                    <IrisNavLinkItem Href="Endpoints" Icon="@IrisIcons.Endpoints" IconMenuActive="@IconMenuActive"/>
+
+                    <IrisNavLinkItem Href="Packages" Icon="@IrisIcons.Packages" IconMenuActive="@IconMenuActive"/>
+
+                    <IrisNavLinkItem Href="History" Icon="@IrisIcons.History" IconMenuActive="@IconMenuActive"/>
+
+                    <IrisNavLinkItem Href="Connections" Icon="@IrisIcons.Connections" IconMenuActive="@IconMenuActive"/>
+
+                    <IrisNavLinkItem Href="Settings" Icon="@IrisIcons.Settings" IconMenuActive="@IconMenuActive"/>
+                </nav>
+            </MudNavMenu>
+            <MudSpacer/>
+            <MudStack Row="true" Class="pa-4">
+                <MudSpacer/>
+                @if (!@IconMenuActive)
+                {
+                    <IconButton Color="Color.Default" Name="@IrisIcons.Collapse" ButtonClicked="ToggleIconMenu"/>
+                }
+                else
+                {
+                    <IconButton Color="Color.Default" Name="@IrisIcons.Expand" ButtonClicked="ToggleIconMenu"/>
+                }
+            </MudStack>
+        </MudStack>
+    </MudDrawer>
+</MudDrawerContainer>
+
+@code
+{
+    [Parameter] public EventCallback<bool> ShowIconMenu { get; set; }
+
+    bool IconMenuActive { get; set; } = false;
+
+    bool _open = true;
+
+    async Task ToggleIconMenu()
+    {
+        _open = !_open;
+        IconMenuActive = !IconMenuActive;
+        await ShowIconMenu.InvokeAsync(IconMenuActive);
+    }
+}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iris</title>
+    <base href="/" />
+    <link rel="stylesheet" href="_content/Iris.Components/css/bootstrap/bootstrap.min.css" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="_content/Iris.Components/css/app.css" />
+    <link rel="icon" type="image/png" href="_content/Iris.Components/favicon.png" />
+    <link href="Iris.Desktop.styles.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="512x512" href="_content/Iris.Components/icon-512.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="_content/Iris.Components/icon-192.png" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <link href="https://cdn-endpnt-stmythetechglobal.azureedge.net/assets/icons.min.css" rel="stylesheet" type="text/css" />
+    <link href="desktop.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+<div id="app">
+    <svg class="loading-progress">
+        <circle r="40%" cx="50%" cy="50%" />
+        <circle r="40%" cx="50%" cy="50%" />
+    </svg>
+    <div class="loading-progress-text"></div>
+</div>
+
+<div id="blazor-error-ui">
+    <span class="text-primary">An unhandled error has occurred.</span>
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss text-decoration-none">❌</a>
+</div>
+<script src="_framework/blazor.webview.js"></script>
+<script src="_content/Iris.Components/js/timezones.js" type="module"></script>
+<script src="_content/PSC.Blazor.Components.Chartjs/lib/Chart.js/chart.js"></script>
+<script src="_content/PSC.Blazor.Components.Chartjs/Chart.js" type="module"></script>
+<script src="_content/PSC.Blazor.Components.Chartjs/lib/chartjs-plugin-datalabels/chartjs-plugin-datalabels.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="_content/BlazorMonaco/jsInterop.js"></script>
+<script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
+<script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
+<script src="_content/MudBlazor/MudBlazor.min.js"></script>
+<script>window.addClickListener = (dotnetHelper) => {
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.dropdown')) {
+            dotnetHelper.invokeMethodAsync('HandleClickOutside');
+        }
+    });
+};
+
+window.removeClickListener = () => {
+    document.removeEventListener('click', handleClickOutside);
+};</script>
+</body>
+
+</html>
+
