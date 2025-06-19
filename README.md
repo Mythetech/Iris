@@ -4,7 +4,9 @@ The first-of-its-kind testing platform for distributed applications. Think Postm
 
 ## 🚀 Overview
 
-Iris is a sophisticated desktop application that makes testing distributed applications easier and more intuitive. Built with modern .NET 9 and Photino.Blazor, it provides a powerful interface for testing complex systems that rely on message brokers, event-driven architectures, and microservices.
+Iris is the culmination of years of deep expertise in distributed systems architecture. Built with modern .NET 9 and Photino.Blazor, it tackles one of the most technically complex challenges in software development: making distributed application testing accessible and intuitive.
+
+This isn't just another tool - it's the result of solving real-world distributed system problems across countless production environments, understanding the pain points that developers face daily, and creating a solution that transforms how we approach testing in event-driven architectures.
 
 ### The Problem
 Today, testing distributed applications means **writing code** - lots of it. Developers spend hours writing boilerplate to:
@@ -24,6 +26,7 @@ Today, testing distributed applications means **writing code** - lots of it. Dev
 - **Local Development** - Run and test your distributed applications locally with ease
 - **Template System** - Reusable test templates for common distributed system contracts
 - **No Code Required** - Visual interface replaces hundreds of lines of test code
+- **Deep Expertise** - Built by someone who's lived and breathed distributed systems for years
 
 ## 🏗️ Architecture
 
