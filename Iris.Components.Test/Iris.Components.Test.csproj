@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector"  />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk"  />   
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="bunit" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="NSubstitute" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Iris.Cloud.Client\Iris.Cloud.Client.csproj" />
+    <ProjectReference Include="..\Iris.Contracts\Iris.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Brokers\" />
+    <None Remove="Messaging\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Brokers\" />
+    <Folder Include="Messaging\" />
+  </ItemGroup>
+</Project>

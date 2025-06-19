@@ -1,0 +1,17 @@
+@inherits Iris.Components.Infrastructure.MessageBus.ComponentConsumer<SetText>
+
+<div>
+    @_text
+</div>
+@code {
+    private string _text = "default";
+    
+    protected override Task Consume(SetText message, CancellationToken cancellationToken)
+    {
+        _text = message.text;
+        StateHasChanged();
+
+        return Task.CompletedTask;
+    }
+
+}

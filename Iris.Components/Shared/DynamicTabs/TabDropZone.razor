@@ -1,0 +1,39 @@
+@inherits IrisBaseComponent
+
+<MudDropZone 
+    T="DynamicTabView" 
+    Identifier="@(Identifier ?? $"tab-dropzone-{Guid.NewGuid().ToString()[0..7]}")" 
+    Class="mud-width-full d-flex flex-row justify-center align-center gap-6 rounded mb-4" 
+    Style="background-color:var(--mud-palette-dark)" 
+    
+    AllowReorder="@AllowReorder"  />
+@{
+var item = Items?.FirstOrDefault(x => x.AreaIdentifier.Equals(Identifier) && x.IsActive);
+if (item != null)
+{
+    <div class="mud-width-full overflow-y-auto p-2">
+        <DynamicComponent Type="@item.ComponentType" Parameters="@GetParameters(item)" />
+    </div>
+}
+}
+
+@code {
+   
+    [Parameter] public string? Identifier { get; set; } = default!;
+
+    [Parameter] public bool AllowReorder { get; set; } = false;
+
+    [Parameter] public RenderFragment ChildContent { get; set; } = default!;
+
+    [Parameter] public List<DynamicTabView> Items { get; set; } = default!;
+
+    private Dictionary<string, object> GetParameters(DynamicTabView item)
+    {
+        item.Parameters ??= new();
+
+        item.Parameters.TryAdd("Instance", item);
+
+        return item.Parameters;
+    }
+    
+}

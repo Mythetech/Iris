@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <PackageIcon>wwwroot\icon.png</PackageIcon>
+        <Company>Mythetech</Company>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AutoFixture" />
+      <PackageReference Include="LiteDB" />
+      <PackageReference Include="Microsoft.Extensions.Http" />
+      <PackageReference Include="Photino.Blazor" />
+      <PackageReference Include="Velopack" />
+      <PackageVersion Include="Toolbelt.Blazor.LoadingBar" />
+      <PackageVersion Include="Toolbelt.Blazor.ViewTransition" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Iris.Brokers\Iris.Brokers.csproj" />
+      <ProjectReference Include="..\Iris.Components\Iris.Components.csproj" />
+      <ProjectReference Include="..\Iris.Contracts\Iris.Contracts.csproj" />
+      <ProjectReference Include="..\Services\Assemblies\Iris.Assemblies\Iris.Assemblies.csproj" />
+      <ProjectReference Include="..\Services\History\Iris.History\Iris.History.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="App.razor">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </Content>
+      <Content Update="wwwroot\index.html">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Layout\MainLayout.razor" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,122 @@
+﻿@using Contracts.Assemblies.Models
+@using Iris.Components.Shared.Snackbar
+@using Iris.Components.Theme
+@using Iris.Components.Shared.Toolbar
+@page "/Packages"
+@inherits IrisPageBase
+
+<IrisToolBar Class="mb-4">
+@*
+    <MudButtonGroup Variant="Variant.Outlined">
+        <MudIconButton Icon="bi bi-record" Color="Color.Secondary"/>
+        <MudIconButton Icon="bi bi-record-circle" Color="Color.Primary"/>
+    </MudButtonGroup>
+    *@
+    <MudSpacer/>
+    <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles">
+        <ActivatorContent>
+            <IrisLoadingButton
+                Text="Upload Package"
+                Loading="@Uploading"
+                LoadingText="Uploading"
+                Icon="@IrisIcons.UploadPackage"/>
+        </ActivatorContent>
+    </MudFileUpload>
+</IrisToolBar>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="overflow-y-auto" Style="max-height:80dvh;">
+<PackageTreeView 
+    Assemblies="@Assemblies" 
+    OnTypeDataRowClicked="ShowTypeDataDetails"/>
+</MudContainer>
+
+@if (Assemblies?.Count < 1)
+{
+    <MudStack Class="w-100" Justify="Justify.Center" AlignItems="AlignItems.Center" Style="@($"height:300px;")">
+        <MudIcon Size="MudBlazor.Size.Large" Icon="@IrisIcons.NoPackages"/>
+        <MudText>No Packages</MudText>
+        <MudText>Iris can use an uploaded assembly to try and automatically match a message broker's endpoint to the expected matching JSON structure.</MudText>
+    </MudStack>
+}
+
+<MudDrawer @bind-Open="IsOpen" Variant="DrawerVariant.Temporary" Anchor="Anchor.End">
+    @if (IsOpen)
+    {
+        <TypeDataDetails Data="@SelectedType"/>
+    }
+</MudDrawer>
+@code {
+    [Inject]
+    protected IPackageService PackageService { get; set; } = default!;
+
+    public override string Identifier { get; set; } = "Packages";
+
+    protected List<TypeData>? Types { get; set; }
+
+    protected List<AssemblyData>? Assemblies { get; set; }
+
+    protected bool Loading { get; set; } = false;
+
+    private bool Uploading { get; set; } = false;
+
+    private bool IsOpen { get; set; } = false;
+
+    private TypeData? SelectedType { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Assemblies == null || Assemblies.Count < 1)
+        {
+            Loading = true;
+            StateHasChanged();
+
+            Assemblies = await PackageService.GetLoadedAssembliesAsync();
+            Types = Assemblies.SelectMany(x => x.ExportedTypes).ToList();
+            Loading = false;
+            StateHasChanged();
+        };
+
+        await base.OnInitializedAsync();
+    }
+
+    private async Task UploadFiles(IBrowserFile? file)
+    {
+        if (file == null)
+            return;
+        
+        Uploading = true;
+
+        StateHasChanged();
+
+        var result = await PackageService.UploadAssemblyAsync(file!);
+
+        Uploading = false;
+
+        StateHasChanged();
+
+        HandleFileUploadResponse(result);
+    }
+
+    private void HandleFileUploadResponse(Result<AssemblyData?> result)
+    {
+        if (result.Value != null)
+        {
+            Snackbar.AddIrisNotification("Uploaded package successfully", Severity.Success);
+            Assemblies.Add(result.Value);
+            StateHasChanged();
+        }
+        else
+        {
+            string error = string.IsNullOrWhiteSpace(result.Message) ? "Error uploading package" : result.Message;
+            Snackbar.AddIrisNotification(error, Severity.Error);
+        }
+    }
+
+    protected void ShowTypeDataDetails(TypeData data)
+    {
+        SelectedType = data;
+        IsOpen = true;
+        StateHasChanged();
+    }
+}
+

@@ -1,0 +1,74 @@
+﻿<FlexRow>
+    <div class="text-muted text-truncate row-divider @Class" style="@($"min-width:{MinWidth}px;max-width:{MaxWidth}px")">
+        @Key
+    </div>
+    @if (HasIcon)
+    {
+        <div class="@($"icon-grid {IconClass}")"></div>
+    }
+    @if (Value.Length >= 40)
+    {
+        <div class="overflow-auto">
+            <MudTooltip Text="@Value">
+                @if (LinkValue)
+                {
+                    <a href="@Value" target="_blank">@Value</a>
+                }
+                else
+                {
+                    <div class="text-truncate">@Value</div>
+                }
+            </MudTooltip>
+        </div>
+
+    }
+    else
+    {
+        @if (LinkValue)
+        {
+            <a href="@Value" target="_blank">@Value</a>
+        }
+        else
+        {
+            <div class="text-truncate">@Value</div>
+        }
+    }
+
+    <FlexSpacer />
+</FlexRow>
+
+@code {
+    [Parameter]
+    public string Key { get; set; } = default!;
+
+    [Parameter]
+    public string Value { get; set; } = default!;
+
+    [Parameter]
+    public string IconClass { get; set; } = default!;
+
+    [Parameter]
+    public int KeyColSize { get; set; } = 2;
+
+    [Parameter]
+    public bool LinkValue { get; set; } = false;
+
+    [Parameter]
+    public string MinWidth { get; set; } = "100";
+
+    [Parameter]
+    public string MaxWidth { get; set; } = "350";
+
+    [Parameter]
+    public string Class { get; set; } = "";
+
+    private bool HasIcon
+    {
+        get
+        {
+            return !string.IsNullOrWhiteSpace(IconClass);
+        }
+    }
+
+}
+

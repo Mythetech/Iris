@@ -1,0 +1,34 @@
+@using Iris.Contracts.Assemblies.Models
+
+@if (Data != null && !string.IsNullOrWhiteSpace(Data.Name))
+{
+    <MudStack Class="pa-4">
+        <MudText Typo="Typo.h6">@Data.Name</MudText>
+        <MudStack Row="true">
+            <MudText Class="mud-text-secondary">@Data.FullyQualifiedName</MudText>
+            <MudSpacer />
+            <MudText  Class="mud-text-secondary">@Data?.Properties?.Count Properties</MudText>
+        </MudStack>
+        <TypePropertyList Data="@Data"></TypePropertyList>
+    </MudStack>
+}
+else
+{
+    <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center">
+        <MudIcon Size="Size.Large" Color="Color.Error" Icon="@IrisIcons.Error" />
+        <MudText>Error displaying Type</MudText>
+    </MudStack>
+}
+@code {
+    [Parameter] public TypeData? Data { get; set; } = default!;
+
+    private string _json => ConvertPropertiesToJson(Data);
+
+    private string ConvertPropertiesToJson(TypeData? d)
+    {
+        if (d?.Properties == null)
+            return "";
+
+        return System.Text.Json.JsonSerializer.Serialize(d.Properties);
+    }
+}

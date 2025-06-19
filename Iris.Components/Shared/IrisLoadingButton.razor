@@ -1,0 +1,30 @@
+<MudButton Variant="Variant.Outlined" Color="@Color" Disabled="@Loading" Class="btn-sm" OnClick="@OnClick" FullWidth="@FullWidth">
+    @if (!string.IsNullOrWhiteSpace(Icon))
+    {
+        <MudIcon Icon="@Icon" Size="Size.Small"/>
+    }
+    @if (!Loading)
+    {
+        <span class="px-2">@Text</span>
+    }
+    else
+    {
+        <span class="px-2">@LoadingText</span>
+        <LoadingDots Class="mt-1" Style="margin-left:-0.5em;"/>
+    }
+</MudButton>
+@code {
+    [Parameter] public Color Color { get; set; } = Color.Primary;
+
+    [Parameter] public bool Loading { get; set; } = false;
+
+    [Parameter] public string Text { get; set; } = "";
+
+    [Parameter] public string LoadingText { get; set; } = "";
+
+    [Parameter] public string Icon { get; set; } = "";
+
+    [Parameter] public EventCallback OnClick { get; set; } = default!;
+
+    [Parameter] public bool FullWidth { get; set; } = false;
+}

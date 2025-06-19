@@ -1,0 +1,63 @@
+﻿<MudStack Class="mud-width-full">
+    @if (Provider == null || _providerDataType == null)
+    {
+        <ProtectedTextField Dense="true" Label="Connection String" @bind-Value="@_connectionString" />
+    }
+    else
+    {
+        <DynamicComponent @ref="_dynamicConnectionDataComponent"
+                          Type="@_providerDataType"
+                          Parameters="_parameters"></DynamicComponent>
+    }
+</MudStack>
+
+@code {
+    [Inject]
+    public Dictionary<string, Type> DataProviderLookup { get; set; } = default!;
+
+    private ConnectionData Data { get; set; } = new()
+    {
+        ConnectionString = string.Empty,
+    };
+
+    public ConnectionData GetData()
+    {
+        if (_dynamicConnectionDataComponent?.Instance == null || Provider == null || _providerDataType == null)
+        {
+            Data.ConnectionString = _connectionString;
+            return Data;
+        }
+
+        return (_dynamicConnectionDataComponent!.Instance as IConnectionDataProvider)!.Payload;
+    }
+
+    [Parameter]
+    public SupportedProvider? Provider { get; set; }
+
+    private DynamicComponent? _dynamicConnectionDataComponent;
+
+    private Type? _providerDataType;
+
+    private string _connectionString = "";
+
+    private IDictionary<string, object>? _parameters;
+
+    protected override void OnParametersSet()
+    {
+        if (Provider != null && DataProviderLookup != null && DataProviderLookup.ContainsKey(Provider.Name.Replace(" ", "").ToLower()))
+        {
+            _providerDataType = DataProviderLookup[Provider.Name.Replace(" ", "").ToLower()];
+
+            _parameters = new Dictionary<string, object>();
+
+            _parameters.Add("Data", Data);
+        }
+        else
+        {
+            _providerDataType = null;
+        }
+
+        StateHasChanged();
+    }
+}
+
