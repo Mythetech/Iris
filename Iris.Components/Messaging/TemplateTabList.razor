@@ -1,0 +1,113 @@
+﻿@using Iris.Components.Templates
+@using Iris.Contracts.Templates.Models
+@using Color = MudBlazor.Color
+@using Size = MudBlazor.Size
+@implements IDisposable
+@inherits DynamicTabView
+
+<MudStack>
+    @if (TemplatesState.Templates == null || _loading)
+    {
+        <MudStack AlignItems="AlignItems.Center">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <MudText Typo="Typo.subtitle1">Loading...</MudText>
+        </MudStack>
+    }
+    else
+    {
+        <MudStack Row="true" Class="mb-2">
+            <MudIcon Size="Size.Small" Icon="@IrisIcons.Templates" />
+            <MudText Typo="Typo.subtitle1">Templates</MudText>
+        </MudStack>
+        @foreach (var template in TemplatesState.Templates)
+        {
+            <MudStack Row="true" Class="mud-width-full" AlignItems="AlignItems.Center">
+                <IconButton Name="@IrisIcons.Edit" Title="Edit" Class="icon-btn-sm" ButtonClicked="@(async () => { FocusedTemplate = template.TemplateId; await _templateToField[template.TemplateId].FocusAsync(); })" />
+                <MudTooltip Color="Color.Transparent">
+                    <ChildContent>
+                        <MudTextField @ref="@(_templateToField[template.TemplateId])"
+                                      T="string"
+                                      Underline="false"
+                                      OnBlur="@(() => FocusedTemplate = Guid.Empty)"
+                                      Value="@template.Name"
+                                      ValueChanged="@((value) => TemplateRenamed(template.TemplateId, value))" />
+                    </ChildContent>
+                    <TooltipContent>
+                        <IrisCard Style="text-align:left;">
+                            <pre>
+                                    @template.FormattedJson
+                                </pre>
+                        </IrisCard>
+                    </TooltipContent>
+                </MudTooltip>
+                <IconButton Name="@IrisIcons.Import" Title="Load to editor" Class="icon-btn-sm" ButtonClicked="@(() => TemplatesState.LoadTemplate(template))" />
+                <MudSpacer />
+                <DeleteButton T="Template" Item="@template" Title="Delete Template" ItemDeleted="DeleteTemplate" />
+            </MudStack>
+
+        }
+    }
+</MudStack>
+@code {
+    [Parameter] public DynamicTabView Instance { get; set; } = default!;
+    
+    [Inject] public TemplatesState TemplatesState { get; set; } = default!;
+
+    [Inject] protected LayoutState LayoutState { get; set; } = default!;
+    
+    private Dictionary<Guid, MudTextField<string>> _templateToField = new();
+
+    private Guid FocusedTemplate { get; set; } = Guid.Empty;
+
+    private bool _loading = false;
+
+    private int _templateCount = 0;
+
+   
+    protected override void OnInitialized()
+    {
+        TemplatesState.TemplateStateChanged += async () => await OnInitializedAsync();
+    }
+
+    public void Dispose()
+    {
+        TemplatesState.TemplateStateChanged -= async () => await OnInitializedAsync();
+    }
+
+    private async Task DeleteTemplate(Template t)
+    {
+        await TemplatesState.DeleteTemplateAsync(t);
+    }
+
+    private async Task TemplateRenamed(Guid templateId, string name)
+    {
+        var template = TemplatesState.Templates.FirstOrDefault(x => x.TemplateId == templateId);
+
+        if (template == null)
+            return;
+
+        template.Name = name;
+
+        await TemplatesState.UpdateTemplateAsync(template);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        var templates = await TemplatesState.GetTemplatesAsync();
+        _templateCount = templates.Count;
+
+        Instance.BadgeCount = _templateCount;
+        
+        LayoutState.UpdateTab(Instance);
+        
+        _loading = false;
+        StateHasChanged();
+    }
+
+    public override string Name { get; set; } = "Templates";
+    public override Type ComponentType { get; set; } = typeof(TemplateTabList);
+    
+}

@@ -1,0 +1,47 @@
+@using Iris.Contracts.Brokers.Models
+
+<MudSelect Value="@Value"
+           ValueChanged="@ValueChanged"
+           T="EndpointDetails" 
+           Placeholder="Select Endpoint" 
+           Margin="Margin.Dense" 
+           Variant="Variant.Text" 
+           TextChanged="SelectedEndpointChanged">
+    @if (Endpoints != null)
+    {
+    @foreach (var context in FilterEndpoints(Endpoints))
+    {
+    <MudSelectItem T="EndpointDetails" Value="@context">
+        <MudStack Row="true">
+            <MudIcon Style="min-width:24px;" Icon="@($"icon-{context.Provider}")" />
+            @if (!string.IsNullOrWhiteSpace(context.Address))
+            {
+            <span class="mud-typography-subtitle2 grey-text text-darken-1">@context.Name</span>
+            }
+        </MudStack>
+    </MudSelectItem>
+    }
+    }
+</MudSelect>
+@code {
+    [Parameter]
+    public string? SelectedProviderAddress { get; set; }
+
+    [Parameter] 
+    public List<EndpointDetails> Endpoints { get; set; } = default!;
+
+    [Parameter] public EventCallback<string> SelectedEndpointChanged { get; set; } = default!;
+    
+    [Parameter] public EndpointDetails Value { get; set; } = default!;
+
+    [Parameter] public EventCallback<EndpointDetails> ValueChanged { get; set; } = default!;
+    
+    protected List<EndpointDetails> FilterEndpoints(List<EndpointDetails> endpoints)
+    {
+        if (string.IsNullOrWhiteSpace(SelectedProviderAddress))
+            return endpoints;
+
+        return endpoints.FindAll(x => x?.Address.Equals(SelectedProviderAddress) ?? false);
+
+    }
+}

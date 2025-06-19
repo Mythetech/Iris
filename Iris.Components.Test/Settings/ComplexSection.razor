@@ -1,0 +1,20 @@
+@inherits Iris.Components.Settings.Section
+
+@code {
+    public override string Name { get; init; } = "Complex";
+    public override Type ComponentType { get; set; } = typeof(ComplexSection);
+
+    protected override void OnInitialized()
+    {
+        AddSubSection(new BasicSection()
+        {
+            Order = 1
+        });
+        
+        AddSubSection(new SimpleSection()
+        {
+            Order = 0
+        });
+    }
+
+}

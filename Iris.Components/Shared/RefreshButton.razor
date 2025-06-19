@@ -1,0 +1,7 @@
+<IconButton Name="@IrisIcons.Refresh" Title="@Title" ButtonClicked="@OnClick" />
+
+@code {
+    [Parameter] public string Title { get; set; } = "Refresh";
+    
+    [Parameter] public EventCallback OnClick { get; set; }
+}

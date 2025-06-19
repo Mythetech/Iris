@@ -1,0 +1,71 @@
+﻿@using Iris.Components.Templates
+@using Iris.Contracts.Templates.Models
+@using Microsoft.Fast.Components.FluentUI
+@using Iris.Components.Shared.DynamicTabs
+@implements IDisposable
+
+<TabDropContainer @ref="_tabDropContainer" Class="mx-4" Style="max-height:82dvh;" Items="@_tabs" ItemsSelector="(view, s) => view.AreaIdentifier.Equals(s)" DropEventHandled="UpdateLayoutState">
+    <ChildContent>
+        <IrisSplitter Class="mud-height-full">
+            <Panel1>
+                <div class="pr-4 py-4 mud-height-full">
+                    <IrisCard Height="100%" Class="flex-grow-1">
+                        <TabDropZone Class="flex-grow-1 mt-4 pa-2" Style="height:86%" Identifier="top-dropzone" Items="@_tabs" />
+                    </IrisCard>
+                </div>
+            </Panel1>
+            <Panel2>
+                <div class="pr-4 py-4 mud-height-full">
+                    <IrisCard Height="100%" Class="flex-grow-1">                    
+                        <TabDropZone Class="flex-grow-1 mt-4 pa-2" Style="height:86%" Identifier="bottom-dropzone" Items="@_tabs"/>
+                    </IrisCard>
+                </div>
+            </Panel2>
+        </IrisSplitter>
+    </ChildContent>
+</TabDropContainer>
+
+@code {
+  private FrameworkSelector _frameworkSelector = default!;
+
+  [Inject] protected LayoutState LayoutState { get; set; } = default!;
+
+  private List<DynamicTabView>? _tabs = [];
+
+  private TabDropContainer? _tabDropContainer = default!;
+
+  protected async Task UpdateLayoutState()
+  {
+      if(_tabs != null)
+      {
+          _tabs = _tabs.OrderBy(x => x.AreaIndex).ToList();
+          await LayoutState.SaveLayoutAsync(_tabs);
+      }
+  }
+
+  protected override void OnInitialized()
+  {
+      LayoutState.LayoutStateChanged += RefreshTabs;
+  }
+
+  protected override async Task OnInitializedAsync()
+  {
+          _tabs = await LayoutState.GetLayoutAsync();
+          _tabDropContainer?.Refresh();
+          StateHasChanged();
+  }
+  
+  protected void RefreshTabs()
+  {
+      _tabs = LayoutState.Layout;
+      _tabDropContainer?.Refresh();
+      StateHasChanged();
+  }
+
+  public void Dispose()
+  {
+      LayoutState.LayoutStateChanged -= RefreshTabs;
+  }
+
+}
+

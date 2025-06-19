@@ -1,0 +1,22 @@
+﻿@page "/Settings"
+@using Iris.Components.Brokers
+@using Iris.Components.Theme
+@inherits IrisPageBase
+
+<MudStack>
+    <IrisCard Title="Settings" HeaderIcon="@IrisIcons.Settings" HeaderClass="mb-4">
+        <ChildContent>
+            <MudStack Spacing="3" Class="pa-2">
+                @foreach (var s in SectionAggregator.GetSettingsSections())
+                {
+                    <SectionLayout Section="@s"/>
+                }   
+            </MudStack>
+        </ChildContent>
+    </IrisCard>
+</MudStack>
+
+@code {
+    [Inject] protected ISectionAggregator SectionAggregator { get; set; } = default!;
+}
+

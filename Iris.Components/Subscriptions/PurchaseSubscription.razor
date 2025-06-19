@@ -1,0 +1,118 @@
+﻿@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [AllowAnonymous]
+@page "/Subscription-Activation"
+@inherits IrisPageBase
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <IrisCard Class="w-100" Height="96dvh">
+        <MudStack Row="true">
+            @if(_expired)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" class="mud-width-full">Subscription expired!</MudAlert>
+            }
+            <MudSpacer/>
+            <StandaloneAccountMenu />
+        </MudStack>
+      
+        <MudStack class="w-100" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.h3">Activate Subscription</MudText>
+            <p>
+                Iris requires an active subscription to use. Get started now with a 30-day free trial.
+            </p>
+            <MudStack Row="true" Class="w-100 h-100" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="12">
+                <SubscriptionCard
+                    Disabled="@(!_eligibleForTrial)"
+                    Cost="$0"
+                    Duration="/30 Days"
+                    Loading="@_loading"
+                    ButtonText="Activate Trial"
+                    ButtonDisabledText="Claimed"
+                    HeaderText="Trial"
+                    OnClick="ActivateTrial"/>
+                
+                <SubscriptionCard
+                    Cost="$10"
+                    Duration="/Month"
+                    Loading="@_loading"
+                    HeaderText="Monthly"
+                    ButtonText="Purchase"
+                    OnClick="PurchaseMonthlySubscription"/>
+
+                <SubscriptionCard
+                    Cost="$100"
+                    Duration="/Year"
+                    Loading="@_loading"
+                    HeaderText="Yearly"
+                    ButtonText="Purchase"
+                    OnClick="PurchaseYearlySubscription"/>
+            </MudStack>
+
+        </MudStack>
+    </IrisCard>
+</MudContainer>
+@code {
+    [Inject]
+    public IWebAssemblyHostEnvironment Host { get; set; } = default!;
+
+    [Inject]
+    public ISubscriptionService SubscriptionService { get; set; } = default!;
+
+    [Inject] public SubscriptionConfiguration SubscriptionConfig { get; set; } = default!;
+
+    [Inject] 
+    public SubscriptionStateProvider SubscriptionProvider { get; set; } = default!;
+
+    [SupplyParameterFromQuery] private bool ShowTrial { get; set; } = false;
+
+    private bool _loading = false;
+    
+    private bool _eligibleForTrial = false;
+
+    private bool _expired = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        
+        var state = await SubscriptionProvider.GetSubscriptionStateAsync();
+
+        if (state.Subscription.IsActive)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+
+        _loading = false;
+        StateHasChanged();
+
+        _eligibleForTrial = state.Subscription is { IsExpired: false, IsActive: false };
+        _expired = state.Subscription is { IsExpired: true };
+        
+        StateHasChanged();
+    }
+
+    public async Task ActivateTrial()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        await SubscriptionService.ActivateTrialAsync();
+
+        _loading = false;
+
+        NavigationManager.Refresh();
+    }
+
+    public void PurchaseMonthlySubscription()
+    {
+        NavigationManager.NavigateTo(SubscriptionConfig.MonthlyLink);
+    }
+    
+    public void PurchaseYearlySubscription()
+    {
+        NavigationManager.NavigateTo(SubscriptionConfig.YearlyLink);
+    }
+}
+

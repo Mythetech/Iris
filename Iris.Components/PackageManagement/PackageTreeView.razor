@@ -1,0 +1,64 @@
+@using System.Text.Json.Nodes
+@using Iris.Contracts.Assemblies.Models
+
+<MudTreeView T="AssemblyData" Dense="@Dense" Hover="@Hover" ExpandOnClick="true">
+    @if (Assemblies?.Count > 0)
+    {
+        foreach (var asm in Assemblies)
+        {
+            <PackageTreeViewItem Assembly="asm">
+                <MudTable T="TypeData" 
+                          Items="@asm.ExportedTypes" 
+                          Hover="true" 
+                          Bordered="true"
+                          Breakpoint="Breakpoint.Sm"
+                          Class="iris-table"
+                          RowClass="cursor-pointer"  
+                          OnRowClick="TypeRowSelected">
+                    <HeaderContent />
+                    <RowTemplate>
+                        <MudTd DataLabel="Name">@context.Name</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </PackageTreeViewItem>
+            
+            <MudDivider />
+        }
+    }
+</MudTreeView>
+
+@code {
+
+    /// <summary>
+    /// Gets or sets the JSON to be displayed.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public List<AssemblyData> Assemblies { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the tree contents are compacted.
+    /// </summary>
+    [Parameter]
+    public bool Dense { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the current row is highlighted.
+    /// </summary>
+    [Parameter]
+    public bool Hover { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether items are sorted by key.
+    /// </summary>
+    [Parameter]
+    public bool Sorted { get; set; }
+
+    [Parameter] public EventCallback<TypeData> OnTypeDataRowClicked { get; set; } = default!;
+
+    private async Task TypeRowSelected(TableRowClickEventArgs<TypeData> args)
+    {
+        if(OnTypeDataRowClicked.HasDelegate)
+            await OnTypeDataRowClicked.InvokeAsync(args.Item!);
+    }
+}

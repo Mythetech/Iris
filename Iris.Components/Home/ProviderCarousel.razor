@@ -1,0 +1,56 @@
+﻿@using Iris.Components.Theme
+<MudCarousel 
+    @ref="Carousel" 
+    Class="mud-width-full h-100" 
+    ShowArrows="true" 
+    ShowBullets="true" 
+    EnableSwipeGesture="true" 
+    AutoCycle="false" T="Provider" ItemsSource="Providers" SelectedIndexChanged="IndexChanged" ArrowsPosition="MudBlazor.Position.End">
+    <ItemTemplate>
+        <MudStack Spacing="3">
+            <MudStack Row="true" Spacing="12">
+                <MudIcon Size="MudBlazor.Size.Large" Icon="@($"icon-{context.Name}")" Style="align-self: center;"/>
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.body1">Provider</MudText>
+                    <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">@context.Name</MudChip>
+                </MudStack>
+                @if (!string.IsNullOrWhiteSpace(context?.TransportDisplay))
+                {
+                    <MudStack Spacing="0">
+                         <MudText Typo="Typo.body1">Transport</MudText>
+                         <MudChip T="string" Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small">@context.TransportDisplay</MudChip>
+                    </MudStack>
+                }
+            </MudStack>
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.body1">Address</MudText>
+                <MudText Typo="Typo.body2">@context.Address</MudText>
+            </MudStack>
+            <MudTooltip Text="Endpoints" Class="d-flex">
+                <MudStack Row="true" Class="pl-4" AlignItems="AlignItems.Center">
+                    <MudIcon Size="Size.Small" Icon="@IrisIcons.Endpoints"/>
+                    <MudText Typo="Typo.h6" Class="text-muted">@context.Endpoints</MudText>
+                </MudStack>
+            </MudTooltip>
+        </MudStack>
+    </ItemTemplate>
+</MudCarousel>
+
+@code {
+    [Parameter]
+    public List<Provider> Providers { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<Provider> ProviderChanged { get; set; } = default!;
+
+    public MudCarousel<Provider> Carousel { get; set; } = default!;
+
+    protected async Task IndexChanged(int index)
+    {
+        var provider = Providers.ElementAt(index);
+
+        if (ProviderChanged.HasDelegate)
+            await ProviderChanged.InvokeAsync(provider);
+    }
+}
+

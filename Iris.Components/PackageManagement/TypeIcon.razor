@@ -1,0 +1,39 @@
+<MudIcon Icon="@GetIcon()" Size="@Size"/>
+
+@code {
+    [Parameter] public string? Type { get; set; }
+
+    [Parameter] public Size Size { get; set; } = Size.Small;
+
+    private string GetIcon()
+    {
+        if (string.IsNullOrWhiteSpace(Type))
+            return IrisIcons.Types.None;
+        
+        if (Type.EndsWith("[]"))
+            return IrisIcons.Types.Array;
+        
+        return Type switch
+        {
+            "String" => IrisIcons.Types.String,
+            "Number" => IrisIcons.Types.Number,
+            "Single" => IrisIcons.Types.Number,
+            "Float" => IrisIcons.Types.Number,
+            "Double" => IrisIcons.Types.Number,
+            "Decimal" => IrisIcons.Types.Number,
+            "Int16" => IrisIcons.Types.Number,
+            "Int32" => IrisIcons.Types.Number,
+            "Int64" => IrisIcons.Types.Number,
+            "Date" => IrisIcons.Types.Date,
+            "DateOnly" => IrisIcons.Types.Date,
+            "DateTime" => IrisIcons.Types.Date,
+            "DateTimeOffset" => IrisIcons.Types.Date,
+            "Boolean" => IrisIcons.Types.Boolean,
+            "Object" => IrisIcons.Types.Object,
+            "Array" => IrisIcons.Types.Array,
+            "Guid" => IrisIcons.Types.Key,
+            _ => IrisIcons.Types.Object
+        };
+    }
+
+}
