@@ -1,0 +1,18 @@
+@inherits IrisBaseComponent
+
+<MudToolBar  
+    Class="@($"darkmorphic gap-4 {Class}")" 
+    Style="@Style"
+    Dense="@Dense"
+    Gutters="@Gutters">
+   @ChildContent
+</MudToolBar>
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    
+    [Parameter] public bool Dense { get; set; } = false;
+
+    [Parameter] public bool Gutters { get; set; } = true;
+}
+

@@ -1,0 +1,12 @@
+<Project>
+  <!-- Configuration Properties -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- This ensures that errors from source generators failing are clearly marked -->
+    <WarningsAsErrors>CS8032</WarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,153 @@
+﻿@inherits IrisPageBase
+@using Iris.Components.Brokers
+@using Iris.Components.Theme
+@page "/Endpoints"
+
+<IrisCard>
+    <MudDataGrid Loading="@Loading"
+                 RowsPerPage="10"
+                 Items="@_endpoints"
+                 T="Contracts.Brokers.Models.EndpointDetails"
+                 Hover="true"
+                 RowClick="EndpointRowClicked"
+                 Class="iris-table"
+                 Filterable="false"
+                 Dense="true"
+                 QuickFilter="@_quickFilter">
+        <ToolBarContent>
+            <MudSpacer />
+            <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="MudBlazor.Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+        <Columns>
+            <TemplateColumn CellClass="grid-icon-col" Filterable="false">
+                <CellTemplate>
+                    <MudTooltip Text="@(context?.Item?.Provider ?? " Provider")">
+                        <MudIcon Size="Size.Small" Class="@($"icon-{context?.Item?.Provider}")" />
+                    </MudTooltip>
+                </CellTemplate>
+            </TemplateColumn>
+            <PropertyColumn Property="x => x!.Provider" Title="Provider" />
+            <PropertyColumn Property="x => x!.Address" Title="Address" />
+            <PropertyColumn Property="x => x!.Name" Title="Name" />
+            <PropertyColumn Property="x => x!.Type" Title="Type" />
+            <TemplateColumn CellClass="grid-icon-col" Filterable="false">
+                <CellTemplate>
+                    <GridActionsMenu OnSendClicked="@(() => HandleSendClicked(context?.Item!))" />
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+        <PagerContent>
+            <MudDataGridPager T="Contracts.Brokers.Models.EndpointDetails" />
+        </PagerContent>
+        <LoadingContent>
+            <MudPaper Class="mud-width-full bg-black" Square="true" Style="margin-top:-1em;margin-bottom:-1em;overflow:hidden;">
+                <MudGrid Class="pa-4">
+                    @for (int i = 0; i < 11; i++)
+                    {
+                        <MudItem xs="1">
+                            <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
+                        </MudItem>
+                        <MudItem xs="4">
+                            <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
+                        </MudItem>
+                        <MudItem xs="2">
+                            <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
+                        </MudItem>
+                        <MudItem xs="1">
+                            <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudPaper>
+        </LoadingContent>
+        <NoRecordsContent>
+            <MudStack Class="w-100" Justify="Justify.Center" AlignItems="AlignItems.Center" Style="@($"height:245px;")">
+                <MudIcon Size="MudBlazor.Size.Large" Icon="@IrisIcons.NoEndpoints" />
+                <MudText>No Endpoints</MudText>
+            </MudStack>
+        </NoRecordsContent>
+    </MudDataGrid>
+</IrisCard>
+<MudDrawer @bind-Open="_isOpen" Variant="DrawerVariant.Temporary" Anchor="Anchor.End">
+    <EndpointOffcanvas Endpoint="@_selectedEndpoint"/>
+</MudDrawer>
+@code {
+    [Inject]
+    public IBrokerService Client { get; set; } = default!;
+
+    private MudDrawer offcanvas = default!;
+
+    private List<Contracts.Brokers.Models.EndpointDetails> _endpoints = new();
+
+    private MudDataGrid<Contracts.Brokers.Models.EndpointDetails> _grid { get; set; } = default!;
+    
+    private bool Loading = true;
+
+    private string? _searchString;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_endpoints is null || _endpoints.Count == 0)
+        {
+            Loading = true;
+
+            StateHasChanged();
+
+            _endpoints = await Client.GetEndpointsAsync();
+
+            Loading = false;
+        }
+
+        StateHasChanged();
+
+        await base.OnInitializedAsync();
+    }
+
+    protected void EndpointRowClicked(DataGridRowClickEventArgs<Contracts.Brokers.Models.EndpointDetails> args)
+    {
+        Console.WriteLine($"{args.Item.Address} | {args.Item.Name}");
+
+        ShowEndpointOffcanvas(args.Item);
+    }
+
+    private EndpointDetails? _selectedEndpoint;
+    private bool _isOpen = false;
+    
+    private void ShowEndpointOffcanvas(Contracts.Brokers.Models.EndpointDetails endpoint)
+    {
+        _selectedEndpoint = endpoint;
+        _isOpen = true;
+        StateHasChanged();
+    }
+
+    private void HandleSendClicked(Contracts.Brokers.Models.EndpointDetails endpoint)
+    {
+        NavigationManager.NavigateTo($"/Messaging?Provider={endpoint.Address}&Endpoint={endpoint.Name}");
+    }
+
+    private Func<Contracts.Brokers.Models.EndpointDetails, bool> _quickFilter => x =>
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        if (x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (x.Address.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (x.Provider.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (x?.Type?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false)
+            return true;
+
+        return false;
+    };
+
+}
+

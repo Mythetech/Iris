@@ -1,0 +1,21 @@
+﻿@inherits IrisBaseComponent
+<MudSkeleton Animation="@Animation" SkeletonType="SkeletonType.Rectangle" Height="@Height" Width="@Width" Class="@((Reverse ? "iris-wing-reverse" : "iris-wing") + $" {Class}")" Style="@($"box-shadow:0px 0px 0.2em 0.3em {ShadowColor};background-color:{ShadowColor}7a;{Style}")">
+
+</MudSkeleton>
+@code {
+    [Parameter]
+    public string ShadowColor { get; set; } = "var(--bs-primary)";
+
+    [Parameter]
+    public bool Reverse { get; set; } = false;
+
+    [Parameter]
+    public string Height { get; set; } = "100px";
+
+    [Parameter]
+    public string Width { get; set; } = "100px";
+
+    [Parameter]
+    public MudBlazor.Animation Animation { get; set; } = MudBlazor.Animation.Pulse;
+}
+

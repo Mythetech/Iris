@@ -1,0 +1,38 @@
+.nav-item {
+    font-size: 0.9rem;
+    padding-left: 1em;
+}
+
+.nav-item:first-of-type {
+    padding-top: 1rem;
+}
+
+.nav-item:last-of-type {
+    padding-bottom: 1rem;
+}
+
+.nav-item ::deep a {
+    color: #d7d7d7;
+    border-radius: 4px;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    line-height: 3rem;
+}
+
+.nav-item ::deep a.active {
+    background: linear-gradient(to right, rgb(0 78 255 / 15%), rgb(118 0 160 / 15%));
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 2px 1px 32px 2px rgba(31, 38, 135, 0.55);
+    backdrop-filter: blur(10px);
+}
+
+.nav-item ::deep a:hover {
+    background: linear-gradient(to right, rgba(54, 76, 126, 0.5), rgba(71, 35, 84, 0.5));
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    backdrop-filter: blur(4px);
+}
+

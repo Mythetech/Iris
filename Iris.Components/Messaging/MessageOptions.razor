@@ -1,0 +1,70 @@
+﻿@inherits DynamicTabView
+<MudStack>
+    <MudStack Row="true">
+        <MudText Typo="Typo.subtitle1">
+            <MudIcon Class="mr-4" Icon="@IrisIcons.RepeatSend" Size="Size.Small" />Repeat
+        </MudText>
+        @if (!string.IsNullOrWhiteSpace(MessageState.RepeatText))
+        {
+        <MudSpacer />
+        <MudChip Color="Color.Primary" Variant="Variant.Text" Value="@MessageState.RepeatText" />
+        }
+    </MudStack>
+
+    <MudStack AlignItems="AlignItems.Center" Row="true">
+        <MudSlider T="int"
+                   Value="@MessageState.Repeat"
+                   ValueChanged="@(async (x) => { MessageState.SetRepeat(x); })"
+                   Min="0"
+                   Max="5"
+                   TickMarks="true"
+                   Disabled="@MessageState.Sending"
+                   Step="1">
+        </MudSlider>
+        <MudChip T="int" Variant="Variant.Outlined">@MessageState.Repeat</MudChip>
+    </MudStack>
+
+    <MudStack Row="true">
+        <MudText Typo="Typo.subtitle1">
+            <MudIcon Class="mr-4" Icon="@IrisIcons.Delay" Size="Size.Small" />Delay
+            <span class="mud-typography-subtitle2 mud-text-secondary">(Seconds)</span>
+        </MudText>
+        @if (!string.IsNullOrWhiteSpace(MessageState.DelayText))
+        {
+        <MudSpacer />
+        <MudChip Color="Color.Primary" Variant="Variant.Text" Value="@MessageState.DelayText" />
+        }
+    </MudStack>
+
+    <MudStack AlignItems="AlignItems.Center" Row="true">
+        <MudSlider T="int"
+                   Value="@MessageState.Delay"
+                   ValueChanged="@(async (x) => { MessageState.SetDelay(x); })"
+                   Min="0"
+                   Max="@MessageState.MaxDelay"
+                   TickMarks="false"
+                   Disabled="@MessageState.Sending"
+                   Step="1">
+        </MudSlider>
+        <MudChip T="int" Variant="Variant.Outlined">@MessageState.Delay</MudChip>
+    </MudStack>
+</MudStack>
+
+@code {
+    [Inject]
+    public MessageState MessageState { get; set; } = default!;
+
+    public override string Name { get; set; } = "Messaging";
+    public override string AreaIdentifier { get; set; } = "top-dropzone";
+    public override Type ComponentType { get; set; } = typeof(MessageOptions);
+
+    protected override void OnInitialized()
+    {
+        MessageState.StateChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        MessageState.StateChanged -= StateHasChanged;
+    }
+}

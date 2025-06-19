@@ -1,0 +1,17 @@
+﻿@typeparam T
+<IconButton Color="Color.Transparent" Class="@($"icon-btn-danger {Class}")" Name="@IrisIcons.Delete" Title="@Title" ButtonClicked="@(async () => await ItemDeleted.InvokeAsync(Item))" />
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "Delete";
+
+    [Parameter]
+    public T Item { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback<T> ItemDeleted { get; set; }
+
+    [Parameter]
+    public string Class { get; set; } = "";
+}
+

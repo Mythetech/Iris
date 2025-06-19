@@ -1,0 +1,28 @@
+﻿@using Iris.Contracts.Admin
+
+<MudStack Row="true" AlignItems="AlignItems.Center">
+    @if (BugType.Severity == 0)
+    {
+        <MudIcon Icon="bi bi-info-circle mb-2" Color="Color.Info" />
+    }
+    else if (BugType.Severity == 1)
+    {
+        <MudIcon Icon="bi bi-exclamation-triangle mb-2" Color="Color.Warning" />
+    }
+    else if (BugType.Severity == 2)
+    {
+        <MudIcon Icon="bi bi-exclamation-octagon mb-2" Color="Color.Error" />
+    }
+    else
+    {
+        <MudIcon Icon="bi bi-radioactive mb-2" Color="Color.Tertiary" />
+    }
+    <MudText Typo="Typo.subtitle1">@BugType.Name</MudText>
+    <MudText Typo="Typo.subtitle2" Class="mud-text-secondary">@BugType.Description</MudText>
+</MudStack>
+
+@code {
+    [Parameter]
+    public BugType BugType { get; set; } = default!;
+}
+

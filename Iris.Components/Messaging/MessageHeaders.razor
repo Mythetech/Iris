@@ -1,0 +1,64 @@
+﻿@using Iris.Components.Theme
+@inherits DynamicTabView
+
+<MudStack>
+    <MudDataGrid Class="iris-table" Hover="true" T="DictionaryViewModel" Dense="true" Items="@MessageState.HeaderMap" QuickFilter="@QuickFilter" ReadOnly="false"
+                 EditMode="DataGridEditMode.Cell"
+                 ColumnResizeMode="ResizeMode.Column">
+        <ToolBarContent>
+            <MudTextField T="string" @bind-Value="_filterString" Placeholder="Filter" Adornment="Adornment.Start" Immediate="true" Clearable="true"
+                          AdornmentIcon="bi bi-filter" IconSize="MudBlazor.Size.Medium" Class="mt-0"/>
+
+            <MudSpacer />
+
+            <IconTextButton
+                OnClick="@(() => { MessageState.AddHeader(new DictionaryViewModel { Key = "Untitled", Value = "" }); })"
+                Icon="@IrisIcons.Plus"
+                Text="Add Header"
+            />
+
+        </ToolBarContent>
+        <Columns>
+            <PropertyColumn Property="x => x!.Key" Title="Key"  />
+            <PropertyColumn Property="x => x!.Value" Title="Value" />
+
+            <TemplateColumn CellClass="grid-icon-col">
+                <CellTemplate>
+                    <span style="width:30px;float:right;">
+                        <IconButton Class="icon-btn-danger" Style="background-color:transparent;" Name="@IrisIcons.Delete" Title="Delete Header" Disabled="@context.Item.Immutable" ButtonClicked="@(() => MessageState.RemoveHeader(context.Item))" />
+                    </span>
+                </CellTemplate>
+                <EditTemplate>
+                    <span style="width:30px;float:right;">
+                        <IconButton Class="icon-btn-danger" Style="background-color:transparent;" Name="@IrisIcons.Delete" Title="Delete Header" Disabled="@context.Item.Immutable" ButtonClicked="@(() => MessageState.RemoveHeader(context.Item))" />
+                    </span>
+                </EditTemplate>
+            </TemplateColumn>
+        </Columns>
+    </MudDataGrid>
+</MudStack>
+
+@code {
+[Inject]
+public MessageState MessageState { get; set; } = default!;
+
+private string? _filterString;
+
+    private bool QuickFilter(DictionaryViewModel x)
+    {
+        if (string.IsNullOrWhiteSpace(_filterString))
+        {
+            return true;
+        }
+
+        if ((x?.Key?.Contains(_filterString, StringComparison.OrdinalIgnoreCase) ?? false) || (x?.Value?.Contains(_filterString, StringComparison.OrdinalIgnoreCase) ?? false))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public override string Name { get; set; } = "Headers";
+    public override Type ComponentType { get; set; } = typeof(MessageHeaders);
+}
