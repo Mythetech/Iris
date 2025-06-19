@@ -1,0 +1,60 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Reflection
+@using Toolbelt.Blazor.ViewTransition
+@using Iris.Components.Identity
+@using Iris.Desktop.Layout
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Routing
+@inject IViewTransition ViewTransition
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly" AdditionalAssemblies="@([typeof(Iris.Components._Imports).Assembly])" OnNavigateAsync="OnNavigateAsync">
+        <Found Context="routeData">
+            <AuthorizeView>
+                <Authorized>
+                    <CascadingValue Name="PageType" Value="@routeData.PageType">
+                        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+                        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+                    </CascadingValue>
+                </Authorized>
+                <Authorizing>
+                    <IrisCard Height="100vh">
+                        <Iris.Components.Shared.Loaders.QuickIrisWingLoader
+                            LoadingText="Contacting authorization server..."/>
+                    </IrisCard>
+                </Authorizing>
+                <NotAuthorized>
+                    <CascadingValue Name="PageType" Value="@routeData.PageType">
+                        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+                        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+                    </CascadingValue>
+                </NotAuthorized>
+            </AuthorizeView>
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+
+@code {
+    private bool IsPageAllowAnonymous(Type pageType)
+    {
+        var attribute = pageType.GetCustomAttribute<AllowAnonymousAttribute>();
+        return attribute != null;
+    }
+    
+    private async Task OnNavigateAsync()
+    {
+        await ViewTransition.BeginAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await ViewTransition.EndAsync();
+    }
+}

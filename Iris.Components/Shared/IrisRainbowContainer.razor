@@ -1,0 +1,22 @@
+﻿@inherits IrisBaseComponent
+<div style="@($"{Style}")" class="@($"{irisCardClass} {Class}")" @onmouseover="AddShadow" @onmouseout="RemoveShadow">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = default!;
+
+    private string irisCardClass = "";
+
+    void AddShadow()
+    {
+        irisCardClass = "iris-rainbow-shadow";
+    }
+
+    void RemoveShadow()
+    {
+        irisCardClass = "";
+    }
+}
+

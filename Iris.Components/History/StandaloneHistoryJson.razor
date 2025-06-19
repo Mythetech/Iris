@@ -1,0 +1,20 @@
+@using System.Text.Json
+@using Iris.Contracts.Audit.Models
+
+<JsonTreeView Dense="true" Json="@ExtractMessageJson(History.Details)"  />
+
+@code {
+    [Parameter] public HistoryRecord History { get; set; } = default!;
+
+    private string ExtractMessageJson(string details)
+    {
+        var dct = JsonSerializer.Deserialize<Dictionary<string, object>>(details);
+
+        if (dct == null)
+            return "";
+        
+        dct.TryGetValue("Message", out var msg);
+
+        return msg?.ToString() ?? "{\n\n}";
+    }
+}

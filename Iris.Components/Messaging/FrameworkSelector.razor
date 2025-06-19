@@ -1,0 +1,67 @@
+﻿@using Iris.Components.Messaging
+@using Iris.Components.Theme
+@using Iris.Components.Messaging
+@using Iris.Components.Theme
+@inherits DynamicTabView
+
+<MudStack>
+    <MudSelect Value="@MessageState.SelectedFramework" ValueChanged="@(framework => MessageState.SetFramework(framework))" Dense="true" T="string" Label="Framework" Variant="Variant.Text" AnchorOrigin="Origin.BottomCenter" Clearable="true">
+        <MudSelectItem Value="@("MassTransit")" />
+        <MudSelectItem Value="@("NServiceBus")" />
+    </MudSelect>
+
+    @if (MessageState.SelectedFramework != null)
+    {
+        <MudDataGrid Class="iris-table" Hover="true" Dense="true" T="DictionaryViewModel" Items="@MessageState.AdditionalProperties" ReadOnly="false"
+                     EditMode="DataGridEditMode.Cell"
+                     ColumnResizeMode="ResizeMode.Column">
+            <ToolBarContent>
+                <MudText Typo="Typo.subtitle1" Class="mud-text-secondary">Additional Properties</MudText>
+            
+                <MudSpacer />
+                <IconTextButton 
+                    OnClick="@(() => MessageState.AddAdditionalProperty(new DictionaryViewModel { Key = "Untitled", Value = "" }))" 
+                    Icon="@IrisIcons.Plus" 
+                    Text="Add Property"
+                />
+            </ToolBarContent>
+            <Columns>
+                <TemplateColumn CellClass="grid-icon-col">
+                    <EditTemplate>
+                        @if (!string.IsNullOrWhiteSpace(context?.Item?.Description))
+                        {
+                            <MudTooltip Text="@context.Item.Description">
+                                <span style="width:30px">
+                                    <MudIcon Size="Size.Small" Icon="bi bi-info-circle" Class="mb-3" Color="Color.Info" />
+                                </span>
+                            </MudTooltip>
+                        }
+                    </EditTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x!.Key" Title="Property" />
+                <PropertyColumn Property="x => x!.Value" Title="Value" />
+                <TemplateColumn CellClass="grid-icon-col">
+                    <CellTemplate>
+                        <span style="width:30px;float:right;">
+                            <IconButton Class="icon-btn-danger" Style="background-color:transparent;" Name="@IrisIcons.Delete" Title="Delete Property" ButtonClicked="@(() => MessageState.RemoveAdditionalProperty(context.Item))" />
+                        </span>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <span style="width:30px;float:right;">
+                            <IconButton Class="icon-btn-danger" Style="background-color:transparent;" Name="@IrisIcons.Delete" Title="Delete Property" ButtonClicked="@(() => MessageState.RemoveAdditionalProperty(context.Item))" />
+                        </span>
+                    </EditTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    }
+</MudStack>
+
+@code {
+    [Inject]
+    public MessageState MessageState { get; set; } = default!;
+    
+    public override string Name { get; set; } = "Frameworks";
+    
+    public override Type ComponentType { get; set; } = typeof(FrameworkSelector);
+}

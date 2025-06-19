@@ -1,0 +1,32 @@
+@using Button = MudBlazor.Button
+<IrisCard Class="rounded-lg pb-4 iris-primary-accent-hover">
+    <MudStack>
+    <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.Center">
+        <MudText Typo="Typo.h5" Align="MudBlazor.Align.Center">@HeaderText</MudText>
+    </MudStack>
+    <div class="d-flex justify-center">
+        <MudText Typo="Typo.h3">@Cost</MudText>
+        <MudText Typo="Typo.h5" Class="ml-1 mt-5" Color="Color.Secondary">@Duration</MudText>
+    </div>
+    <MudSpacer />
+    <MudButton Disabled="@(Loading || Disabled)" Variant="Variant.Outlined" Color="Color.Primary" OnClick="@OnClick">@(Disabled ? ButtonDisabledText : ButtonText)</MudButton>
+    </MudStack>
+</IrisCard>
+
+@code {
+    [Parameter] public bool Loading { get; set; } = false;
+
+    [Parameter] public bool Disabled { get; set; } = false;
+    
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    [Parameter] public string HeaderText { get; set; } = "Subscription";
+
+    [Parameter] public string ButtonText { get; set; } = "Purchase";
+
+    [Parameter] public string ButtonDisabledText { get; set; } = "Disabled";
+
+    [Parameter] public string Cost { get; set; } = "$?";
+
+    [Parameter] public string Duration { get; set; } = "/";
+}

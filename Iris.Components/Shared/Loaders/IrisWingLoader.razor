@@ -1,0 +1,20 @@
+﻿<MudContainer Class="d-flex" Style="justify-content:center;align-items:center;flex-direction:column;text-align:center;min-height:75vh;" MaxWidth="MaxWidth.Small">
+    <MudStack Class="mud-width-full" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="1" Row="true">
+        <MudStack Spacing="0">
+            <IrisWing Style="margin-top:-4em;z-index:30;transform:rotate(-10deg);margin-left:2em;" Height="110px" Width="65px" Reverse="true" ShadowColor="#3498db" />
+            <IrisWing Style="margin-top:-4em;margin-left:1.5em;z-index:20;" Reverse="true" Width="65px" ShadowColor="#00bc8c" />
+            <IrisWing Style="margin-top: -2em;margin-left:2em;z-index:10; transform: rotate(-40deg);" Height="50px" Width="65px" Reverse="true" ShadowColor="#fd7e14" />
+        </MudStack>
+        <MudStack>
+            <MudSkeleton Class="bg-black" Style="z-index:50;box-shadow: 0 0 0.7em 0.7em var(--iris-accent);margin-left:0.35em;" SkeletonType="SkeletonType.Circle" Height="30px" Width="30px" />
+            <MudSkeleton Class="bg-black" Style="z-index:50;box-shadow: 0 0 0.5em 0.5em var(--bs-primary);margin-bottom:0.5em;" SkeletonType="SkeletonType.Circle" Height="40px" Width="40px" />
+        </MudStack>
+        <MudStack Spacing="0">
+            <IrisWing Style="margin-top: -4em; z-index: 30; transform: rotate(10deg); " Height="110px" Width="65px" ShadowColor="#0d6efd" />
+            <IrisWing Style="margin-top:-4em;margin-left:0.5em;z-index:20;" Width="65px" ShadowColor="#6610f2" />
+            <IrisWing Style="margin-top: -2em;margin-left:0em; z-index: 10; transform: rotate(40deg);" Height="50px" Width="65px" ShadowColor="#e83e8c" />
+        </MudStack>
+    </MudStack>
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="w-100 my-4" />
+    <MudText Class="text-muted">Loading Iris...</MudText>
+</MudContainer>

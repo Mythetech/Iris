@@ -1,0 +1,53 @@
+@inherits Iris.Components.Settings.Section
+@using Iris.Components.Settings
+@implements IDisposable
+
+<MudStack>
+      <ToggleSetting 
+            Value="@MessageState.SendIrisHeader"
+            ValueChanged="ToggleIrisHeader"
+            SettingName="Iris Key"
+            Description="Send requests with additional header to uniquely identify test requests"
+      />
+      
+</MudStack>
+
+@code {
+      [Inject] public MessageState MessageState { get; set; } = default!;
+
+      [Inject] public LayoutState LayoutState { get; set; } = default!;
+
+      public MessagingSettingsSection()
+      {
+            if (!SubSections?.Any(x => x.Name.Equals("Tab Layout")) ?? true)
+            {
+                  AddSubSection(new LayoutSettingsSection());
+            }
+      }
+
+      protected override void OnInitialized()
+      {
+            MessageState.StateChanged += StateHasChanged;
+      }
+      
+      public override string Name { get; init; } = "Messaging";
+      
+      public override Type ComponentType { get; set; } = typeof(MessagingSettingsSection);
+
+      private void ToggleIrisHeader(bool value)
+      {
+            if (value)
+            {
+                  MessageState.EnableIrisHeader();
+            }
+            else
+            {
+                  MessageState.DisableIrisHeader();
+            }
+      }
+
+      public void Dispose()
+      {
+            MessageState.StateChanged -= StateHasChanged;
+      }
+}

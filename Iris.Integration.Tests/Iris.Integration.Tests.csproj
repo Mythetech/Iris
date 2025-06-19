@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector"  />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+  
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio"  />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing"/>
+    <PackageReference Include="Testcontainers.RabbitMq" />
+    <PackageReference Include="FluentAssertions"  />
+    <PackageReference Include="Testcontainers.PostgreSql"  />
+    <PackageReference Include="Testcontainers.Azurite" />
+    <PackageReference Include="FastEndpoints.Testing"  />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Iris.Api\Iris.Api.csproj" />
+    <ProjectReference Include="..\Iris.Brokers\Iris.Brokers.csproj" />
+    <ProjectReference Include="..\Iris.Contracts\Iris.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Brokers\" />
+    <None Remove="Templates\" />
+    <None Remove="Infrastructure\" />
+    <None Remove="Integrations\" />
+    <None Remove="Assemblies\" />
+    <None Remove="Assemblies\TestAssemblyModules\" />
+    <None Remove="Assemblies\TestAssemblyModules\Iris.Cloud.Demo.Contracts.dll" />
+    <None Remove="Admin\" />
+    <None Remove="Brokers\EmulatedProvider\" />
+    <None Remove="Subscriptions\" />
+    <None Remove="Users\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Templates\" />
+    <Folder Include="Infrastructure\" />
+    <Folder Include="Integrations\" />
+    <Folder Include="Assemblies\" />
+    <Folder Include="Assemblies\TestAssemblyModules\" />
+    <Folder Include="Admin\" />
+    <Folder Include="Brokers\EmulatedProvider\" />
+    <Folder Include="Users\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Assemblies\TestAssemblyModules\Iris.Cloud.Demo.Contracts.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

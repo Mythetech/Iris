@@ -1,0 +1,210 @@
+﻿@using Iris.Components.Theme
+<MudStack Spacing="6">
+
+    <div class="d-flex flex-row gap-0">
+        <h1>@FilterEndpoints(Endpoints).Count</h1>
+        @if (Endpoints.Count > 0)
+        {
+            <Chart Config="_config1" @ref="_chart1"></Chart>
+        }
+        else
+        {
+            <MudStack Class="w-100" Justify="Justify.Center" AlignItems="AlignItems.Center" Style="@($"height:245px;")">
+                <MudIcon Size="MudBlazor.Size.Large" Icon="@IrisIcons.NoEndpoints" />
+                <MudText>No Endpoints</MudText>
+            </MudStack>
+        }
+    </div>
+    <MudSpacer />
+    <MudPaper Class="d-flex bg-transparent flex-nowrap gap-1 overflow-auto" Elevation="0">
+        <MudChipSet @ref="_chipset" Class="d-flex" @bind-SelectedValues="@_filters" T="string" SelectionMode="SelectionMode.MultiSelection" CheckMark="true">
+
+            @foreach (var t in FilterEndpoints(Endpoints).Select((x) => x.Type).Distinct().Select((_t, i) => new KeyValuePair<int, string>(i, _t!)))
+            {
+                EndpointTypeToColor[t.Value] = IrisColors[t.Key];
+                <IrisChip Color="@(IrisColors[t.Key])"
+                          Text="@t.Value"
+                          OnClick="EndpointFilterUpdated"
+                          @ref="@ChipLookup[t.Value]" />
+            }
+
+        </MudChipSet>
+    </MudPaper>
+</MudStack>
+
+@code {
+    [Parameter]
+    public string Name { get; set; } = default!;
+
+    [Parameter]
+    public List<EndpointDetails> Endpoints { get; set; } = new();
+
+    [Parameter]
+    public string SelectedProvider { get; set; } = "";
+
+    [Parameter]
+    public bool FilterSelectedProvider { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<IReadOnlyCollection<string>> EndpointFiltersUpdated { get; set; } = default!;
+
+    public Dictionary<string, string> EndpointTypeToColor { get; set; } = new();
+
+    public Dictionary<string, IrisChip> ChipLookup = new();
+
+    private IReadOnlyCollection<string> _filters { get; set; } = default!;
+
+    private List<string> __filters_internal { get; set; } = new();
+
+    private BarChartConfig? _config1;
+    private Chart? _chart1;
+
+    private MudChipSet<string> _chipset = default!;
+
+    private static string[] IrisColors =
+    {
+                Iris.Cloud.Client.Shared.IrisColors._Red,
+                Iris.Cloud.Client.Shared.IrisColors._Pink,
+                Iris.Cloud.Client.Shared.IrisColors._Orange,
+                                //Iris.Cloud.Client.Shared.IrisColors._Yellow,
+                Iris.Cloud.Client.Shared.IrisColors._Green,
+};
+
+    private string[] IrisBackgroundColors =
+    {
+        Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[0], 0.8),
+        Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[1], 0.8),
+        Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[2], 0.8),
+        Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[3], 0.8),
+        //Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[4], 0.8),
+        //Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[5], 0.8),
+        //Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[6], 0.8),
+        //Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[7], 0.8),
+};
+
+    private static double border = 0.9;
+    private string[] IrisBorderColors =
+    {
+        Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[0], border),
+        Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[1], border),
+        Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[2], border),
+        Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[3], border),
+        //Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[4], 0.8),
+        //Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[5], 0.8),
+        //Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[6], 0.8),
+        //Iris.Cloud.Client.Shared.IrisColors.Opacity(IrisColors[7], 0.8),
+};
+
+    protected override async Task OnInitializedAsync()
+    {
+        _config1 = new BarChartConfig()
+        {
+            Options = new Options()
+            {
+                IndexAxis = "y",
+                Responsive = true,
+                MaintainAspectRatio = false,
+                Plugins = new Plugins()
+                {
+                    Legend = new Legend()
+                    {
+                        Align = PSC.Blazor.Components.Chartjs.Models.Common.Align.Center,
+                        Display = false,
+                        Position = LegendPosition.Right
+                    }
+                },
+                Scales = new Dictionary<string, Axis>()
+{
+                {
+                    PSC.Blazor.Components.Chartjs.Models.Common.Scales.XAxisId, new Axis()
+                    {
+                        Stacked = true,
+                        Ticks = new Ticks()
+                        {
+                            MaxRotation = 0,
+                            MinRotation = 1
+                        }
+                    }
+                },
+                {
+                    PSC.Blazor.Components.Chartjs.Models.Common.Scales.YAxisId, new Axis()
+                    {
+                        Stacked = true
+                    }
+                }
+            }
+            }
+        };
+        _config1.Data.Labels = FilterEndpoints(Endpoints).Select(x => x.Type).Distinct().ToList();
+        _config1.Data.Datasets.Add(new BarDataset()
+        {
+            Label = "Count",
+            Data = FilterEndpoints(Endpoints).GroupBy(x => x.Type).Select(x => (decimal?)x.Count()).ToList(),
+            BackgroundColor = IrisBackgroundColors?.ToList(),
+            BorderColor = IrisBorderColors?.ToList(),
+            BorderWidth = 1
+        });
+
+        await base.OnInitializedAsync();
+    }
+
+    public async Task RefreshAsync()
+    {
+        await OnInitializedAsync();
+    }
+
+    private List<EndpointDetails> FilterEndpoints(List<EndpointDetails> e)
+    {
+        if (!FilterSelectedProvider)
+            return e;
+
+        if (string.IsNullOrWhiteSpace(SelectedProvider))
+            return e;
+
+        return e.Where(x => x.Address.Equals(SelectedProvider, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    private async Task EndpointFilterUpdated(string filter)
+    {
+        __filters_internal ??= new List<string>();
+
+        if (__filters_internal.Contains(filter))
+        {
+            __filters_internal.Remove(filter);
+        }
+        else
+        {
+            __filters_internal.Add(filter);
+        }
+
+        await EndpointFiltersUpdated.InvokeAsync(__filters_internal);
+    }
+
+
+    public async Task RemoveFilterAsync(string filter)
+    {
+        var chip = ChipLookup[filter];
+
+        await chip.ClickAsync();
+
+        StateHasChanged();
+    }
+
+    public async Task ClearFiltersAsync()
+    {
+
+        __filters_internal = new List<string>();
+
+        foreach (var c in ChipLookup.Values)
+        {
+            await c.ClearAsync();
+        }
+
+        StateHasChanged();
+
+        await EndpointFiltersUpdated.InvokeAsync(new List<string>());
+
+    }
+
+}
+

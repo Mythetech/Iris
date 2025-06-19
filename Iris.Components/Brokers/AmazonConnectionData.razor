@@ -1,0 +1,41 @@
+﻿@using Iris.Contracts.Brokers.Models.Amazon
+@implements IConnectionDataProvider
+
+<MudAutocomplete T="RegionEndpoint" Label="Region" Value="@_regionEndpoint" ValueChanged="(x) => { _regionEndpoint = x; if (Data != null && x?.SystemName != null) { Data.Region = x.SystemName; } }" SearchFunc="@RegionSearch"
+                 ToStringFunc="(x => x.DisplayName)"
+                 ResetValueOnEmptyText="@true"
+                 CoerceText="@false"
+                 Dense="true"
+                 AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Primary" />
+<ProtectedTextField Dense="true" Label="Access Key" @bind-Value="@Data!.Username"></ProtectedTextField>
+<ProtectedTextField Dense="true" Label="Secret Access Key" @bind-Value="@Data!.Password"></ProtectedTextField>
+
+@code {
+    public string ProviderName { get => "amazon"; }
+
+    public ConnectionData Payload { get => Data!; }
+
+    [Parameter]
+    public ConnectionData? Data { get; set; }
+
+    private RegionEndpoint _regionEndpoint { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        if (Data != null)
+            Data.Region = _regionEndpoint.SystemName;
+    }
+
+    public Task<IEnumerable<RegionEndpoint>> RegionSearch(string value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return Task.FromResult(RegionEndpoint.Regions.Values);
+        }
+
+        var regions = RegionEndpoint.Regions.Values.Where(x => x.DisplayName.Contains(value, StringComparison.OrdinalIgnoreCase));
+
+        return Task.FromResult(regions);
+    }
+}
+

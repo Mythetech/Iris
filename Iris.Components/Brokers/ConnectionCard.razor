@@ -1,0 +1,45 @@
+<IrisCard>
+<MudStack Spacing="3">
+    <MudStack Row="true" Spacing="12">
+        <MudIcon Size="MudBlazor.Size.Large" Icon="@($"icon-{Provider.Name}")" Style="align-self: center;"/>
+        <MudStack Spacing="0">
+            <MudText Typo="Typo.body1">Provider</MudText>
+            <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">@Provider.Name</MudChip>
+        </MudStack>
+        @if (!string.IsNullOrWhiteSpace(Provider?.TransportDisplay))
+        {
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.body1">Transport</MudText>
+                <MudChip T="string" Color="Color.Secondary" Variant="Variant.Filled" Size="Size.Small">@Provider.TransportDisplay</MudChip>
+            </MudStack>
+        }
+    </MudStack>
+    <MudStack Spacing="0">
+        <MudText Typo="Typo.body1">Address</MudText>
+        <MudText Typo="Typo.body2">@Provider.Address</MudText>
+    </MudStack>
+    <MudStack Row="true" Spacing="1" Class="pr-4">
+        <MudTooltip Text="Endpoints" Class="d-flex">
+            <MudStack Row="true" Class="pl-4" AlignItems="AlignItems.Center">
+                <MudIcon Size="Size.Small" Icon="@IrisIcons.Endpoints"/>
+                <MudText Typo="Typo.h6" Class="text-muted">@Provider.Endpoints</MudText>
+            </MudStack>
+        </MudTooltip>
+        <MudSpacer />
+        <DeleteButton Title="Delete Connection" T="Provider" Item="Provider" ItemDeleted="async (_) => await RaiseOnDelete()" />
+    </MudStack>
+</MudStack>
+</IrisCard>
+@code {
+    [Parameter]
+    public required Provider Provider { get; set; }
+    
+    [Parameter]
+    public EventCallback<Provider> OnDelete { get; set; }
+
+    private async Task RaiseOnDelete()
+    {
+        if (OnDelete.HasDelegate)
+            await OnDelete.InvokeAsync(Provider);
+    }
+}

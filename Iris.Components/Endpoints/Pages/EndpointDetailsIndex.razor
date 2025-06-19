@@ -1,0 +1,18 @@
+﻿@inherits IrisPageBase
+@page "/Endpoints/{EndpointName}"
+
+@code {
+    [Parameter]
+    public string EndpointName { get; set; } = "";
+
+    protected override void OnParametersSet()
+    {
+        if (EndpointName.IsNullOrWhitespace())
+        {
+            NavigationManager.NavigateTo("/Endpoints");
+        }
+
+        base.OnParametersSet();
+    }
+}
+

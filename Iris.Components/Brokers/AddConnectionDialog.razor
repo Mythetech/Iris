@@ -1,0 +1,103 @@
+<MudDialog Class="glassmorphic-bg pa-4 mud-width-full box-shadow-primary" Style="width:33dvw;">
+    <DialogContent>
+        <MudSelect @ref="_providerSelector" Required="true" @bind-Value="@_selectedProvider" T="SupportedProvider" Label="Connection Provider" AnchorOrigin="Origin.BottomCenter">
+            @foreach (var context in SupportedProviders)
+            {
+                <MudSelectItem T="SupportedProvider" Value="@context">
+                    <MudStack Row="true">
+                        <MudIcon Style="min-width:24px;" Icon="@context.Icon"/>
+                        @context.Name
+                        @if (!string.IsNullOrWhiteSpace(context.Product))
+                        {
+                            <span class="text-muted">@context.Product</span>
+                        }
+                    </MudStack>
+                </MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudStack Row="true" Class="pt-2">
+            @if (_selectedProvider != null)
+            {
+                <DynamicConnectionDataProvider @ref="@_providerConnectionData" Provider="@_selectedProvider"/>
+            }
+        </MudStack>
+    </DialogContent>
+<DialogActions>
+    <MudStack Row="true" AlignItems="AlignItems.End" Justify="Justify.FlexEnd">
+        <MudButton Variant="Variant.Text" OnClick="CloseClicked">
+            Cancel
+        </MudButton>
+
+        <IrisLoadingButton
+            Loading="@_connecting"
+            Text="Connect"
+            LoadingText="Connecting"
+            OnClick="@ConnectAsync"
+        />
+
+    </MudStack>
+</DialogActions>
+</MudDialog >
+
+
+
+@code {
+
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = default!;
+    
+    [Inject]
+    public IBrokerService BrokerService { get; set; } = default!;
+
+    [Parameter]
+    public List<SupportedProvider> SupportedProviders { get; set; } = default!;
+    
+    protected void CloseClicked() => MudDialog.Cancel();
+
+    private SupportedProvider? _selectedProvider = default!;
+
+    private MudSelect<SupportedProvider> _providerSelector = default!;
+
+    private DynamicConnectionDataProvider _providerConnectionData = default!;
+
+    //private bool _validationError = false;
+
+    //private string _validationErrorMessage = "";
+
+    private ConnectionData _data = new();
+
+    private bool _connecting = false;
+
+    private void ValidateClientInput(ConnectionData data)
+    {
+
+    }
+
+    protected async Task ConnectAsync()
+    {
+        await _providerSelector.Validate();
+        
+        if (_providerSelector.HasErrors)
+            return;
+        
+        _connecting = true;
+
+        var data = _providerConnectionData.GetData();
+        
+        _data = data;
+
+        _data.Provider = _selectedProvider?.Name ?? "";
+
+        StateHasChanged();
+
+        var result = await BrokerService.CreateConnectionAsync(_data);
+
+        _connecting = false;
+
+        StateHasChanged();
+
+        MudDialog.Close(DialogResult.Ok(result));
+    }
+
+}
+

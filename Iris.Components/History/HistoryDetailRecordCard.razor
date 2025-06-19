@@ -1,0 +1,43 @@
+﻿@using System.Text.Json
+<IrisCard Title="Details">
+    <ToolbarContent>
+        <MudToggleGroup Class="border-primary" @bind-Value="@_displayFormat" T="string" Outlined="true" Size="MudBlazor.Size.Small" Rounded="true">
+            <MudToggleItem Value="@("Pretty")" />
+            <MudToggleItem Value="@("Raw")" />
+        </MudToggleGroup>
+    </ToolbarContent>
+    <ChildContent>
+        @if (Json == null)
+        {
+            <MudStack>
+                <MudText>No Additional Details</MudText>
+            </MudStack>
+        }
+        else
+        {
+            @if (_displayFormat?.Equals("Raw") ?? false)
+            {
+                <pre>
+                    @ToFormattedJson(Json)
+                </pre>
+            }
+            else
+            {
+                <JsonTreeView Dense="true" Json="@Json"  />
+            }
+        }
+    </ChildContent>
+</IrisCard>
+
+@code {
+    [Parameter]
+    public string? Json { get; set; } = default!;
+
+    private string? _displayFormat = "Pretty";
+
+    private string ToFormattedJson(string s)
+    {
+        using JsonDocument doc = JsonDocument.Parse(s);
+        return JsonSerializer.Serialize(doc, new JsonSerializerOptions { WriteIndented = true });
+    }
+}

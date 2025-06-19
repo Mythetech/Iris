@@ -1,0 +1,36 @@
+﻿@implements IDisposable
+@inject SubscriptionStateProvider SubscriptionStateProvider
+
+<CascadingValue TValue="System.Threading.Tasks.Task<SubscriptionState>" Value="@_currentSubscriptionStateTask" ChildContent="@ChildContent" />
+
+@code {
+    private Task<SubscriptionState>? _currentSubscriptionStateTask;
+
+    /// <summary>
+    /// The content to which the Subscription state should be provided.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    protected override void OnInitialized()
+    {
+        SubscriptionStateProvider.SubscriptionStateChanged += OnSubscriptionStateChanged;
+
+        _currentSubscriptionStateTask = SubscriptionStateProvider
+            .GetSubscriptionStateAsync();
+    }
+
+    private void OnSubscriptionStateChanged(Task<SubscriptionState> newAuthStateTask)
+    {
+        _ = InvokeAsync(() =>
+        {
+            _currentSubscriptionStateTask = newAuthStateTask;
+            StateHasChanged();
+        });
+    }
+
+    void IDisposable.Dispose()
+    {
+        SubscriptionStateProvider.SubscriptionStateChanged -= OnSubscriptionStateChanged;
+    }
+}

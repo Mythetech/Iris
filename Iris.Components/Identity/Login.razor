@@ -1,0 +1,121 @@
+@page "/login"
+@inject IAccountManagement Acct
+@inject NavigationManager Navigator
+@using Iris.Cloud.Client.Identity
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [AllowAnonymous]
+
+<PageTitle>Iris | Login</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        <div class="alert alert-success">You're logged in as @context.User.Identity?.Name.</div>
+    </Authorized>
+    <NotAuthorized>
+        @if (errors)
+        {
+            @foreach (var error in errorList)
+            {
+                <div class="alert alert-danger">@error</div>
+            }
+        }
+        
+        <MudToolBar Class="gap-1">
+            <MudIcon Size="Size.Small" Class="icon-iris mb-1"></MudIcon>
+            <MudText Class="iris-font">Iris</MudText>
+            <MudSpacer />
+            <MythetechWebsiteLink />
+        </MudToolBar>
+
+        <MudContainer MaxWidth="MaxWidth.ExtraSmall" Style="margin-top:10em;">
+            <IrisRainbowContainer Style="border-radius:10px;">
+                <IrisCard Title="Sign In" Height="450px" Class="pa-8">
+                    <MudStack Spacing="1" Class="pb-16 mud-height-full">
+                        <MudTextField @bind-Value="email" Label="Email" Variant="Variant.Filled" InputType="InputType.Text" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Email" />
+
+                        <MudTextField @bind-Value="password" Label="Password" Variant="Variant.Filled" InputType="@PasswordInput" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="ToggleMask" AdornmentAriaLabel="Show Password" />
+                        <MudSpacer />
+                        <IrisLoadingButton Color="Color.Primary" FullWidth="true" OnClick="DoLoginAsync" Loading="@loading" Text="Login" LoadingText="Logging in" />
+                        <MudDivider Class="mt-4 border-primary" />
+                        <MudButton Variant="Variant.Outlined" Color="Color.Default" FullWidth="true" Href="/register" Target="_self" Disabled="@loading">
+                            Sign up
+                        </MudButton>
+                    </MudStack>
+                </IrisCard>
+            </IrisRainbowContainer>
+        </MudContainer>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    
+    private bool success, errors;
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string[] errorList = [];
+    bool loading = false;
+
+    bool isShow;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    void ToggleMask()
+    {
+        @if (isShow)
+        {
+            isShow = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            isShow = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    public async Task DoLoginAsync()
+    {
+        success = errors = false;
+        errorList = [];
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            errors = true;
+            errorList = ["Email is required."];
+
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            errors = true;
+            errorList = ["Password is required."];
+
+            return;
+        }
+        
+        loading = true;
+        StateHasChanged();
+        
+        var result = await Acct.LoginAsync(email, password);
+
+        loading = false;
+        StateHasChanged();
+
+        if (result.Succeeded)
+        {
+            success = true;
+            email = password = string.Empty;
+            NavigationManager.NavigateTo("/", true);
+        }
+        else
+        {
+            errors = true;
+            errorList = result.ErrorList;
+        }
+    }
+}

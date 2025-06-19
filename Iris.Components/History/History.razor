@@ -1,0 +1,145 @@
+﻿@page "/History"
+@inherits IrisPageBase
+@inject HistoryState HistoryState
+@implements IDisposable
+@using Iris.Contracts.Audit.Models
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using Iris.Components.Theme
+@using Iris.Contracts.Audit
+@using Iris.Components.Shared.Time
+
+<IrisCard HeaderIcon="@IrisIcons.Account" Title="@($"User History")" Height="90vh">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex gap-4 mt-2 overflow-auto" Style="flex-direction:column;">
+        <MudGrid>
+            <MudItem xs="12">
+                <MudDataGrid T="HistoryRecord" Class="iris-table" Hover="true" Items="@(HistoryState?.History ?? [])" Loading="@Loading" RowsPerPage="10" QuickFilter="@QuickFilter" ColumnResizeMode="ResizeMode.Column">
+                    <ToolBarContent>
+                        <AuthorizeView>
+                            <MudText Typo="Typo.subtitle1">@context.User.Identity?.Name</MudText>
+                        </AuthorizeView>
+                        <MudSpacer />
+                        <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+                                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="MudBlazor.Size.Medium" Class="mt-0"></MudTextField>
+                    </ToolBarContent>
+                    <Columns>
+                        <HierarchyColumn T="HistoryRecord" />
+                        <TemplateColumn Class="grid-icon-col" Sortable="false">
+                            <CellTemplate>
+                                <HistoryActionIcon Action="@context.Item.Action" />
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn Property="x => x!.Action" Title="Action">
+                            <CellTemplate>
+                                @GetActionDisplay(context.Item.Action)
+                            </CellTemplate>
+                        </PropertyColumn>
+                        <PropertyColumn Property="x => x!.Target" Title="Target" />
+                        @*<PropertyColumn Property="x => x!.User" Title="User" />*@
+                        <PropertyColumn Property="x => x!.Timestamp" Title="When">
+                            <CellTemplate>
+                                <LocalTime DateTimeOffset="@context.Item.Timestamp"  />
+                                @*context.Item.Timestamp.ToString("G")*@
+                            </CellTemplate>
+                        </PropertyColumn>
+                    </Columns>
+                    <ChildRowContent>
+                        <HistoryDetailRecordCard Json="@ToJson(context.Item.Details!)" />
+                    </ChildRowContent>
+                    <PagerContent>
+                        <MudDataGridPager T="HistoryRecord" />
+                    </PagerContent>
+                    <NoRecordsContent>
+                        <MudStack Class="w-100" Justify="Justify.Center" AlignItems="AlignItems.Center" Style="@($"height:245px;")">
+                            <MudIcon Size="MudBlazor.Size.Large" Icon="@IrisIcons.NoHistory" />
+                            <MudText>No History</MudText>
+                        </MudStack>
+                    </NoRecordsContent>
+                </MudDataGrid>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+</IrisCard>
+
+@code {
+    private string _searchString = "";
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        HistoryState.OnHistoryStateChange += StateHasChanged;
+    }
+
+    private bool QuickFilter(HistoryRecord x)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        if (x.Action.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (x.Target.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        var dct = JsonSerializer.Deserialize < Dictionary<string, string>>(x.Details);
+        if (dct != null &&
+            dct.Any(x => x.Key.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+             || x.Value.Contains(_searchString, StringComparison.OrdinalIgnoreCase)))
+            return true;
+
+        return false;
+    }
+
+    private string ToJson(string compressed)
+        => ToJson(JsonSerializer.Deserialize<Dictionary<string, string>>(compressed));
+
+    private string ToJson(Dictionary<string, string> d)
+    {
+        var jsonString = System.Text.Json.JsonSerializer.Serialize(d);
+        var jsonNode = JsonNode.Parse(jsonString);
+
+        var tempDict = new Dictionary<string, JsonNode>();
+
+        foreach (var property in jsonNode!.AsObject())
+        {
+            if (property.Value is JsonValue jsonValue && jsonValue.GetValueKind() == JsonValueKind.String)
+            {
+                var valueString = jsonValue.ToString();
+                if ((valueString.StartsWith("{") && valueString.EndsWith("}")) || (valueString.StartsWith("[") && valueString.EndsWith("]")))
+                {
+                    try
+                    {
+                        var parsedNode = JsonNode.Parse(valueString);
+                        tempDict[property.Key] = parsedNode!;
+                    }
+                    catch (JsonException)
+                    {
+                        tempDict[property.Key] = jsonValue;
+                    }
+                }
+                else
+                {
+                    tempDict[property.Key] = jsonValue;
+                }
+            }
+            else
+            {
+                tempDict[property.Key] = property.Value!;
+            }
+        }
+
+        jsonNode.AsObject().Clear();
+        foreach (var kvp in tempDict)
+        {
+            jsonNode.AsObject().Add(kvp.Key, kvp.Value);
+        }
+
+        return jsonNode.ToJsonString();
+    }
+
+    public void Dispose()
+    {
+        HistoryState.OnHistoryStateChange -= StateHasChanged;
+    }
+
+}

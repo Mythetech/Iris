@@ -1,0 +1,76 @@
+@using Iris.Components.Admin
+@using Iris.Contracts.Admin
+
+<MudDialog Class="glassmorphic-bg pa-4 mud-width-full h-50 box-shadow-primary">
+    <DialogContent>
+        <MudSelect T="BugType" Label="Severity" @bind-Value="@_bugType" Required="true" Clearable="true">
+            <MudSelectItem T="BugType" Value="BugSeverity.Low">
+                <BugTypeListItem BugType="@BugSeverity.Low"/>
+            </MudSelectItem>
+            <MudSelectItem T="BugType" Value="BugSeverity.Medium">
+                <BugTypeListItem BugType="@BugSeverity.Medium"/>
+            </MudSelectItem>
+            <MudSelectItem T="BugType" Value="BugSeverity.High">
+                <BugTypeListItem BugType="@BugSeverity.High"/>
+            </MudSelectItem>
+            <MudSelectItem T="BugType" Value="BugSeverity.Critical">
+                <BugTypeListItem BugType="@BugSeverity.Critical"/>
+            </MudSelectItem>
+        </MudSelect>
+
+        <MudTextField T="string" Label="Description" Variant="Variant.Text" @bind-Text="@_description" AutoGrow Lines="3" HelperText="Please enter any helpful information in your bug report."/>
+    </DialogContent>
+    <DialogActions>
+        <MudStack Class="w-100">
+        <PrimaryDivider/>
+
+        <MudStack Row="true" AlignItems="AlignItems.End" Justify="Justify.FlexEnd">
+            <MudButton Variant="Variant.Outlined" OnClick="Cancel">
+                Cancel
+            </MudButton>
+
+            <IrisLoadingButton 
+                OnClick="@SubmitAsync"
+                Loading="@_submitting"
+                Text="Submit"
+                LoadingText="Submitting"
+            />
+          
+        </MudStack>
+        </MudStack>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = default!;
+
+    [Inject]
+    public IAdminService AdminService { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback CloseClicked { get; set; }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    [Parameter]
+    public EventCallback<Result<bool>> SubmitClicked { get; set; }
+
+    private bool _submitting = false;
+
+    private string _description = "";
+
+    private BugType? _bugType = default!;
+
+    protected async Task SubmitAsync()
+    {
+        if (_bugType == null)
+            return;
+
+        StateHasChanged();
+
+        var result = await AdminService.SubmitBugReportAsync(_bugType, _description);
+        
+        MudDialog.Close(DialogResult.Ok<Result<bool>>(result ? new Success<bool>(true, "") : new Failure<bool>("")));
+    }
+
+}
+

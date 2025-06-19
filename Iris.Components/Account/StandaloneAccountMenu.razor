@@ -1,0 +1,54 @@
+    @using Iris.Components.Theme    
+    @using MudBlazor.Extensions
+    <div>
+    <MudTooltip Text="Account">
+    <MudIconButton Size="MudBlazor.Size.Small" class="toggle-btn" Icon="@($"{IrisIcons.Account} fs-6")" OnClick="ToggleMenu" />
+    </MudTooltip>
+    <MudPopover Open="@_open" Class="iris-rainbow-shadow glassmorphic-bg" Style="backdrop-filter: blur(8px) brightness(0.2);" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+        <AccountDropdownMenu SubmitBugReportClicked="OpenBugReportModal"/>
+    </MudPopover>
+    </div>
+    @code {
+        [Inject] protected ISnackbar Snackbar { get; set; } = default!;
+        [Inject] protected IDialogService DialogService { get; set; } = default!;
+        
+        private bool _open = false;
+        
+        private void ToggleMenu()
+        {
+            _open = !_open;
+            StateHasChanged();
+        }
+        
+        protected async Task OpenBugReportModal()
+        {
+            var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small };
+            
+            var dialogRef = await DialogService.ShowAsync<BugReportDialog>(title: "🐛 Bug Report", options);
+
+            ToggleMenu();
+            
+            var result = (await dialogRef.Result)?.Data?.As<Result<bool>>();
+            
+            if(result != null)
+                HandleResultAsync(result);
+            
+            dialogRef.Close();
+        }
+        
+
+        protected void HandleResultAsync(Result<bool> result)
+        {
+            if (result.Error || !result.Value)
+            {
+                Snackbar.Add("Error submitting bug report 🐛", Severity.Error);
+            }
+            else
+            {
+                Snackbar.Add("Submitted bug report successfully!", Severity.Success);
+
+            }
+
+            StateHasChanged();
+        }
+    }

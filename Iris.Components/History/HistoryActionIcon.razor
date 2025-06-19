@@ -1,0 +1,25 @@
+﻿@using Iris.Components.Theme
+@using Iris.Contracts.Audit
+
+@if (string.IsNullOrWhiteSpace(Action))
+{
+    <MudIcon Size="Size.Small" Icon="@IrisIcons.Info" Color="Color.Info" />
+}
+else if (Action == Actions.MessageSent)
+{
+    <MudIcon Size="Size.Small" Icon="@IrisIcons.Send" Color="Color.Primary" />
+}
+else if (Action.Contains("created", StringComparison.OrdinalIgnoreCase) || Action.Contains("added", StringComparison.OrdinalIgnoreCase))
+{
+    <MudIcon Size="Size.Small" Icon="@IrisIcons.Success" Color="Color.Success" />
+}
+else if (Action.Contains("deleted", StringComparison.OrdinalIgnoreCase) || Action.Contains("removed", StringComparison.OrdinalIgnoreCase))
+{
+    <MudIcon Size="Size.Small" Icon="@IrisIcons.Error" Color="Color.Error" />
+}
+
+@code {
+    [Parameter]
+    public string Action { get; set; } = "";
+}
+

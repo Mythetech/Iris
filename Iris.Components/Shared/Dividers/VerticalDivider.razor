@@ -1,0 +1,7 @@
+@inherits IrisBaseComponent
+<div class="border-solid border-1" style="width:1px;height:@Height;color: var(--mud-palette-primary);background-color: var(--mud-palette-primary);align-self: center;"></div>
+
+@code {
+    [Parameter] public string Height { get; set; } = "60px";
+
+}

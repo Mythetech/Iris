@@ -1,0 +1,19 @@
+﻿@page "/loading"
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [AllowAnonymous]
+@inherits IrisPageBase
+
+<MudStack>
+    <IrisCard Title="Pulse Loader">
+        <IrisWingLoader />
+    </IrisCard>
+
+    <IrisCard Title="Animated Pulse Loader">
+        <AnimatedIrisWingLoader />
+    </IrisCard>
+
+    <IrisCard Title="Quick Cycle Loader">
+        <QuickIrisWingLoader />
+    </IrisCard>
+</MudStack>

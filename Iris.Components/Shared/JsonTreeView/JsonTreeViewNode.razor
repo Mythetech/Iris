@@ -1,0 +1,129 @@
+﻿@using System.Text.Json
+@using System.Text.Json.Nodes
+
+@if (Node is JsonObject)
+{
+    @* Is sorting is enabled, sort by key *@
+    var nodes = Sorted ? Node.AsObject().OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value) : Node.AsObject().ToDictionary(x => x.Key, x => x.Value);
+    @* Go through each item *@
+    foreach (var child in nodes)
+    {
+        if (child.Value is JsonValue)
+        {
+            @* Get the type of value in this node *@
+            var valueKind = child.Value.AsValue().GetValue<JsonElement>().ValueKind;
+            switch (valueKind)
+            {
+                case JsonValueKind.String:
+                    var str = child.Value.AsValue().GetValue<string>();
+                    @*Special for null*@
+                    if (str == "null")
+                    {
+                        <JsonTreeViewItem Key="@child.Key" Value="null" Icon="bi-slash-lg" />
+                    }
+                    @* Could be a date *@
+                    else if (DateTime.TryParse(str, out DateTime date))
+                    {
+                        <JsonTreeViewItem Key="@child.Key" Value="@date.ToString()" Icon="bi-calendar" />
+                    }
+                    @* Could be a GUID *@
+                    else if (Guid.TryParse(str, out Guid guid))
+                    {
+                        <JsonTreeViewItem Key="@child.Key" Value="@str" Icon="bi-key" />
+                    }
+                    @* Fall back to string *@
+                    else
+                    {
+                        <JsonTreeViewItem Key="@child.Key" Value="@str" Icon="bi-fonts" />
+                    }
+                    break;
+                case JsonValueKind.Number:
+                    if (child.Value.AsValue().TryGetValue<int>(out var number))
+                    {
+                        <JsonTreeViewItem Key="@child.Key" Value="@number.ToString()" Icon="bi-hash" />
+                    }
+                    else if (child.Value.AsValue().TryGetValue<float>(out var floatNumber))
+                    {
+                        <JsonTreeViewItem Key="@child.Key" Value="@floatNumber.ToString()" Icon="bi-hash" />
+                    }
+                    else if (child.Value.AsValue().TryGetValue<decimal>(out var decimalNumber))
+                    {
+                        <JsonTreeViewItem Key="@child.Key" Value="@decimalNumber.ToString()" Icon="bi-hash" />
+                    }
+                    break;
+                case JsonValueKind.True:
+                    <JsonTreeViewItem Key="@child.Key" Value="true" Icon="bi-check2" />
+                    break;
+                case JsonValueKind.False:
+                    <JsonTreeViewItem Key="@child.Key" Value="false" Icon="bi-x" />
+                    break;
+                case JsonValueKind.Null:
+                    <JsonTreeViewItem Key="@child.Key" Value="null" Icon="bi-slash-lg" />
+                    break;
+            }
+        }
+        else if (child.Value is JsonArray)
+        {
+            var count = 0;
+            @* Iterate each array element *@
+            foreach (var c in child.Value.AsArray())
+            {
+                count++;
+
+                <JsonTreeViewItem Nested="true" Key="@child.Value!.GetPropertyName()" Value="@($"Array {child.Value.AsArray().Count}")" Icon="bi-stack">
+                    @if (c is JsonValue)
+                    {
+                        var valueKind = c.AsValue().GetValue<JsonElement>().ValueKind;
+                        switch (valueKind)
+                        {
+                            case JsonValueKind.String:
+                                var str = c.AsValue().GetValue<string>
+                                    ();
+                                <JsonTreeViewItem Key="@($"{count - 1}")" Value="@str" Icon="bi-dash-lg" />
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        <JsonTreeViewNode Node="@c" Sorted="@Sorted" />
+                    }
+
+                </JsonTreeViewItem>
+            }
+        }
+        else if (child.Value is JsonObject)
+        {
+            var jsonObject = child.Value.AsObject();
+            if (!jsonObject.Any())
+            {
+                <JsonTreeViewItem Key="@child.Key" Value="Object Empty" Icon="bi-braces" />
+            }
+            else
+            {
+
+                <JsonTreeViewItem Nested="true" Key="@child.Key" Value="@($"Object {jsonObject.AsObject().Count}")" Icon="bi-braces">
+                    <JsonTreeViewNode Node="@child.Value" Sorted="@Sorted" />
+                </JsonTreeViewItem>
+            }
+        }
+        else if (child.Value is null)
+        {
+            <JsonTreeViewItem Key="@child.Key" Value="null" Icon="bi-slash-lg" />
+        }
+    }
+}
+
+@code {
+    /// <summary>
+    /// Gets or sets the node to display (including children).
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public required JsonNode Node { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether items are sorted by key.
+    /// </summary>
+    [Parameter]
+    public bool Sorted { get; set; }
+}

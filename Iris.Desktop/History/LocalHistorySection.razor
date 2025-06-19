@@ -1,0 +1,46 @@
+@using Iris.Components.History
+@using Iris.Components.Shared.Dialogs
+@inherits Iris.Components.Settings.Section
+
+<MudStack Row>
+    <MudText>Clear Local History</MudText>
+    <MudSpacer />
+    <IconTextButton Color="Color.Error" Icon="@IrisIcons.Delete" Text="Delete History" OnClick="PromptDeleteHistory" />
+</MudStack>
+
+@code {
+    public override string Name { get; init; } = "Local History";
+    public override Type ComponentType { get; set; } = typeof(LocalHistorySection);
+
+    [Inject] public HistoryRepository Repository { get; set; } = default!;
+
+    [Inject] public HistoryState State { get; set; } = default!;
+
+    [Inject] public IDialogService DialogService { get; set; } = default!;
+
+    [Inject] public ISnackbar Snackbar { get; set; } = default!;
+
+    protected async Task PromptDeleteHistory()
+    {
+        var parameters = new DialogParameters<BasicDialog>
+        {
+            { x => x.ContentText, "Do you really want to delete all local history?" },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small  };
+
+        var dialogRef = await DialogService.ShowAsync<BasicDialog>("Delete History", parameters, options);
+
+        var result = await dialogRef.Result;
+
+        if (result is { Canceled: false, Data: not null } && (bool)result.Data)
+        { 
+            Repository.DeleteHistory();
+            State.Refresh();
+            Snackbar.Add("Successfully cleared local history", Severity.Success);
+        }
+    }
+}
+    

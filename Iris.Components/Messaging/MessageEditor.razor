@@ -1,0 +1,100 @@
+@using System.Text.Json
+<IrisCard Title="Editor" HeaderIcon="@IrisIcons.Editor" Class="flex-grow-1 m-3" Height="95.8%">
+    <ToolbarContent>
+        <IconButton Name="@IrisIcons.Copy" Title="Copy to Clipboard" ButtonClicked="CopyData"/>
+        <IconButton Name="@IrisIcons.CreateMessageData" Title="Create Sample Data" ButtonClicked="OnCreateSampleData"/>
+        <IconButton Name="@IrisIcons.Format" Title="Format Json" ButtonClicked="FormatDocumentAsync"/>
+        <IconButton Name="@IrisIcons.AddTemplate" Title="Save As Template" ButtonClicked="SaveTemplateAsync"/>
+    </ToolbarContent>
+    <ChildContent>
+        <div class="d-flex pa-2" style="height:96%;">
+            <StandaloneCodeEditor @ref="_editor" Id="messaging-editor" ConstructionOptions="EditorConstructionOptions" />
+        </div>
+    </ChildContent>
+</IrisCard>
+@code {
+    [Inject] public IJsApiService JsApiService { get; set; } = default!;
+    
+    [Parameter] public EventCallback<string> OnTemplateSaved { get; set; } = default!;
+
+    [Parameter] public EventCallback OnCreateSampleData { get; set; } = default!;
+    
+    private StandaloneCodeEditor _editor = default!;
+    
+    private readonly System.Text.Json.JsonSerializerOptions _options = new()
+    {
+        WriteIndented = true,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
+    private const string DefaultJson = "{\n" +
+                                  "\n" +
+                                  "}";
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            AutomaticLayout = true,
+            Theme = "vs-dark",
+            Language = "json",
+            Value = DefaultJson
+        };
+    }
+
+    private async Task SaveTemplateAsync()
+    {
+        var json = await _editor.GetValue();
+
+        await OnTemplateSaved.InvokeAsync(json ?? DefaultJson);
+    }
+
+    private async Task FormatDocumentAsync()
+    {
+        try
+        {
+            await _editor.Trigger("messaging-editor", "editor.action.formatDocument", "");
+        }
+        catch
+        {
+            
+        }
+    }
+
+    public async Task<string?> GetTextAsync()
+    {
+        return await _editor.GetValue(false, default!);
+    }
+    
+    public async Task SetTextAsync(string? text)
+    {
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                    await _editor.SetValue(Deserialize(Serialize(JsonDocument.Parse(text))));
+            }
+            }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private string Deserialize(string text)
+    {
+        return JsonSerializer.Deserialize<object>(text, _options).ToString();
+    }
+
+    private string Serialize(JsonDocument doc)
+    {
+        return JsonSerializer.Serialize(doc, _options);
+    }
+
+    private async Task CopyData()
+    {
+        string text = await _editor.GetValue();
+        await JsApiService.CopyToClipboardAsync(text);
+    }
+   
+}
