@@ -1,7 +1,6 @@
 ﻿using Bunit;
 using FluentAssertions;
 using Iris.Components.Home;
-using Iris.Cloud.Client.Services.Brokers;
 using Iris.Components.Brokers;
 using Iris.Contracts.Brokers.Models;
 using Microsoft.Extensions.DependencyInjection;

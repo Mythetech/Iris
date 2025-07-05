@@ -7,14 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Iris.Integration.Tests.Brokers;
 
-public class BrokerConnectionManagerTests : TestBase<IrisTestAppFixture>
+public class BrokerConnectionManagerTests 
 {
-    private readonly HttpClient _client;
-    private readonly IrisTestAppFixture _fixture;
+    private readonly IrisWebApplicationFactory _fixture;
 
-    public BrokerConnectionManagerTests(IrisTestAppFixture fixture)
+    public BrokerConnectionManagerTests(IrisWebApplicationFactory fixture)
     {
-        _client = fixture.CreateClient();
         _fixture = fixture;
     }
 
