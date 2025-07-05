@@ -50,15 +50,15 @@ public static partial class IrisIcons
 
     public static string MoreOptions => Round("more_vert");
 
-    public static string UploadPackage => Round("arrow-up-from-bracket");
+    public static string UploadPackage => Round("file_upload");
 
     public static string Settings => Round("settings");
 
     public static string Home => Round("house");
 
-    public static string Format => Round("indent");
+    public static string Format => Round("format_indent_increase");
 
-    public static string AddTemplate => Round("file_plus");
+    public static string AddTemplate => Round("file_export");
     
     public static string Success => Round("check_circle");
 
@@ -66,19 +66,19 @@ public static partial class IrisIcons
 
     public static string Info => Round("circle_info");
 
-    public static string Plus => Round("plus");
+    public static string Add => Round("add");
 
-    public static string RepeatSend => Round("arrows_repeat");
+    public static string RepeatSend => Round("repeat");
 
-    public static string Delay => Round("alarm_clock");
+    public static string Delay => Round("schedule");
     
     public static string Templates => Round("files");
 
-    public static string Support => Round("comments_question_check");
+    public static string Support => Round("contact_support");
 
     public static string Bug => Round("bug_report");
     
-    public static string Delete => Round("trash_can_xmark");
+    public static string Delete => Round("delete_forever");
 
     public static string Expand => Round("keyboard_double_arrow_right");
 
@@ -96,5 +96,5 @@ public static partial class IrisIcons
 
     public static string Refresh => Round("directory_sync");
 
-    public static string Copy => Round("copy");
+    public static string Copy => Round("content_copy");
 }
