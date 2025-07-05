@@ -39,8 +39,9 @@
     private string _hrefAbsolute;
 
     private string GetIcon(bool isActive)
-    {
-        return isActive ? Icon.Replace("regular", "solid") : Icon;
+    { 
+        //ToDo fix for material symbols
+        return Icon; //isActive ? Icon.Replace("rounded", "filled") : Icon;
     }
     
     protected override void OnInitialized()

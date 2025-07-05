@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Iris.Cloud.Client\Iris.Cloud.Client.csproj" />
+    <ProjectReference Include="..\Iris.Components\Iris.Components.csproj" />
     <ProjectReference Include="..\Iris.Contracts\Iris.Contracts.csproj" />
   </ItemGroup>
   <ItemGroup>
@@ -35,5 +35,8 @@
   <ItemGroup>
     <Folder Include="Brokers\" />
     <Folder Include="Messaging\" />
+  </ItemGroup>
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Subscriptions\TestSubscriptionContent.razor" />
   </ItemGroup>
 </Project>

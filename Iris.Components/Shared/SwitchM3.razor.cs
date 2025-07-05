@@ -1,9 +1,9 @@
 ﻿using System;
-using Iris.Cloud.Client.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using MudBlazor.Services;
+using MudBlazor.Utilities;
 
 namespace Iris.Components.Shared
 {

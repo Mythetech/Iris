@@ -1,14 +1,10 @@
-﻿using System.Net.Http.Headers;
-using Iris.Api;
-using Iris.Api.Infrastructure;
-using Iris.Api.Infrastructure.Account;
-using Iris.Api.Services.Integrations;
+using System.Net.Http.Headers;
+using Iris.Desktop;
 using Iris.Integration.Tests.Infrastructure;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Iris.Integration.Tests
@@ -19,10 +15,6 @@ namespace Iris.Integration.Tests
         {
             builder.ConfigureServices(services =>
             {
-                UseTestDbContext(services);
-
-                UseKeyVaultEmulator(services);
-
                 services.AddMassTransitTestHarness();
 
                 services.AddAuthentication("Test")
@@ -37,32 +29,5 @@ namespace Iris.Integration.Tests
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
         }
 
-        private static void UseTestDbContext(IServiceCollection services)
-        {
-            var dbContextDescriptor = services.SingleOrDefault(
-                    d => d.ServiceType ==
-                        typeof(DbContextOptions<IrisCloudDbContext>));
-
-            services.Remove(dbContextDescriptor);
-
-            services.AddDbContext<IrisCloudDbContext>((container, options) =>
-            {
-                options.UseInMemoryDatabase("IrisTestDb");
-            });
-        }
-
-        private static void UseKeyVaultEmulator(IServiceCollection services)
-        {
-            var descriptor = services.SingleOrDefault(
-                   d => d.ServiceType ==
-                       typeof(ISecretService));
-
-            services.Remove(descriptor);
-
-            services.AddScoped<ISecretService, EmulatedKeyVaultService>();
-        }
-
-
     }
 }
-
