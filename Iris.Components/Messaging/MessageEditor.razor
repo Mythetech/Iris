@@ -72,12 +72,11 @@
         {
             if (!string.IsNullOrWhiteSpace(text))
             {
-                    await _editor.SetValue(Deserialize(Serialize(JsonDocument.Parse(text))));
+                await _editor.SetValue(Deserialize(Serialize(JsonDocument.Parse(text))));
             }
-            }
-        catch (Exception ex)
+        }
+        catch
         {
-            Console.WriteLine(ex.Message);
         }
     }
 

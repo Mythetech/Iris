@@ -82,8 +82,6 @@ namespace Iris.Brokers.RabbitMQ
 
         public async Task SendAsync(EndpointDetails endpoint, string json)
         {
-            Console.WriteLine(json);
-
             var result = await _client.PublishAsync($"{Rabbit.VHost}", endpoint?.Type?.Equals("queue", StringComparison.OrdinalIgnoreCase) ?? true ? "amq.default" : endpoint.Name, new PublishInfo(endpoint?.Name ?? "/", json));
         }
     }

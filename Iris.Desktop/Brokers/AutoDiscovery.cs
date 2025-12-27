@@ -1,16 +1,19 @@
 using Iris.Brokers;
 using Iris.Brokers.Extensions;
 using Iris.Brokers.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Iris.Desktop.Brokers;
 
 public class AutoDiscovery
 {
     private readonly IBrokerConnectionManager _connectionManager;
+    private readonly ILogger<AutoDiscovery> _logger;
 
-    public AutoDiscovery(IBrokerConnectionManager connectionManager)
+    public AutoDiscovery(IBrokerConnectionManager connectionManager, ILogger<AutoDiscovery> logger)
     {
         _connectionManager = connectionManager;
+        _logger = logger;
     }
 
     public async Task<List<IConnection>> DiscoverLocalConnectionsAsync()
@@ -32,7 +35,7 @@ public class AutoDiscovery
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _logger.LogDebug("Local RabbitMQ not available: {Message}", ex.Message);
         }
         
         try
@@ -47,7 +50,7 @@ public class AutoDiscovery
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _logger.LogDebug("Local Azure storage emulator not available: {Message}", ex.Message);
         }
         
         var connections = await _connectionManager.GetConnectionsAsync();
