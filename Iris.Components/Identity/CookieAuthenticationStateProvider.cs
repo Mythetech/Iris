@@ -64,8 +64,6 @@ namespace Iris.Components.Identity
         public async Task<FormResult> RegisterAsync(string email, string password, string subscriptionKey = "", bool freeTrial = false)
         {
             string[] defaultDetail = ["An unknown error prevented registration from succeeding."];
-            
-            Console.WriteLine(subscriptionKey);
 
             bool validKeyFormat = Guid.TryParse(subscriptionKey, out Guid subscriptionGuid);
 

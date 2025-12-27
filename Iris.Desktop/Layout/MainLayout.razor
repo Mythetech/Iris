@@ -46,6 +46,8 @@
 
     [Inject] AutoDiscovery AutoDiscovery { get; set; } = default!;
 
+    [Inject] IPhotinoAppProvider Provider { get; set; } = default!;
+
     [CascadingParameter(Name = "PageType")] public Type? PageType { get; set; }
 
     private bool _iconMenuActive { get; set; }

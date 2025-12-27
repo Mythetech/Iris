@@ -162,10 +162,8 @@ public class LocalConnectionManager : IBrokerService, IMessageService
             return Task.FromResult(JsonSerializer.Serialize(response));
 
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Error creating message structure from type: {messageType}");
-
             return Task.FromResult("");
         }
     }
@@ -190,10 +188,8 @@ public class LocalConnectionManager : IBrokerService, IMessageService
 
             return Task.FromResult(JsonSerializer.Serialize(sample));
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Error creating message data from type: {messageType}");
-
             return Task.FromResult("");
         }
 

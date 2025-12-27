@@ -138,8 +138,6 @@
             var p = _providers?.FirstOrDefault(x => x.Address == Provider);
             if (p != null)
             {
-                Console.WriteLine(_selectedProvider?.Name);
-
                 _selectedProvider = p;
 
                 var index = _providers?.IndexOf(p);

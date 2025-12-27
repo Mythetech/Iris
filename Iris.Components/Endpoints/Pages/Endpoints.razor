@@ -109,8 +109,6 @@
 
     protected void EndpointRowClicked(DataGridRowClickEventArgs<Contracts.Brokers.Models.EndpointDetails> args)
     {
-        Console.WriteLine($"{args.Item.Address} | {args.Item.Name}");
-
         ShowEndpointOffcanvas(args.Item);
     }
 
