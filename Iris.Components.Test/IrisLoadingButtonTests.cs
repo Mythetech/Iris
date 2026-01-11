@@ -82,15 +82,13 @@ namespace Iris.Components.Test
         public void Icon_Is_Displayed_When_Set()
         {
             // Arrange
-            var iconClass = ".fa-regular";
             var cut = RenderComponent<IrisLoadingButton>(parameters => parameters
                 .Add(p => p.Icon, IrisIcons.Home));
 
-            // Act
-            var icon = cut.Find($"{iconClass}");
-
-            // Assert
+            // Act & Assert - Material Symbols icons render as <span class="material-symbols-rounded">icon_name</span>
+            var icon = cut.Find(".material-symbols-rounded");
             icon.Should().NotBeNull();
+            icon.TextContent.Should().Contain("house");
         }
     }
 }

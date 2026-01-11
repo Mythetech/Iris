@@ -6,6 +6,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Iris.Integration.Tests.Brokers
 {
+    /// <summary>
+    /// Integration tests for Azure Service Bus.
+    /// These tests require real credentials and are skipped by default.
+    /// To run: replace placeholder credentials with real ones and remove Skip parameter.
+    /// </summary>
+    [Trait("Category", "Integration")]
     public class AzureServiceBusTests : IClassFixture<IrisWebApplicationFactory>
     {
         private readonly IrisWebApplicationFactory _factory;
@@ -22,7 +28,7 @@ namespace Iris.Integration.Tests.Brokers
             _factory = factory;
         }
 
-        [Fact(DisplayName = "Can connect to azure service bus and retrieve endpoints")]
+        [Fact(DisplayName = "Can connect to azure service bus and retrieve endpoints", Skip = "Requires real Azure Service Bus credentials")]
         public async Task Can_ConnectTo_AzureServiceBus()
         {
             // Arrange
@@ -46,7 +52,7 @@ namespace Iris.Integration.Tests.Brokers
         }
 
 
-        [Fact(DisplayName = "Can send message to Azure Service Bus Queue")]
+        [Fact(DisplayName = "Can send message to Azure Service Bus Queue", Skip = "Requires real Azure Service Bus credentials")]
         public async Task Can_SendMessageTo_AzureServiceBusQueue()
         {
             // Arrange
