@@ -18,7 +18,7 @@
     <PackageVersion Include="EFCore.NamingConventions" Version="8.0.3" />
     <PackageVersion Include="FastEndpoints" Version="5.31.0" />
     <PackageVersion Include="LiteDB" Version="5.0.21" />
-    <PackageVersion Include="MassTransit" Version="8.3.1" />
+    <PackageVersion Include="MassTransit" Version="9.0.0" />
     <PackageVersion Include="MassTransit.Azure.ServiceBus.Core" Version="8.3.1" />
     <PackageVersion Include="MassTransit.RabbitMQ" Version="8.3.1" />
     <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.22.0" />
