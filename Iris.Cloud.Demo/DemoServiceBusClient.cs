@@ -1,17 +1,21 @@
 ﻿using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Iris.Cloud.Demo.Contracts;
+using Microsoft.Extensions.Logging;
+
 namespace Iris.Cloud.Demo
 {
     public class DemoServiceBusClient
     {
-        public Action<ChangeColorsCommand> ChangeColorsReceived;
+        public Action<ChangeColorsCommand>? ChangeColorsReceived;
 
-        private string _connectionString = "";
+        private readonly string _connectionString;
+        private readonly ILogger<DemoServiceBusClient>? _logger;
 
-        public DemoServiceBusClient(string connectionString)
+        public DemoServiceBusClient(string connectionString, ILogger<DemoServiceBusClient>? logger = null)
         {
             _connectionString = connectionString;
+            _logger = logger;
         }
 
         public async Task ConnectAsync()
@@ -48,25 +52,21 @@ namespace Iris.Cloud.Demo
         async Task MessageHandler(ProcessMessageEventArgs args)
         {
             string body = args.Message.Body.ToString();
-            Console.WriteLine(body);
+            _logger?.LogDebug("Received message: {Body}", body);
 
             // we can evaluate application logic and use that to determine how to settle the message.
             await args.CompleteMessageAsync(args.Message);
 
             var evt = JsonSerializer.Deserialize<ChangeColorsCommand>(body);
 
-            ChangeColorsReceived?.Invoke(evt);
+            ChangeColorsReceived?.Invoke(evt!);
         }
 
         Task ErrorHandler(ProcessErrorEventArgs args)
         {
-            // the error source tells me at what point in the processing an error occurred
-            Console.WriteLine(args.ErrorSource);
-            // the fully qualified namespace is available
-            Console.WriteLine(args.FullyQualifiedNamespace);
-            // as well as the entity path
-            Console.WriteLine(args.EntityPath);
-            Console.WriteLine(args.Exception.ToString());
+            _logger?.LogError(args.Exception,
+                "Error processing message. Source: {ErrorSource}, Namespace: {Namespace}, EntityPath: {EntityPath}",
+                args.ErrorSource, args.FullyQualifiedNamespace, args.EntityPath);
             return Task.CompletedTask;
         }
 

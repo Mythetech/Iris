@@ -107,7 +107,10 @@ namespace Iris.Components.Identity
                     ErrorList = problemDetails == null ? defaultDetail : [..errors]
                 };
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during user registration");
+            }
 
             // unknown error
             return new FormResult
@@ -232,7 +235,10 @@ namespace Iris.Components.Identity
                     _authenticated = true;
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "User is not authenticated");
+            }
 
             // return the state
             return _cachedAuthState = new AuthenticationState(user);
