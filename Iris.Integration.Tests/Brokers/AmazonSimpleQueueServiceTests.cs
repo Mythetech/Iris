@@ -6,14 +6,22 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Iris.Integration.Tests.Brokers
 {
+    /// <summary>
+    /// Integration tests for Amazon SQS.
+    /// These tests require real credentials and are skipped by default.
+    /// To run: replace placeholder credentials with real ones and remove Skip parameter.
+    /// </summary>
+    [Trait("Category", "Integration")]
     public class AmazonSimpleQueueServiceTests : IClassFixture<IrisWebApplicationFactory>
     {
         private readonly IrisWebApplicationFactory _factory;
 
+        // Example credentials - replace with your own AWS IAM credentials
+        // or use environment variables for CI/CD
         private ConnectionData _data = new()
         {
-            Username = "AKIA3FLDZ6QFHB2ZCZHM",
-            Password = "SZWtO1m/eLU+U/meoR4b6EqGaeuvktRpccDgV1fr",
+            Username = "YOUR_AWS_ACCESS_KEY_ID",
+            Password = "YOUR_AWS_SECRET_ACCESS_KEY",
             Region = Amazon.RegionEndpoint.USEast1.SystemName,
         };
 
@@ -22,7 +30,7 @@ namespace Iris.Integration.Tests.Brokers
             _factory = factory;
         }
 
-        [Fact(DisplayName = "Can connect to amazon simple queue service and retrieve endpoints")]
+        [Fact(DisplayName = "Can connect to amazon simple queue service and retrieve endpoints", Skip = "Requires real AWS credentials")]
         public async Task Can_ConnectTo_AmazonSimpleQueueService()
         {
             // Arrange
@@ -44,7 +52,7 @@ namespace Iris.Integration.Tests.Brokers
             endpoints.Any(x => x.Type.Equals("queue", StringComparison.OrdinalIgnoreCase)).Should().BeTrue();
         }
         
-        [Fact(DisplayName = "Can send message to Amazon SQS")]
+        [Fact(DisplayName = "Can send message to Amazon SQS", Skip = "Requires real AWS credentials")]
         public async Task Can_SendMessageTo_AmazonWebServicesQueue()
         {
             // Arrange

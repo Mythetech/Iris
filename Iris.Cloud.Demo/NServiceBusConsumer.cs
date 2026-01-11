@@ -1,15 +1,18 @@
-﻿using System;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Iris.Cloud.Demo.Contracts;
 using MassTransit;
+using Microsoft.Extensions.Logging;
 
 namespace Iris.Cloud.Demo
 {
     public class NServiceBusConsumer : IHandleMessages<ChangeColorsCommand>
     {
-        public NServiceBusConsumer(IConsumerNotifier<ChangeColorsCommand> notifier)
+        private readonly ILogger<NServiceBusConsumer> _logger;
+
+        public NServiceBusConsumer(IConsumerNotifier<ChangeColorsCommand> notifier, ILogger<NServiceBusConsumer> logger)
         {
             Notifier = notifier;
+            _logger = logger;
         }
 
         public IServiceProvider ServiceProvider { get; }
@@ -17,7 +20,7 @@ namespace Iris.Cloud.Demo
 
         public async Task Handle(ChangeColorsCommand message, IMessageHandlerContext context)
         {
-            Console.WriteLine(JsonSerializer.Serialize(message));
+            _logger.LogDebug("Received message: {Message}", JsonSerializer.Serialize(message));
 
             await Notifier.ReceivedEvent(message);
         }
