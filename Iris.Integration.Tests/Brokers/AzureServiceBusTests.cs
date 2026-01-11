@@ -10,9 +10,11 @@ namespace Iris.Integration.Tests.Brokers
     {
         private readonly IrisWebApplicationFactory _factory;
 
+        // Example connection string - replace with your own Azure Service Bus credentials
+        // or use environment variables for CI/CD
         private ConnectionData _data = new()
         {
-            ConnectionString = "Endpoint=sb://iris-cloud.servicebus.windows.net/;SharedAccessKeyName=integration-test;SharedAccessKey=Q5SvdXPe2EPbTk8X9AGq0Xry2azzoEpzK+ASbMFtn7E="
+            ConnectionString = "Endpoint=sb://your-namespace.servicebus.windows.net/;SharedAccessKeyName=your-key-name;SharedAccessKey=your-shared-access-key"
         };
 
         public AzureServiceBusTests(IrisWebApplicationFactory factory)

@@ -4,6 +4,7 @@ using Iris.Contracts.Audit;
 using Iris.Contracts.Audit.Models;
 using Iris.Desktop.Infrastructure;
 using Iris.History;
+using Microsoft.Extensions.Logging;
 using HistoryRecord = Iris.History.HistoryRecord;
 
 namespace Iris.Desktop.History;
@@ -11,10 +12,12 @@ namespace Iris.Desktop.History;
 public class LocalHistoryService : IHistoryService
 {
     private readonly HistoryRepository _db;
-    
-    public LocalHistoryService(HistoryRepository db)
+    private readonly ILogger<LocalHistoryService> _logger;
+
+    public LocalHistoryService(HistoryRepository db, ILogger<LocalHistoryService> logger)
     {
         _db = db;
+        _logger = logger;
     }
 
     private List<HistoryRecord> History { get; } = new();
@@ -36,8 +39,9 @@ public class LocalHistoryService : IHistoryService
                     User = x.Source,
                 };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogWarning(ex, "Failed to deserialize history record details");
                 return null;
             }
         

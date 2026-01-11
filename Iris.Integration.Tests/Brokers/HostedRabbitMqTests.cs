@@ -14,11 +14,13 @@ namespace Iris.Integration.Tests.Brokers
 
         private string QueueName = "changecolorscommand";
 
+        // Example credentials - replace with your own CloudAMQP or RabbitMQ credentials
+        // or use environment variables for CI/CD
         private ConnectionData _data = new()
         {
-            Uri = "https://shrimp.rmq.cloudamqp.com",
-            Username = "rlbrfkzc",
-            Password = "A6qCDiyOP7iQrZHZV5dRS6rMbQE8NxxB",
+            Uri = "https://your-instance.rmq.cloudamqp.com",
+            Username = "your-username",
+            Password = "your-password",
         };
 
         public HostedRabbitMqTests(IrisWebApplicationFactory factory)
