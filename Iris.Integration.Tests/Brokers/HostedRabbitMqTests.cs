@@ -8,6 +8,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Iris.Integration.Tests.Brokers
 {
+    /// <summary>
+    /// Integration tests for hosted RabbitMQ (CloudAMQP).
+    /// These tests require real credentials and are skipped by default.
+    /// To run: replace placeholder credentials with real ones and remove Skip parameter.
+    /// </summary>
+    [Trait("Category", "Integration")]
     public class HostedRabbitMqTests : IClassFixture<IrisWebApplicationFactory>, IAsyncLifetime
     {
         private readonly IrisWebApplicationFactory _factory;
@@ -28,7 +34,7 @@ namespace Iris.Integration.Tests.Brokers
             _factory = factory;
         }
 
-        [Fact(DisplayName = "Can connect to hosted RabbitMq and retrieve endpoints")]
+        [Fact(DisplayName = "Can connect to hosted RabbitMq and retrieve endpoints", Skip = "Requires real CloudAMQP credentials")]
         public async Task Can_ConnectTo_HostedRabbitMq()
         {
             // Arrange
@@ -52,7 +58,7 @@ namespace Iris.Integration.Tests.Brokers
             endpoints.Any(x => x.Type.Equals("exchange", StringComparison.OrdinalIgnoreCase)).Should().BeTrue();
         }
 
-        [Fact(DisplayName = "Can send message to hosted Rabbit")]
+        [Fact(DisplayName = "Can send message to hosted Rabbit", Skip = "Requires real CloudAMQP credentials")]
         public async Task Can_SendMessageTo_HostedRabbitMq()
         {
             // Arrange
@@ -89,19 +95,31 @@ namespace Iris.Integration.Tests.Brokers
             return Task.CompletedTask;
         }
 
-        public async Task InitializeAsync()
+        public Task InitializeAsync()
         {
-            var client = new ManagementClient(new Uri(_data.Uri), _data.Username, _data.Password);
+            // Skip initialization when using placeholder credentials
+            // To run these tests, replace credentials and remove Skip from test attributes
+            if (_data.Uri.Contains("your-instance"))
+            {
+                return Task.CompletedTask;
+            }
+
+            return InitializeQueueAsync();
+        }
+
+        private async Task InitializeQueueAsync()
+        {
+            var client = new ManagementClient(new Uri(_data.Uri!), _data.Username!, _data.Password!);
 
             try
             {
-                var queue = await client.GetQueueAsync(_data.Username, QueueName);
+                var queue = await client.GetQueueAsync(_data.Username!, QueueName);
                 Console.WriteLine("RabbitMq hosted test queue exists");
             }
-            catch (UnexpectedHttpStatusCodeException ex)
+            catch (UnexpectedHttpStatusCodeException)
             {
                 Console.WriteLine($"Recreating {QueueName} on CloudAMPQ hosted environment...");
-                await client.CreateQueueAsync(_data.Username, QueueName, new());
+                await client.CreateQueueAsync(_data.Username!, QueueName, new());
                 Console.WriteLine($"Created {QueueName}");
             }
         }

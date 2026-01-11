@@ -26,8 +26,9 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
-      # Run only unit tests (skip integration tests that require external services/native libs)
+      # Run unit tests (skip integration tests that require external services/native libs)
       - name: Test
         run: |
-          dotnet test Iris.Brokers.Test --no-build --configuration Release --verbosity normal
-          dotnet test Iris.Assemblies.Test --no-build --configuration Release --verbosity normal
+          dotnet test Services/Iris.Brokers.Test/Iris.Brokers.Test.csproj --no-build --configuration Release --verbosity normal
+          dotnet test Services/Assemblies/Iris.Assemblies.Test/Iris.Assemblies.Test.csproj --no-build --configuration Release --verbosity normal
+          dotnet test Iris.Components.Test/Iris.Components.Test.csproj --no-build --configuration Release --verbosity normal
