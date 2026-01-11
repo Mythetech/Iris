@@ -10,10 +10,12 @@ namespace Iris.Integration.Tests.Brokers
     {
         private readonly IrisWebApplicationFactory _factory;
 
+        // Example credentials - replace with your own AWS IAM credentials
+        // or use environment variables for CI/CD
         private ConnectionData _data = new()
         {
-            Username = "AKIA3FLDZ6QFHB2ZCZHM",
-            Password = "SZWtO1m/eLU+U/meoR4b6EqGaeuvktRpccDgV1fr",
+            Username = "YOUR_AWS_ACCESS_KEY_ID",
+            Password = "YOUR_AWS_SECRET_ACCESS_KEY",
             Region = Amazon.RegionEndpoint.USEast1.SystemName,
         };
 
