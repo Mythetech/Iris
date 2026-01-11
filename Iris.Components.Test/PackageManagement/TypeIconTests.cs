@@ -1,12 +1,14 @@
 using FluentAssertions;
 using Iris.Components.PackageManagement;
-using Iris.Components.Theme;
 using Xunit;
 
 namespace Iris.Components.Test.PackageManagement;
 
 public class TypeIconTests : IrisTestContext
 {
+    // Helper to extract icon name from the IrisIcons path format "material-symbols-rounded/icon_name"
+    private static string GetIconName(string iconPath) => iconPath.Split('/').Last();
+
     [Theory(DisplayName = "Displays correct type icon for strings")]
     [InlineData("String")]
     public void Displays_CorrectlyTyped_StringIcon(string type)
@@ -14,7 +16,8 @@ public class TypeIconTests : IrisTestContext
         var cut = RenderComponent<TypeIcon>(parameters => parameters
             .Add(p => p.Type, type));
 
-        cut.Markup.Should().Contain(IrisIcons.Types.String);
+        cut.Markup.Should().Contain("material-symbols-rounded");
+        cut.Markup.Should().Contain("text");
     }
 
     [Theory(DisplayName = "Displays correct type icon for numbers")]
@@ -31,7 +34,8 @@ public class TypeIconTests : IrisTestContext
         var cut = RenderComponent<TypeIcon>(parameters => parameters
             .Add(p => p.Type, type));
 
-        cut.Markup.Should().Contain(IrisIcons.Types.Number);
+        cut.Markup.Should().Contain("material-symbols-rounded");
+        cut.Markup.Should().Contain("hashtag");
     }
 
     [Theory(DisplayName = "Displays correct type icon for dates")]
@@ -44,7 +48,8 @@ public class TypeIconTests : IrisTestContext
         var cut = RenderComponent<TypeIcon>(parameters => parameters
             .Add(p => p.Type, type));
 
-        cut.Markup.Should().Contain(IrisIcons.Types.Date);
+        cut.Markup.Should().Contain("material-symbols-rounded");
+        cut.Markup.Should().Contain("calendar");
     }
 
     [Theory(DisplayName = "Displays correct type icon for booleans")]
@@ -54,7 +59,8 @@ public class TypeIconTests : IrisTestContext
         var cut = RenderComponent<TypeIcon>(parameters => parameters
             .Add(p => p.Type, type));
 
-        cut.Markup.Should().Contain(IrisIcons.Types.Boolean);
+        cut.Markup.Should().Contain("material-symbols-rounded");
+        cut.Markup.Should().Contain("check");
     }
 
     [Theory(DisplayName = "Displays correct type icon for objects")]
@@ -65,7 +71,8 @@ public class TypeIconTests : IrisTestContext
         var cut = RenderComponent<TypeIcon>(parameters => parameters
             .Add(p => p.Type, type));
 
-        cut.Markup.Should().Contain(IrisIcons.Types.Object);
+        cut.Markup.Should().Contain("material-symbols-rounded");
+        cut.Markup.Should().Contain("brackets-curly");
     }
 
     [Theory(DisplayName = "Displays array icon for types ending in '[]'")]
@@ -75,9 +82,10 @@ public class TypeIconTests : IrisTestContext
         var cut = RenderComponent<TypeIcon>(parameters => parameters
             .Add(p => p.Type, type));
 
-        cut.Markup.Should().Contain(IrisIcons.Types.Array);
+        cut.Markup.Should().Contain("material-symbols-rounded");
+        cut.Markup.Should().Contain("brackets-square");
     }
-    
+
     [Theory(DisplayName = "Displays key icon for key/secret types")]
     [InlineData("Guid")]
     public void Displays_CorrectlyTyped_KeyIcon(string type)
@@ -85,7 +93,8 @@ public class TypeIconTests : IrisTestContext
         var cut = RenderComponent<TypeIcon>(parameters => parameters
             .Add(p => p.Type, type));
 
-        cut.Markup.Should().Contain(IrisIcons.Types.Key);
+        cut.Markup.Should().Contain("material-symbols-rounded");
+        cut.Markup.Should().Contain(">key<");
     }
 
     [Fact(DisplayName = "Displays default icon for null or empty type")]
@@ -94,6 +103,7 @@ public class TypeIconTests : IrisTestContext
         var cut = RenderComponent<TypeIcon>(parameters => parameters
             .Add(p => p.Type, null));
 
-        cut.Markup.Should().Contain(IrisIcons.Types.None);
+        cut.Markup.Should().Contain("material-symbols-rounded");
+        cut.Markup.Should().Contain("slash");
     }
 }
