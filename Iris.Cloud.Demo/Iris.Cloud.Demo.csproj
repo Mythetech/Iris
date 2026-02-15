@@ -17,6 +17,8 @@
 		<PackageReference Include="NServiceBus.Transport.AzureStorageQueues"  />
 	</ItemGroup>
 	<ItemGroup>
+  	<PackageReference Include="Microsoft.AspNetCore.Authorization" VersionOverride="10.0.3" />
+  	<PackageReference Include="System.Linq.Async" />
 	  <ProjectReference Include="..\Iris.Cloud.Demo.Contracts\Iris.Cloud.Demo.Contracts.csproj">
 	    <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
 	  </ProjectReference>
