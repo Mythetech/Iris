@@ -1,0 +1,24 @@
+@using Iris.Components.Shared.Dividers
+
+<MudText Typo="Typo.h6" Class="mud-text-secondary mt-4">Tab Layout</MudText>
+<PrimaryDivider Class="m-1" />
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+    <LayoutPreview Layout="LayoutState.Layout" LayoutName="Current"/>
+    <LayoutPreview Layout="LayoutState.GetDefaultTabLayout()" LayoutName="Default"/>
+    <IconTextButton Icon="@IrisIcons.Refresh" Text="Reset" OnClick="RefreshLayout"/>
+</MudStack>
+
+@code {
+    [Inject] public LayoutState LayoutState { get; set; } = default!;
+
+    protected async Task RefreshLayout()
+    {
+       await LayoutState.SaveLayoutAsync(LayoutState.GetDefaultTabLayout());
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LayoutState.GetLayoutAsync();
+        StateHasChanged();
+    }
+}

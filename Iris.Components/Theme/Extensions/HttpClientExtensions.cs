@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.Http.Json;
 
-namespace Iris.Cloud.Client.Shared.Extensions
+namespace Iris.Components.Theme.Extensions
 {
     public static class HttpClientExtensions
     {

@@ -1,55 +1,39 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Iris.Assemblies;
 using Iris.Assemblies.CodeGeneration;
 using Iris.Brokers;
 using Iris.Brokers.Extensions;
 using Iris.Brokers.Models;
 using Iris.Components;
-using Iris.Components.Infrastructure.MessageBus;
-using Iris.Components.Settings;
 using Iris.Desktop.Admin;
 using Iris.Desktop.Brokers;
 using Iris.Desktop.History;
 using Iris.Desktop.Infrastructure;
 using Iris.Desktop.PackageManagement;
 using Iris.Desktop.Templates;
-using Microsoft.Extensions.Configuration;
-using Velopack;
+using Microsoft.Extensions.DependencyInjection;
+using Mythetech.Framework.Desktop;
+using Mythetech.Framework.Infrastructure.MessageBus;
+using Mythetech.Framework.Infrastructure.Settings;
+using Photino.Blazor;
 
 namespace Iris.Desktop;
 
-using Microsoft.Extensions.DependencyInjection;
-using Photino.Blazor;
-
 public class Program
 {
-
     [STAThread]
     static void Main(string[] args)
     {
-        VelopackApp.Build().Run();
-        
         var builder = PhotinoBlazorAppBuilder.CreateDefault(args);
 
-        builder.Services
-            .AddLogging();
-
-        var config = new ConfigurationManager();
-        config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-
-        // register root component and selector
+        builder.Services.AddLogging();
         builder.RootComponents.Add<App>("#app");
 
+        // Iris domain services
         builder.Services.AddIrisComponentServices<LocalConnectionManager, LocalConnectionManager, LocalTemplateService, LocalPackageService, LocalHistoryService, AdminClient, MessageLayoutRepository>();
-        
-        builder.Services.AddIrisConfiguration(config);
-
-        builder.Services.AddIrisMessageBus(typeof(Program).Assembly);
-
         builder.Services.AddSingleton<IBrokerConnectionManager, BrokerConnectionManager>();
-
         builder.Services.AddFrameworkProvider();
-        
+
         foreach (var implementationType in Assembly.GetAssembly(typeof(IConnector))!.GetTypes()
                      .Where(t => typeof(IConnector).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract))
         {
@@ -57,32 +41,33 @@ public class Program
         }
 
         builder.Services.AddTransient<IAssemblyLoadService, AssemblyLoader>();
-        
         builder.Services.AddTransient<ICodeGenerator, CodeGenerator>();
-
         builder.Services.AddTransient<IrisLiteDbContext>();
-
         builder.Services.AddTransient<HistoryRepository>();
-
         builder.Services.AddTransient<AutoDiscovery>();
-        
-        builder.Services.AddSettingsProviders(typeof(Program).Assembly);
-        
+
+        // Framework infrastructure
+        builder.Services.AddMessageBus(typeof(Program).Assembly);
+        builder.Services.AddSettingsFramework();
+        builder.Services.AddDesktopSettingsStorage("Iris");
+        builder.Services.RegisterSettingsFromAssembly(typeof(Program).Assembly);
+        builder.Services.RegisterSettingsFromAssembly(typeof(Iris.Components.Messaging.MessagingSettings).Assembly);
+        builder.Services.AddDesktopServices();
+
         var app = builder.Build();
 
-        app.Services.UseIrisMessageBus(typeof(Program).Assembly);
+        app.Services.UseMessageBus(typeof(Program).Assembly);
+        app.Services.UseSettingsFramework();
+        app.Services.LoadPersistedSettingsAsync().GetAwaiter().GetResult();
 
         app.MainWindow
             .SetTitle("Iris Desktop")
-            .SetSize(1920, 1080)
-            .SetTransparent(true);
+            .SetSize(1920, 1080);
 
         AppDomain.CurrentDomain.UnhandledException += (sender, error) =>
         {
             app.MainWindow.ShowMessage("Fatal exception", error.ExceptionObject.ToString());
         };
-
-        
 
         app.Run();
     }

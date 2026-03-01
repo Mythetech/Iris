@@ -24,8 +24,7 @@ namespace Iris.Components.Test.Brokers
         };
             Services.AddSingleton(providerLookup);
             Services.AddMudServices();
-            JSInterop.SetupVoid("mudPopover.initialize", _ => true);
-            JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true);
+            JSInterop.Mode = JSRuntimeMode.Loose;
             RenderComponent<MudPopoverProvider>();
         }
 

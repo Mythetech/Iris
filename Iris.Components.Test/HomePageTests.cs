@@ -20,15 +20,7 @@ public class HomePageTests : TestContext
         Services.AddSingleton(_mockBrokerService);
         
         Services.AddMudServices();
-        
-        JSInterop.SetupModule("./_content/PSC.Blazor.Components.Chartjs/Chart.js")
-            .SetupVoid("chartSetup", _ => true);
-
-        JSInterop.SetupVoid("mudPopover.initialize", _ => true);
-        JSInterop.SetupVoid("mudPopover.connect", _ => true);
-        JSInterop.SetupVoid("addClickListener", _ => true);
-        JSInterop.SetupVoid("mudKeyInterceptor.connect", _ => true);
-        JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true);
+        JSInterop.Mode = JSRuntimeMode.Loose;
         RenderComponent<MudPopoverProvider>();
     }
 

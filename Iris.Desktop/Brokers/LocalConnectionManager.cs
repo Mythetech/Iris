@@ -7,7 +7,7 @@ using Iris.Brokers.Exceptions;
 using Iris.Brokers.Frameworks;
 using Iris.Brokers.Models;
 using Iris.Components.Brokers;
-using Iris.Components.Infrastructure.MessageBus;
+using Mythetech.Framework.Infrastructure.MessageBus;
 using Iris.Components.Messaging;
 using Iris.Components.PackageManagement;
 using Iris.Contracts.Brokers.Endpoints;

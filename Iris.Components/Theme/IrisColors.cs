@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Iris.Cloud.Client.Shared
+namespace Iris.Components.Theme
 {
     public static class IrisColors
     {

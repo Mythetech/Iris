@@ -44,7 +44,7 @@
 
 @code {
 
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = default!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
     
     [Inject]
     public IBrokerService BrokerService { get; set; } = default!;
