@@ -14,7 +14,7 @@
       <PackageReference Include="LiteDB" />
       <PackageReference Include="Microsoft.Extensions.Http" />
       <PackageReference Include="Mythetech.Framework.Desktop" />
-      <PackageReference Include="Photino.Blazor" />
+      <PackageReference Include="Mythetech.Hermes.Blazor" />
     </ItemGroup>
 
     <ItemGroup>
