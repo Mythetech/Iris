@@ -45,9 +45,9 @@
     <PackageVersion Include="MassTransit.TestFramework" Version="8.3.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageVersion Include="WolverineFx" Version="3.3.0" />
-    <PackageVersion Include="xunit" Version="2.9.2" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.extensibility.core" Version="2.9.2" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2">
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageVersion>
@@ -57,9 +57,9 @@
     </PackageVersion>
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
     <PackageVersion Include="FastEndpoints.Testing" Version="5.31.0" />
-    <PackageVersion Include="FluentAssertions" Version="6.12.2" />
+    <PackageVersion Include="FluentAssertions" Version="8.8.0" />
     <PackageVersion Include="System.Reflection.Emit" Version="4.7.0" />
-    <PackageVersion Include="bunit" Version="1.34.0" />
+    <PackageVersion Include="bunit" Version="2.6.2" />
     <PackageVersion Include="BlazorMonaco" Version="3.2.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.0" PrivateAssets="all" />
@@ -74,9 +74,9 @@
     <PackageVersion Include="Mythetech.Hermes.Blazor" Version="0.0.0-preview.63" />
     <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="10.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
-    <PackageVersion Include="Testcontainers.RabbitMq" Version="4.0.0" />
-    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.0.0" />
-    <PackageVersion Include="Testcontainers.Azurite" Version="4.0.0" />
+    <PackageVersion Include="Testcontainers.RabbitMq" Version="4.10.0" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.10.0" />
+    <PackageVersion Include="Testcontainers.Azurite" Version="4.10.0" />
     <PackageVersion Include="Mythetech.Framework" Version="0.11.1" />
     <PackageVersion Include="Mythetech.Framework.Desktop" Version="0.11.3" />
   </ItemGroup>
