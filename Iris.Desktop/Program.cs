@@ -1,4 +1,6 @@
 using System.Reflection;
+using Hermes;
+using Hermes.Blazor;
 using Iris.Assemblies;
 using Iris.Assemblies.CodeGeneration;
 using Iris.Brokers;
@@ -15,7 +17,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Mythetech.Framework.Desktop;
 using Mythetech.Framework.Infrastructure.MessageBus;
 using Mythetech.Framework.Infrastructure.Settings;
-using Photino.Blazor;
 
 namespace Iris.Desktop;
 
@@ -24,10 +25,18 @@ public class Program
     [STAThread]
     static void Main(string[] args)
     {
-        var builder = PhotinoBlazorAppBuilder.CreateDefault(args);
+        var builder = HermesBlazorAppBuilder.CreateDefault(args);
 
         builder.Services.AddLogging();
         builder.RootComponents.Add<App>("#app");
+
+        builder.ConfigureWindow(options =>
+        {
+            options.Title = "Iris Desktop";
+            options.Width = 1920;
+            options.Height = 1080;
+            options.CenterOnScreen = true;
+        });
 
         // Iris domain services
         builder.Services.AddIrisComponentServices<LocalConnectionManager, LocalConnectionManager, LocalTemplateService, LocalPackageService, LocalHistoryService, AdminClient, MessageLayoutRepository>();
@@ -52,7 +61,7 @@ public class Program
         builder.Services.AddDesktopSettingsStorage("Iris");
         builder.Services.RegisterSettingsFromAssembly(typeof(Program).Assembly);
         builder.Services.RegisterSettingsFromAssembly(typeof(Iris.Components.Messaging.MessagingSettings).Assembly);
-        builder.Services.AddDesktopServices();
+        builder.Services.AddDesktopServices(DesktopHost.Hermes);
 
         var app = builder.Build();
 
@@ -60,13 +69,9 @@ public class Program
         app.Services.UseSettingsFramework();
         app.Services.LoadPersistedSettingsAsync().GetAwaiter().GetResult();
 
-        app.MainWindow
-            .SetTitle("Iris Desktop")
-            .SetSize(1920, 1080);
-
         AppDomain.CurrentDomain.UnhandledException += (sender, error) =>
         {
-            app.MainWindow.ShowMessage("Fatal exception", error.ExceptionObject.ToString());
+            Console.Error.WriteLine($"Fatal exception: {error.ExceptionObject}");
         };
 
         app.Run();
