@@ -1,27 +1,22 @@
-﻿@using System.Reflection
-@using Microsoft.AspNetCore.Authorization
-@using Iris.Components.Subscriptions
-@using Microsoft.AspNetCore.Components.Authorization
+@using System.Reflection
 @using Iris.Components.Navigation
 @using Iris.Components
 @using Iris.Components.Shared.Time
 @using Iris.Desktop.Admin
 @using Iris.Desktop.Brokers
 
-
 @inherits LayoutComponentBase
 
     <div class="page">
-       
+
                     <div class="sidebar" style="@IconMenuCssClass">
                         <IrisNavMenu ShowIconMenu="ToggleIconMenu"/>
                     </div>
-    
+
         <main>
                     <div class="top-row px-4">
                                 <MudBreadcrumbs Style="background-color:transparent;" Items="BreadcrumbService.Breadcrumbs"/>
                                 <FlexSpacer/>
-                                @*<IconButton Title="Notifications" Name="IconName.BellFill" />*@
                                 <DesktopAccountDropdown />
                     </div>
             <article class="content px-4">
@@ -49,7 +44,7 @@
     [CascadingParameter(Name = "PageType")] public Type? PageType { get; set; }
 
     private bool _iconMenuActive { get; set; }
-    
+
     private string? IconMenuCssClass => _iconMenuActive ? "width: 86px;" : null;
 
     protected static Version AppVersion => System.Reflection.Assembly.GetExecutingAssembly().GetName().Version ?? throw new NullReferenceException();
@@ -60,21 +55,14 @@
     {
         _iconMenuActive = iconMenuActive;
     }
-    
+
     protected override void OnInitialized()
     {
         BreadcrumbService.OnChange += StateHasChanged;
     }
-    
 
     public void Dispose()
     {
         BreadcrumbService.OnChange -= StateHasChanged;
-    }
-
-    private bool IsPageAllowAnonymous(Type? pageType)
-    {
-        var attribute = pageType?.GetCustomAttribute<AllowAnonymousAttribute>();
-        return attribute != null;
     }
 }

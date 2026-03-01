@@ -3,15 +3,11 @@ using Iris.Components.History;
 using Iris.Contracts.Audit;
 using Iris.Contracts.Audit.Models;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Iris.Components.History
 {
     public partial class History : IrisPageBase
     {
-        [Inject]
-        protected AuthenticationStateProvider Auth { get; set; } = default!;
-
         public override string Identifier { get; set; } = "History";
 
         private List<AuditRecord>? HistoryRecords { get; set; } = new();

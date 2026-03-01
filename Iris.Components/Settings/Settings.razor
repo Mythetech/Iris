@@ -1,22 +1,10 @@
-﻿@page "/Settings"
-@using Iris.Components.Brokers
+@page "/Settings"
 @using Iris.Components.Theme
+@using Mythetech.Framework.Components.Settings
 @inherits IrisPageBase
 
-<MudStack>
-    <IrisCard Title="Settings" HeaderIcon="@IrisIcons.Settings" HeaderClass="mb-4">
-        <ChildContent>
-            <MudStack Spacing="3" Class="pa-2">
-                @foreach (var s in SectionAggregator.GetSettingsSections())
-                {
-                    <SectionLayout Section="@s"/>
-                }   
-            </MudStack>
-        </ChildContent>
-    </IrisCard>
-</MudStack>
-
-@code {
-    [Inject] protected ISectionAggregator SectionAggregator { get; set; } = default!;
-}
-
+<IrisCard Title="Settings" HeaderIcon="@IrisIcons.Settings" HeaderClass="mb-4">
+    <ChildContent>
+        <SettingsPanel ShowTitle="false" />
+    </ChildContent>
+</IrisCard>

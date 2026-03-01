@@ -15,9 +15,6 @@
             <MudItem xs="12">
                 <MudDataGrid T="HistoryRecord" Class="iris-table" Hover="true" Items="@(HistoryState?.History ?? [])" Loading="@Loading" RowsPerPage="10" QuickFilter="@QuickFilter" ColumnResizeMode="ResizeMode.Column">
                     <ToolBarContent>
-                        <AuthorizeView>
-                            <MudText Typo="Typo.subtitle1">@context.User.Identity?.Name</MudText>
-                        </AuthorizeView>
                         <MudSpacer />
                         <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
                                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="MudBlazor.Size.Medium" Class="mt-0"></MudTextField>
