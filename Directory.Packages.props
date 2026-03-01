@@ -71,7 +71,7 @@
     <PackageVersion Include="Microsoft.Fast.Components.FluentUI" Version="3.7.8" />
     <PackageVersion Include="Toolbelt.Blazor.LoadingBar" Version="14.0.0" />
     <PackageVersion Include="Toolbelt.Blazor.ViewTransition" Version="1.0.3" />
-    <PackageVersion Include="Photino.Blazor" Version="4.0.13" />
+    <PackageVersion Include="Mythetech.Hermes.Blazor" Version="0.0.0-preview.63" />
     <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="10.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
     <PackageVersion Include="Testcontainers.RabbitMq" Version="4.0.0" />

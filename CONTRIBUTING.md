@@ -6,7 +6,7 @@ Thank you for your interest in contributing to Iris! This document provides guid
 
 ### Prerequisites
 
-- **.NET 9 SDK** (9.0.100 or later)
+- **.NET 10 SDK** (10.0.100 or later)
 - **Visual Studio 2022** or **JetBrains Rider** (recommended)
 - **Git** for version control
 
@@ -49,7 +49,7 @@ dotnet test Iris.Integration.Tests
 
 | Project | Description |
 |---------|-------------|
-| `Iris.Desktop` | Main Photino.Blazor desktop application |
+| `Iris.Desktop` | Main Hermes/Blazor desktop application |
 | `Iris.Components` | Shared Blazor UI components |
 | `Iris.Brokers` | Message broker abstractions and connectors |
 | `Iris.Contracts` | Shared DTOs, commands, and events |
