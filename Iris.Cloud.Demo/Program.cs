@@ -24,8 +24,9 @@ builder.Services.AddSingleton<IConsumerNotifier<ChangeColorsCommandV2>, ChangeCo
 
 var ec = new EndpointConfiguration("changecolorscommand");
 ec.UseSerialization<SystemJsonSerializer>();
-var transport = new AzureStorageQueueTransport("REDACTED_AZURE_STORAGE_CONNECTION_STRING",
-    false);
+var storageConnectionString = builder.Configuration.GetConnectionString("AzureStorageQueue")
+    ?? throw new InvalidOperationException("AzureStorageQueue connection string is required. Set it via user secrets or environment variables.");
+var transport = new AzureStorageQueueTransport(storageConnectionString, false);
 ec.Recoverability().Delayed(settings => settings.NumberOfRetries(0));
 
 
