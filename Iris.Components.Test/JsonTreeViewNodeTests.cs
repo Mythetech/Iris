@@ -4,6 +4,8 @@ using System.Text.Json.Nodes;
 using Bunit;
 using FluentAssertions;
 using Iris.Components.Shared.JsonTreeView;
+using Microsoft.Extensions.DependencyInjection;
+using MudBlazor.Services;
 
 namespace Iris.Components.Test
 {
@@ -11,6 +13,8 @@ namespace Iris.Components.Test
     {
         public JsonTreeViewNodeTests()
         {
+            Services.AddMudServices();
+            JSInterop.Mode = JSRuntimeMode.Loose;
         }
 
         [Fact(DisplayName = "Can render json tree nodes with value types")]

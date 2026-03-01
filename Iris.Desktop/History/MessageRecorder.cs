@@ -1,42 +1,32 @@
 using System.Text.Json;
 using Iris.Components.History;
-using Iris.Components.Infrastructure.MessageBus;
+using Mythetech.Framework.Infrastructure.MessageBus;
 using Iris.Contracts.Audit;
 using Iris.Contracts.Messaging.Events;
 using Iris.Desktop.Infrastructure;
 using Iris.History;
-using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Iris.Desktop.History;
 
 public class MessageRecorder : IConsumer<MessageSent>
 {
     private readonly HistoryState _state;
-    private readonly AuthenticationStateProvider _authenticationStateProvider;
     private readonly HistoryRepository _db;
-    private LocalHistoryService LocalHistoryService { get; }
-    public MessageRecorder(HistoryState state, AuthenticationStateProvider authenticationStateProvider, HistoryRepository db)
+    public MessageRecorder(HistoryState state, HistoryRepository db)
     {
         _state = state;
-        _authenticationStateProvider = authenticationStateProvider;
         _db = db;
     }
     public async Task Consume(MessageSent message)
     {
-        var auth = await _authenticationStateProvider.GetAuthenticationStateAsync();
-
-        bool anonymous = !auth.User.Identity.IsAuthenticated;
-        
-        string source = anonymous ? "Local" : auth.User.Identity?.Name ?? "Unknown";
-        
-        var record = new HistoryRecord(Actions.MessageSent, source)
+        var record = new HistoryRecord(Actions.MessageSent, "Local")
         {
             Action = Actions.MessageSent,
             Details = JsonSerializer.Serialize(ToDetailsDictionary(message)),
             EventAction = "SendMessage",
             Target = message.Address,
             Timestamp = DateTimeOffset.Now,
-            Source = source
+            Source = "Local"
         };
         
         _db.AddHistoryRecord(record);

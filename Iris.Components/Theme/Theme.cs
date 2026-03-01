@@ -1,7 +1,7 @@
 ﻿using System;
 using MudBlazor;
 
-namespace Iris.Cloud.Client.Shared
+namespace Iris.Components.Theme
 {
     public class Theme
     {
@@ -35,12 +35,12 @@ namespace Iris.Cloud.Client.Shared
             },
             Typography = new Typography()
             {
-                Default = new Default()
+                Default = new DefaultTypography()
                 {
                     FontFamily = new[] { "Helvetica-Neue", "Helvetica", "Arial", "sans-serif" },
                     TextTransform = "none",
                 },
-                Button = new Button()
+                Button = new ButtonTypography()
                 {
                     FontFamily = new[] { "Helvetica-Neue", "Helvetica", "Arial", "sans-serif" },
                     TextTransform = "none",

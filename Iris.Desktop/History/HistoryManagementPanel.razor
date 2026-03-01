@@ -1,6 +1,5 @@
 @using Iris.Components.History
 @using Iris.Components.Shared.Dialogs
-@inherits Iris.Components.Settings.Section
 
 <MudStack Row>
     <MudText>Clear Local History</MudText>
@@ -9,9 +8,6 @@
 </MudStack>
 
 @code {
-    public override string Name { get; init; } = "Local History";
-    public override Type ComponentType { get; set; } = typeof(LocalHistorySection);
-
     [Inject] public HistoryRepository Repository { get; set; } = default!;
 
     [Inject] public HistoryState State { get; set; } = default!;
@@ -29,18 +25,17 @@
             { x => x.Color, Color.Error }
         };
 
-        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small  };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small };
 
         var dialogRef = await DialogService.ShowAsync<BasicDialog>("Delete History", parameters, options);
 
         var result = await dialogRef.Result;
 
         if (result is { Canceled: false, Data: not null } && (bool)result.Data)
-        { 
+        {
             Repository.DeleteHistory();
             State.Refresh();
             Snackbar.Add("Successfully cleared local history", Severity.Success);
         }
     }
 }
-    

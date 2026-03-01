@@ -2,13 +2,11 @@
 using System.Text.Json;
 using Iris.Components.Shared.Snackbar;
 using Iris.Contracts.Results;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
 namespace Iris.Components
 {
-    [Authorize]
     public class IrisPageBase : LayoutComponentBase
     {
         [Inject]

@@ -1,4 +1,4 @@
-using Iris.Components.Infrastructure.MessageBus;
+using Mythetech.Framework.Infrastructure.MessageBus;
 using Microsoft.Extensions.Logging;
 
 namespace Iris.Components.Test.Infrastructure;

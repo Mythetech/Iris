@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
@@ -15,10 +15,8 @@
     </ItemGroup>
     
     <ItemGroup>
-      <AdditionalFiles Include="Account\AccountDropdownMenu.razor" />
       <AdditionalFiles Include="Account\BugReportDialog.razor" />
       <AdditionalFiles Include="Account\BugTypeListItem.razor" />
-      <AdditionalFiles Include="Account\StandaloneAccountMenu.razor" />
       <AdditionalFiles Include="Brokers\AmazonConnectionData.razor" />
       <AdditionalFiles Include="Brokers\DynamicConnectionDataProvider.razor" />
       <AdditionalFiles Include="Brokers\RabbitMqConnectionData.razor" />
@@ -39,10 +37,6 @@
       <AdditionalFiles Include="Home\ProviderEndpointBarChartLoader.razor" />
       <AdditionalFiles Include="Home\ProviderEndpointCard.razor" />
       <AdditionalFiles Include="Home\ProviderEndpointCardLoader.razor" />
-      <AdditionalFiles Include="Identity\Login.razor" />
-      <AdditionalFiles Include="Identity\Logout.razor" />
-      <AdditionalFiles Include="Identity\RedirectToLogin.razor" />
-      <AdditionalFiles Include="Identity\Register.razor" />
       <AdditionalFiles Include="Messaging\EndpointSelector.razor" />
       <AdditionalFiles Include="Messaging\FrameworkSelector.razor" />
       <AdditionalFiles Include="Messaging\IrisSplitter.razor" />
@@ -76,17 +70,15 @@
       <AdditionalFiles Include="Shared\Loaders\LoadingExamplePage.razor" />
       <AdditionalFiles Include="Shared\Loaders\QuickIrisWingLoader.razor" />
       <AdditionalFiles Include="Shared\ProtectedTextField.razor" />
-      <AdditionalFiles Include="Shared\SwitchM3.razor" />
     </ItemGroup>
     
     <ItemGroup>
       <PackageReference Include="BlazorMonaco" />
-      <PackageReference Include="Microsoft.AspNetCore.Authorization" />
-      <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" />
       <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
       <PackageReference Include="Microsoft.Extensions.Http" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
       <PackageReference Include="MudBlazor" />
+      <PackageReference Include="Mythetech.Framework" />
       <PackageReference Include="PSC.Blazor.Components.Chartjs" />
       <PackageReference Include="Microsoft.Fast.Components.FluentUI"/>
       <PackageReference Include="Toolbelt.Blazor.LoadingBar" />

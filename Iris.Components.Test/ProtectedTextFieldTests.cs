@@ -11,6 +11,7 @@ namespace Iris.Components.Test
         public ProtectedTextFieldTests()
         {
             Services.AddMudServices();
+            JSInterop.Mode = JSRuntimeMode.Loose;
         }
 
         [Fact(DisplayName = "ProtectedTextField can render and bind value")]

@@ -1,6 +1,6 @@
 using Bunit;
 using FluentAssertions;
-using Iris.Components.Infrastructure.MessageBus;
+using Mythetech.Framework.Infrastructure.MessageBus;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Iris.Components.Test.Infrastructure;
@@ -9,7 +9,7 @@ public class MessageBusTests : TestContext
 {
  public MessageBusTests()
  {
-     Services.AddIrisMessageBus(typeof(MessageBusTests).Assembly);
+     Services.AddMessageBus(typeof(MessageBusTests).Assembly);
      Services.AddSingleton<TestDataStateService>();
  }
 
@@ -33,7 +33,7 @@ public class MessageBusTests : TestContext
 
  {
      // Arrange
-     Services.UseIrisMessageBus(typeof(SimpleServiceConsumer).Assembly);
+     Services.UseMessageBus(typeof(SimpleServiceConsumer).Assembly);
 
      var message = new SetText("test");
      var messageBus = Services.GetService<IMessageBus>();
@@ -51,7 +51,7 @@ public class MessageBusTests : TestContext
  public async Task Can_Update_ServiceAndComponentConsumer()
  {
      // Arrange
-     Services.UseIrisMessageBus(typeof(SimpleServiceConsumer).Assembly);
+     Services.UseMessageBus(typeof(SimpleServiceConsumer).Assembly);
 
      var message = new SetText("test2");
      var messageBus = Services.GetService<IMessageBus>();
@@ -70,9 +70,9 @@ public class MessageBusTests : TestContext
  public async Task No_Consumers_Should_Not_Throw()
  {
      var ctx = new TestContext();
-     ctx.Services.AddIrisMessageBus();
+     ctx.Services.AddMessageBus();
      ctx.Services.AddSingleton<TestDataStateService>();
-     ctx.Services.UseIrisMessageBus();
+     ctx.Services.UseMessageBus();
      
      // Arrange
      var message = new SetText("test");

@@ -12,10 +12,7 @@ namespace Iris.Components.Test
         public IrisTestContext()
         {
             Services.AddMudServices();
-            JSInterop.SetupVoid("mudPopover.initialize", _ => true);
-            JSInterop.SetupVoid("mudPopover.connect", _ => true);
-            JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true);
-            JSInterop.SetupVoid("mudKeyInterceptor.connect", _ => true);
+            JSInterop.Mode = JSRuntimeMode.Loose;
         }
     }
 }

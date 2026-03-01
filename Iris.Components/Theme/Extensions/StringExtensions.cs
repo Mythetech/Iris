@@ -1,4 +1,4 @@
-﻿namespace Iris.Cloud.Client.Shared.Extensions
+﻿namespace Iris.Components.Theme.Extensions
 {
     public static class StringExtensions
     {
