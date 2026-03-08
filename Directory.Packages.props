@@ -66,7 +66,7 @@
     <PackageVersion Include="Microsoft.Extensions.Features" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Primitives" Version="10.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
-    <PackageVersion Include="MudBlazor" Version="8.14.0" />
+    <PackageVersion Include="MudBlazor" Version="9.1.0" />
     <PackageVersion Include="PSC.Blazor.Components.Chartjs" Version="8.0.8" />
     <PackageVersion Include="Microsoft.Fast.Components.FluentUI" Version="3.7.8" />
     <PackageVersion Include="Toolbelt.Blazor.LoadingBar" Version="14.0.0" />
