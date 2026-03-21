@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PackageIcon>wwwroot\icon.png</PackageIcon>
+        <AssemblyName>Iris</AssemblyName>
         <Company>Mythetech</Company>
     </PropertyGroup>
 
