@@ -15,64 +15,6 @@
     </ItemGroup>
     
     <ItemGroup>
-      <AdditionalFiles Include="Account\BugReportDialog.razor" />
-      <AdditionalFiles Include="Account\BugTypeListItem.razor" />
-      <AdditionalFiles Include="Brokers\AmazonConnectionData.razor" />
-      <AdditionalFiles Include="Brokers\DynamicConnectionDataProvider.razor" />
-      <AdditionalFiles Include="Brokers\RabbitMqConnectionData.razor" />
-      <AdditionalFiles Include="Endpoints\EndpointOffcanvas.razor" />
-      <AdditionalFiles Include="Endpoints\Pages\EndpointDetailsIndex.razor" />
-      <AdditionalFiles Include="Endpoints\Pages\Endpoints.razor" />
-      <AdditionalFiles Include="History\History.razor" />
-      <AdditionalFiles Include="History\HistoryActionIcon.razor" />
-      <AdditionalFiles Include="History\HistoryDetailRecordCard.razor" />
-      <AdditionalFiles Include="Home\ConnectionDoughnut.razor" />
-      <AdditionalFiles Include="Home\ConnectionDoughnutLoader.razor" />
-      <AdditionalFiles Include="Home\Home.razor" />
-      <AdditionalFiles Include="Home\HomeCard.razor" />
-      <AdditionalFiles Include="Home\IrisChip.razor" />
-      <AdditionalFiles Include="Home\ProviderCarousel.razor" />
-      <AdditionalFiles Include="Home\ProviderCarouselLoader.razor" />
-      <AdditionalFiles Include="Home\ProviderEndpointBarChart.razor" />
-      <AdditionalFiles Include="Home\ProviderEndpointBarChartLoader.razor" />
-      <AdditionalFiles Include="Home\ProviderEndpointCard.razor" />
-      <AdditionalFiles Include="Home\ProviderEndpointCardLoader.razor" />
-      <AdditionalFiles Include="Messaging\EndpointSelector.razor" />
-      <AdditionalFiles Include="Messaging\FrameworkSelector.razor" />
-      <AdditionalFiles Include="Messaging\IrisSplitter.razor" />
-      <AdditionalFiles Include="Messaging\MessageHeaders.razor" />
-      <AdditionalFiles Include="Messaging\MessageOptions.razor" />
-      <AdditionalFiles Include="Messaging\Messaging.razor" />
-      <AdditionalFiles Include="Messaging\OptionsPanel.razor" />
-      <AdditionalFiles Include="Messaging\ProviderSelector.razor" />
-      <AdditionalFiles Include="Messaging\TemplateTabList.razor" />
-      <AdditionalFiles Include="PackageManagement\Packages.razor" />
-      <AdditionalFiles Include="Settings\DeleteConnectionModal.razor" />
-      <AdditionalFiles Include="Settings\Settings.razor" />
-      <AdditionalFiles Include="Shared\ActionMenu.razor" />
-      <AdditionalFiles Include="Shared\DeleteButton.razor" />
-      <AdditionalFiles Include="Shared\FlexColumn.razor" />
-      <AdditionalFiles Include="Shared\FlexContainer.razor" />
-      <AdditionalFiles Include="Shared\FlexKeyValuePair.razor" />
-      <AdditionalFiles Include="Shared\FlexRow.razor" />
-      <AdditionalFiles Include="Shared\FlexSpacer.razor" />
-      <AdditionalFiles Include="Shared\GridActionsMenu.razor" />
-      <AdditionalFiles Include="Shared\IconButton.razor" />
-      <AdditionalFiles Include="Shared\IrisCard.razor" />
-      <AdditionalFiles Include="Shared\IrisRainbowContainer.razor" />
-      <AdditionalFiles Include="Shared\IrisWing.razor" />
-      <AdditionalFiles Include="Shared\JsonTreeView\JsonTreeView.razor" />
-      <AdditionalFiles Include="Shared\JsonTreeView\JsonTreeViewItem.razor" />
-      <AdditionalFiles Include="Shared\JsonTreeView\JsonTreeViewNode.razor" />
-      <AdditionalFiles Include="Shared\Loaders\AnimatedIrisWingLoader.razor" />
-      <AdditionalFiles Include="Shared\Loaders\IrisWingLoader.razor" />
-      <AdditionalFiles Include="Shared\Loaders\LoadingDots.razor" />
-      <AdditionalFiles Include="Shared\Loaders\LoadingExamplePage.razor" />
-      <AdditionalFiles Include="Shared\Loaders\QuickIrisWingLoader.razor" />
-      <AdditionalFiles Include="Shared\ProtectedTextField.razor" />
-    </ItemGroup>
-    
-    <ItemGroup>
       <PackageReference Include="BlazorMonaco" />
       <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
       <PackageReference Include="Microsoft.Extensions.Http" />
