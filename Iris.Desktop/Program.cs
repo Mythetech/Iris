@@ -17,6 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Mythetech.Framework.Desktop;
 using Mythetech.Framework.Infrastructure.MessageBus;
 using Mythetech.Framework.Infrastructure.Settings;
+using Velopack;
 
 namespace Iris.Desktop;
 
@@ -25,6 +26,15 @@ public class Program
     [STAThread]
     static void Main(string[] args)
     {
+        try
+        {
+            VelopackApp.Build().Run();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Velopack initialization failed: {ex.Message}");
+        }
+
         var builder = HermesBlazorAppBuilder.CreateDefault(args);
 
         builder.Services.AddLogging();
