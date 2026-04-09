@@ -1,0 +1,32 @@
+@using Iris.Components.NativeMenu.Commands
+@using Iris.Components.PackageManagement
+@using Mythetech.Framework.Infrastructure.Files
+@inherits Mythetech.Framework.Infrastructure.MessageBus.ComponentConsumer<TriggerPackageUpload>
+
+@code {
+    [Inject] IPackageService PackageService { get; set; } = default!;
+    [Inject] IFileOpenService FileOpenService { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+
+    protected override async Task Consume(TriggerPackageUpload message, CancellationToken cancellationToken)
+    {
+        var files = await FileOpenService.OpenFileAsync(
+            title: "Select Assembly",
+            filters: [new FileFilter("Assemblies", ["dll"])]);
+
+        if (files.Length == 0)
+            return;
+
+        var result = await PackageService.UploadAssemblyAsync(files[0]);
+
+        if (result.Value != null)
+        {
+            Snackbar.Add("Uploaded package successfully", Severity.Success);
+        }
+        else
+        {
+            var error = string.IsNullOrWhiteSpace(result.Message) ? "Error uploading package" : result.Message;
+            Snackbar.Add(error, Severity.Error);
+        }
+    }
+}
