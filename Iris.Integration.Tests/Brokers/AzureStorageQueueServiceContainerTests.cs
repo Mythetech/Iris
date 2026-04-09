@@ -23,6 +23,7 @@ namespace Iris.Integration.Tests.Brokers
 
             _azuriteContainer = new AzuriteBuilder()
                     .WithImage("mcr.microsoft.com/azure-storage/azurite")
+                    .WithCommand("--skipApiVersionCheck")
                     .WithPortBinding(10000)
                     .WithExposedPort(10000)
                     .WithPortBinding(10001)

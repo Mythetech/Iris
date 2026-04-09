@@ -5,7 +5,7 @@
 @inherits DynamicTabView
 
 <MudStack>
-    <MudSelect Value="@MessageState.SelectedFramework" ValueChanged="@(framework => MessageState.SetFramework(framework))" Dense="true" T="string" Label="Framework" Variant="Variant.Text" AnchorOrigin="Origin.BottomCenter" Clearable="true">
+    <MudSelect Value="@MessageState.SelectedFramework" ValueChanged="@(framework => MessageState.SetFramework(framework))" Dense="true" T="string" Label="Framework" Variant="Variant.Text" Clearable="true">
         <MudSelectItem Value="@("MassTransit")" />
         <MudSelectItem Value="@("NServiceBus")" />
     </MudSelect>

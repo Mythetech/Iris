@@ -1,11 +1,12 @@
 ﻿@using Iris.Components.Theme
-@inject IJSRuntime JSRuntime
 
 <div @onclick:stopPropagation="true">
     <MudMenu Dense="true" >
         <ActivatorContent>
             <MudTooltip Text="Actions">
-                <IconButton Color="Color.Default" Name="@IrisIcons.MoreOptions" Style="cursor:pointer;" />
+                <div @onclick="@context.ToggleAsync">
+                    <IconButton Color="Color.Default" Name="@IrisIcons.MoreOptions" Style="cursor:pointer;" />
+                </div>
             </MudTooltip>
         </ActivatorContent>
         <ChildContent>

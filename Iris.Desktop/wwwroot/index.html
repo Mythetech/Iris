@@ -33,15 +33,47 @@
     <a class="dismiss text-decoration-none">❌</a>
 </div>
 <script src="_framework/blazor.webview.js"></script>
+<script src="_content/MudBlazor/MudBlazor.min.js"></script>
+<script src="_content/Mythetech.Framework/js-guard.js"></script>
+<script>
+    // Fix AMD loader conflict for dynamically injected plugin scripts
+    // Hide define.amd temporarily when scripts are injected so UMD scripts use global fallback
+    (function() {
+        var originalAppendChild = Element.prototype.appendChild;
+        Element.prototype.appendChild = function(child) {
+            if (child.tagName === 'SCRIPT' && child.textContent && window.define && window.define.amd) {
+                var savedAmd = window.define.amd;
+                delete window.define.amd;
+                var result = originalAppendChild.call(this, child);
+                Promise.resolve().then(function() {
+                    if (window.define && !window.define.amd) {
+                        window.define.amd = savedAmd;
+                    }
+                });
+                return result;
+            }
+            return originalAppendChild.call(this, child);
+        };
+    })();
+</script>
+<script src="_content/BlazorMonaco/jsInterop.js"></script>
+<script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
+<script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
+<script>
+    // On Linux/WebKitGTK, editor.main.js AMD modules don't resolve synchronously.
+    if (typeof monaco === 'undefined' && typeof require === 'function') {
+        require(['vs/editor/editor.main'], function() {});
+    }
+    registerJsGuard("monaco", function() { return typeof monaco !== 'undefined'; });
+</script>
 <script src="_content/Iris.Components/js/timezones.js" type="module"></script>
+<!-- Hide AMD loader before UMD scripts so they use global fallback instead of Monaco's define() -->
+<script>if(window.define&&window.define.amd){window.__savedAmd=window.define.amd;delete window.define.amd;}</script>
 <script src="_content/PSC.Blazor.Components.Chartjs/lib/Chart.js/chart.js"></script>
 <script src="_content/PSC.Blazor.Components.Chartjs/Chart.js" type="module"></script>
 <script src="_content/PSC.Blazor.Components.Chartjs/lib/chartjs-plugin-datalabels/chartjs-plugin-datalabels.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-<script src="_content/BlazorMonaco/jsInterop.js"></script>
-<script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
-<script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
-<script src="_content/MudBlazor/MudBlazor.min.js"></script>
+<script>if(window.define&&window.__savedAmd){window.define.amd=window.__savedAmd;delete window.__savedAmd;}</script>
 <script>window.addClickListener = (dotnetHelper) => {
     document.addEventListener('click', (event) => {
         if (!event.target.closest('.dropdown')) {

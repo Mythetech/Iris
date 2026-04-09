@@ -46,7 +46,7 @@ public class MessageLayoutRepository : IMessagingLayoutService, IRepository
         }
         catch
         {
-            return default!;
+            return Task.FromResult<List<DynamicTabView>?>(null);
         }
 
     }
