@@ -2,26 +2,18 @@
 @using Iris.Components.Shared.Snackbar
 @using Iris.Components.Theme
 @using Iris.Components.Shared.Toolbar
+@using Mythetech.Framework.Infrastructure.Files
 @page "/Packages"
 @inherits IrisPageBase
 
 <IrisToolBar Class="mb-4">
-@*
-    <MudButtonGroup Variant="Variant.Outlined">
-        <MudIconButton Icon="bi bi-record" Color="Color.Secondary"/>
-        <MudIconButton Icon="bi bi-record-circle" Color="Color.Primary"/>
-    </MudButtonGroup>
-    *@
     <MudSpacer/>
-    <MudFileUpload T="IBrowserFile" FilesChanged="UploadFiles">
-        <ActivatorContent>
-            <IrisLoadingButton
-                Text="Upload Package"
-                Loading="@Uploading"
-                LoadingText="Uploading"
-                Icon="@IrisIcons.UploadPackage"/>
-        </ActivatorContent>
-    </MudFileUpload>
+    <IrisLoadingButton
+        Text="Upload Package"
+        Loading="@Uploading"
+        LoadingText="Uploading"
+        Icon="@IrisIcons.UploadPackage"
+        OnClick="OpenFileAndUpload"/>
 </IrisToolBar>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="overflow-y-auto" Style="max-height:80dvh;">
@@ -48,6 +40,9 @@
 @code {
     [Inject]
     protected IPackageService PackageService { get; set; } = default!;
+
+    [Inject]
+    protected IFileOpenService FileOpenService { get; set; } = default!;
 
     public override string Identifier { get; set; } = "Packages";
 
@@ -79,19 +74,21 @@
         await base.OnInitializedAsync();
     }
 
-    private async Task UploadFiles(IBrowserFile? file)
+    private async Task OpenFileAndUpload()
     {
-        if (file == null)
-            return;
-        
-        Uploading = true;
+        var files = await FileOpenService.OpenFileAsync(
+            title: "Select Assembly",
+            filters: [new FileFilter("Assemblies", ["dll"])]);
 
+        if (files.Length == 0)
+            return;
+
+        Uploading = true;
         StateHasChanged();
 
-        var result = await PackageService.UploadAssemblyAsync(file!);
+        var result = await PackageService.UploadAssemblyAsync(files[0]);
 
         Uploading = false;
-
         StateHasChanged();
 
         HandleFileUploadResponse(result);

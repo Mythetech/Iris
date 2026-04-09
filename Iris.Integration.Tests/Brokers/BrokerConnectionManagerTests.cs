@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Iris.Integration.Tests.Brokers;
 
-public class BrokerConnectionManagerTests 
+public class BrokerConnectionManagerTests : IClassFixture<IrisWebApplicationFactory>
 {
     private readonly IrisWebApplicationFactory _fixture;
 
