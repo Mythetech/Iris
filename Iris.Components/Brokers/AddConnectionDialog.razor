@@ -1,6 +1,6 @@
 <MudDialog Class="glassmorphic-bg pa-4 mud-width-full box-shadow-primary" Style="width:33dvw;">
     <DialogContent>
-        <MudSelect @ref="_providerSelector" Required="true" @bind-Value="@_selectedProvider" T="SupportedProvider" Label="Connection Provider" AnchorOrigin="Origin.BottomCenter">
+        <MudSelect @ref="_providerSelector" Required="true" @bind-Value="@_selectedProvider" T="SupportedProvider" Label="Connection Provider">
             @foreach (var context in SupportedProviders)
             {
                 <MudSelectItem T="SupportedProvider" Value="@context">
@@ -75,7 +75,7 @@
 
     protected async Task ConnectAsync()
     {
-        await _providerSelector.Validate();
+        await _providerSelector.ValidateAsync();
         
         if (_providerSelector.HasErrors)
             return;

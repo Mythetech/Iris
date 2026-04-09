@@ -12,7 +12,8 @@ namespace Iris.Components.PackageManagement
         
 
         public Task<Result<AssemblyData>> UploadAssemblyAsync(IBrowserFile file);
-        
+
+        public Task<Result<AssemblyData>> UploadAssemblyAsync(string filePath);
     }
 }
 

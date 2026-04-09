@@ -41,11 +41,21 @@ public class LocalPackageService : IPackageService
 
     public async Task<Result<AssemblyData>> UploadAssemblyAsync(IBrowserFile file)
     {
-
         using var stream = file.OpenReadStream();
+        return await LoadAssemblyFromStreamAsync(stream);
+    }
+
+    public async Task<Result<AssemblyData>> UploadAssemblyAsync(string filePath)
+    {
+        await using var stream = File.OpenRead(filePath);
+        return await LoadAssemblyFromStreamAsync(stream);
+    }
+
+    private async Task<Result<AssemblyData>> LoadAssemblyFromStreamAsync(Stream stream)
+    {
         using var memoryStream = new MemoryStream();
         await stream.CopyToAsync(memoryStream);
-        memoryStream.Position = 0; // Reset to the beginning of the stream
+        memoryStream.Position = 0;
 
         var asm = await _assemblyLoader.LoadAssemblyAsync(memoryStream);
 
@@ -53,8 +63,8 @@ public class LocalPackageService : IPackageService
         {
             return new Failure<AssemblyData>("Failed to load assembly. The file may be invalid or unsupported.");
         }
-        
-        if(!_assemblies.Any(x => x.FullName == asm.FullName))
+
+        if (!_assemblies.Any(x => x.FullName == asm.FullName))
             _assemblies.Add(asm);
 
         return new Success<AssemblyData>(asm.ToContract());

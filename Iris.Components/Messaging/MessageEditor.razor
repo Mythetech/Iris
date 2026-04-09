@@ -1,4 +1,5 @@
 @using System.Text.Json
+@using Mythetech.Framework.Infrastructure.Guards
 <IrisCard Title="Editor" HeaderIcon="@IrisIcons.Editor" Class="flex-grow-1 m-3" Height="95.8%">
     <ToolbarContent>
         <IconButton Name="@IrisIcons.Copy" Title="Copy to Clipboard" ButtonClicked="CopyData"/>
@@ -8,7 +9,9 @@
     </ToolbarContent>
     <ChildContent>
         <div class="d-flex pa-2" style="height:96%;">
-            <StandaloneCodeEditor @ref="_editor" Id="messaging-editor" ConstructionOptions="EditorConstructionOptions" />
+            <JsGuard Name="monaco">
+                <StandaloneCodeEditor @ref="_editor" Id="messaging-editor" ConstructionOptions="EditorConstructionOptions" />
+            </JsGuard>
         </div>
     </ChildContent>
 </IrisCard>
