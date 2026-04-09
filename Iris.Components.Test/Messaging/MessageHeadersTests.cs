@@ -64,7 +64,7 @@ namespace Iris.Components.Test.Messaging
             cut.Instance.MessageState.HeaderMap.Add(new DictionaryViewModel { Key = "Key1", Value = "Value1" });
             cut.Instance.MessageState.HeaderMap.Add(new DictionaryViewModel { Key = "Key2", Value = "Value2" });
             var search = cut.FindComponent<MudTextField<string>>();
-            await search.InvokeAsync(() => search.Instance.SetText("key1"));
+            await search.InvokeAsync(() => search.Instance.SetTextAsync("key1"));
 
             // Act
             var filteredItems = cut.FindComponent<MudDataGrid<DictionaryViewModel>>();

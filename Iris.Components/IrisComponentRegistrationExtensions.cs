@@ -39,6 +39,13 @@ namespace Iris.Components
             services.AddSingleton<HistoryState>();
             services.AddScoped<IAdminService, TAdminService>();
 
+            // Dynamic connection data provider lookup (maps normalized provider names to custom connection UI components)
+            services.AddSingleton(new Dictionary<string, Type>
+            {
+                { "rabbitmq", typeof(Brokers.RabbitMqConnectionData) },
+                { "amazon", typeof(Brokers.AmazonConnectionData) },
+            });
+
             // Add MudBlazor and other UI services
             services.AddMudServices(config =>
             {
