@@ -1,0 +1,12 @@
+@using Iris.Components.NativeMenu.Commands
+@inherits Mythetech.Framework.Infrastructure.MessageBus.ComponentConsumer<NavigateTo>
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+
+    protected override Task Consume(NavigateTo message, CancellationToken cancellationToken)
+    {
+        NavigationManager.NavigateTo(message.Path);
+        return Task.CompletedTask;
+    }
+}

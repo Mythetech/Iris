@@ -1,0 +1,32 @@
+@using System.Text.Json
+@using Iris.Components.History
+@using Iris.Components.NativeMenu.Commands
+@using Mythetech.Framework.Infrastructure.Files
+@inherits Mythetech.Framework.Infrastructure.MessageBus.ComponentConsumer<ExportHistoryAsJson>
+
+@code {
+    [Inject] HistoryState HistoryState { get; set; } = default!;
+    [Inject] IFileSaveService FileSaveService { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
+
+    protected override async Task Consume(ExportHistoryAsJson message, CancellationToken cancellationToken)
+    {
+        var records = await HistoryState.GetUserHistoryAsync();
+
+        if (records is null || records.Count == 0)
+        {
+            Snackbar.Add("No history records to export", Severity.Warning);
+            return;
+        }
+
+        var json = JsonSerializer.Serialize(records, new JsonSerializerOptions { WriteIndented = true });
+
+        var filePath = await FileSaveService.PromptFileSaveAsync("iris-history-export", "json");
+
+        if (filePath is not null)
+        {
+            await FileSaveService.SaveFileAsync(filePath, json);
+            Snackbar.Add("History exported successfully", Severity.Success);
+        }
+    }
+}

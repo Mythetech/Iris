@@ -11,8 +11,10 @@ using Iris.Desktop.Admin;
 using Iris.Desktop.Brokers;
 using Iris.Desktop.History;
 using Iris.Desktop.Infrastructure;
+using Iris.Desktop.NativeMenu;
 using Iris.Desktop.PackageManagement;
 using Iris.Desktop.Templates;
+using Iris.Components.NativeMenu;
 using Microsoft.Extensions.DependencyInjection;
 using Mythetech.Framework.Desktop;
 using Mythetech.Framework.Desktop.Hermes;
@@ -49,6 +51,7 @@ public class Program
             options.Height = 1080;
             options.CenterOnScreen = true;
             options.DevToolsEnabled = true;
+            options.CustomTitleBar = true;
         });
 
         // Iris domain services
@@ -68,6 +71,10 @@ public class Program
         builder.Services.AddTransient<HistoryRepository>();
         builder.Services.AddTransient<AutoDiscovery>();
 
+        // Native menu services
+        builder.Services.AddSingleton<INativeMenuService, NativeMenuService>();
+        builder.Services.AddSingleton<INativeMenuCommandDispatcher, NativeMenuCommandDispatcher>();
+
         // Framework infrastructure
         builder.Services.AddMessageBus(typeof(Program).Assembly);
         builder.Services.AddSettingsFramework();
@@ -80,6 +87,11 @@ public class Program
         var app = builder.Build();
 
         app.RegisterHermesProvider();
+
+        // Initialize native menus
+        var menuService = app.Services.GetRequiredService<INativeMenuService>();
+        menuService.Initialize(app.MainWindow.MenuBar);
+
         app.Services.UseMessageBus(typeof(Program).Assembly);
         app.Services.UseSettingsFramework();
         app.Services.LoadPersistedSettingsAsync().GetAwaiter().GetResult();

@@ -1,0 +1,30 @@
+@using Iris.Components.Brokers
+@implements IDisposable
+
+@* Invisible component that syncs app state with native menu items *@
+
+@code {
+    [Inject] private INativeMenuService MenuService { get; set; } = default!;
+    [Inject] private IBrokerService BrokerService { get; set; } = default!;
+
+    private bool _initialized;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && MenuService.IsActive && !_initialized)
+        {
+            _initialized = true;
+            await RebuildConnectionsMenuAsync();
+        }
+    }
+
+    public async Task RebuildConnectionsMenuAsync()
+    {
+        var providers = await BrokerService.GetProvidersAsync();
+        MenuService.RebuildConnectionsMenu(providers);
+    }
+
+    public void Dispose()
+    {
+    }
+}
