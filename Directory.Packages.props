@@ -65,7 +65,7 @@
     <PackageVersion Include="Microsoft.Extensions.Primitives" Version="10.0.5" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.5" />
     <PackageVersion Include="PSC.Blazor.Components.Chartjs" Version="8.0.8" />
-    <PackageVersion Include="Microsoft.Fast.Components.FluentUI" Version="3.7.8" />
+    <PackageVersion Include="Microsoft.Fast.Components.FluentUI" Version="3.8.0" />
     <PackageVersion Include="Toolbelt.Blazor.LoadingBar" Version="14.0.0" />
     <PackageVersion Include="Toolbelt.Blazor.ViewTransition" Version="2.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="10.0.5" />
