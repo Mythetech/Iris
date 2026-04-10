@@ -1,6 +1,6 @@
 @inherits IrisBaseComponent
 
-<MudPaper Class="@Class" Outlined="false" Style="@($"background:rgba(0,0,0,0.9);height:100%")">
+<MudPaper Class="@Class" Outlined="false" Style="@($"background:var(--mud-palette-background-gray);height:100%")">
     <MudDropContainer Class="mud-height-full" Style="@Style" @ref="_dropContainer" T="DynamicTabView" 
                       Items="@Items" 
                       ItemsSelector="@ItemsSelector"

@@ -25,6 +25,7 @@ namespace Iris.Components.Theme
                 Background = Colors.Shades.Black,
                 DrawerBackground = Colors.Shades.Black,
                 Surface = Colors.Shades.Black,
+                BackgroundGray = "#111",
                 GrayDarker = "#222"
             },
             LayoutProperties = new LayoutProperties()

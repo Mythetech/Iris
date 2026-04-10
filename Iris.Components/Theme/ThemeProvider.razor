@@ -1,4 +1,5 @@
 @using Iris.Components.Theme
+@using Microsoft.JSInterop
 @inherits Mythetech.Framework.Infrastructure.MessageBus.ComponentConsumer<ThemeChanged>
 
 <MudThemeProvider @ref="_themeProvider"
@@ -9,6 +10,9 @@
 @code {
     [Inject]
     IrisAppState AppState { get; set; } = default!;
+
+    [Inject]
+    IJSRuntime JS { get; set; } = default!;
 
     private MudThemeProvider _themeProvider = default!;
 
@@ -36,5 +40,7 @@
             ThemeMode.System => await _themeProvider.GetSystemDarkModeAsync(),
             _ => true
         };
+
+        await BlazorMonaco.Editor.Global.SetTheme(JS, AppState.IsDarkMode ? "vs-dark" : "vs");
     }
 }
