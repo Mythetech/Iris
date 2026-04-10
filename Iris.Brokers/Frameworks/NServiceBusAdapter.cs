@@ -4,8 +4,11 @@ using NServiceBus.Transport;
 
 namespace Iris.Brokers.Frameworks
 {
-    public class NServiceBusAdapater : IFramework
+    public class NServiceBusAdapter : IFramework
     {
+        private static readonly string NServiceBusVersion =
+            typeof(OutgoingMessage).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+
         public string Name => "NServiceBus";
 
         public string CreateWrappedMessage(IMessageRequest apiMessageRequest)
@@ -36,7 +39,7 @@ namespace Iris.Brokers.Frameworks
             { "$.diagnostics.originating.hostid", Guid.NewGuid().ToString() },
             { "NServiceBus.ContentType", "application/json" },
             { "NServiceBus.EnclosedMessageTypes", messageType },
-            { "NServiceBus.Version", "9.1.0" },
+            { "NServiceBus.Version", NServiceBusVersion },
             { "NServiceBus.TimeSent", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss:ffffff Z") }
         };
 
