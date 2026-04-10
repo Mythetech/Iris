@@ -23,7 +23,10 @@ namespace Iris.Brokers.Azure
             get => "Azure";
         }
         
-        public async Task<IConnection?> ConnectAsync(ConnectionData data, bool discoverEndpoints = true)
+        public Task<IConnection?> ConnectAsync(ConnectionData data, bool discoverEndpoints = true)
+            => ConnectAsync(data, CancellationToken.None, discoverEndpoints);
+
+        public async Task<IConnection?> ConnectAsync(ConnectionData data, CancellationToken cancellationToken, bool discoverEndpoints = true)
         {
             if (string.IsNullOrWhiteSpace(data.ConnectionString))
             {
@@ -31,19 +34,21 @@ namespace Iris.Brokers.Azure
             }
 
             _logger.LogInformation($"Connection string passed basic validation");
-            
+
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
                 if (data.ConnectionString.Contains("Endpoint=sb") ||
                     (data?.ConnectionString?.Contains("servicebus", StringComparison.OrdinalIgnoreCase) ?? false))
                 {
                     _logger.LogInformation("Determined connection string is azure service bus, connecting...");
-                    return await ConnectToAzureServiceBusAsync(data.ConnectionString, discoverEndpoints);
+                    return await ConnectToAzureServiceBusAsync(data.ConnectionString, cancellationToken, discoverEndpoints);
                 }
                 else
                 {
                     _logger.LogInformation("Determined connection string is azure queue storage, connecting...");
-                    return await ConnectToAzureQueueStorageAsync(data!.ConnectionString!, discoverEndpoints);
+                    return await ConnectToAzureQueueStorageAsync(data!.ConnectionString!, cancellationToken, discoverEndpoints);
                 }
             }
             catch (Exception ex)
@@ -53,7 +58,7 @@ namespace Iris.Brokers.Azure
             }
         }
 
-        private async Task<IConnection?> ConnectToAzureServiceBusAsync(string connectionString, bool discoverEndpoints = true)
+        private async Task<IConnection?> ConnectToAzureServiceBusAsync(string connectionString, CancellationToken cancellationToken, bool discoverEndpoints = true)
         {
             var client = new ServiceBusClient(connectionString);
 
@@ -69,13 +74,14 @@ namespace Iris.Brokers.Azure
 
             if (discoverEndpoints && connection != null)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var endpoints = await connection.GetEndpointsAsync();
             }
 
             return connection;
         }
 
-        private async Task<IConnection?> ConnectToAzureQueueStorageAsync(string connectionString, bool discoverEndpoints = true)
+        private async Task<IConnection?> ConnectToAzureQueueStorageAsync(string connectionString, CancellationToken cancellationToken, bool discoverEndpoints = true)
         {
             var serviceClient = new QueueServiceClient(connectionString, new QueueClientOptions()
             {
@@ -93,6 +99,7 @@ namespace Iris.Brokers.Azure
 
             if (discoverEndpoints && connection != null)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 _ = await connection.GetEndpointsAsync();
             }
 
