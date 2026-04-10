@@ -16,8 +16,10 @@ using Iris.Desktop.PackageManagement;
 using Iris.Desktop.Templates;
 using Iris.Components.NativeMenu;
 using Microsoft.Extensions.DependencyInjection;
+using Iris.Desktop.Configuration;
 using Mythetech.Framework.Desktop;
 using Mythetech.Framework.Desktop.Hermes;
+using Mythetech.Framework.Desktop.Updates;
 using Mythetech.Framework.Infrastructure.Guards;
 using Mythetech.Framework.Infrastructure.Plugins;
 using Mythetech.Framework.Infrastructure.MessageBus;
@@ -85,6 +87,18 @@ public class Program
         builder.Services.RegisterSettingsFromAssembly(typeof(Program).Assembly);
         builder.Services.RegisterSettingsFromAssembly(typeof(Iris.Components.Messaging.MessagingSettings).Assembly);
         builder.Services.AddDesktopServices(DesktopHost.Hermes);
+        builder.Services.RegisterSettingsFromAssembly(typeof(DesktopHost).Assembly);
+        builder.Services.AddUpdateService(options =>
+        {
+            var platform = OperatingSystem.IsWindows() ? "windows"
+                : OperatingSystem.IsMacOS() ? "macos"
+                : "linux";
+            var channel = OperatingSystem.IsWindows() ? "win"
+                : OperatingSystem.IsMacOS() ? "osx"
+                : "linux";
+            options.UpdateUrl = $"{IrisDownloadConfiguration.UpdateBaseUrl}/{platform}";
+            options.Channel = channel;
+        });
         builder.Services.AddJsGuards();
         builder.Services.AddPluginStateProvider("Iris");
         builder.Services.AddPluginFramework();
@@ -102,6 +116,7 @@ public class Program
 
         app.Services.UseMessageBus(typeof(Program).Assembly);
         app.Services.UseSettingsFramework();
+        app.Services.UseUpdateService();
         AppDomain.CurrentDomain.UnhandledException += (sender, error) =>
         {
             Console.Error.WriteLine($"Fatal exception: {error.ExceptionObject}");
