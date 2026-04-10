@@ -16,22 +16,99 @@
     <link rel="icon" type="image/png" href="_content/Iris.Components/favicon.png" />
     <link rel="apple-touch-icon" sizes="512x512" href="_content/Iris.Components/icon-512.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="_content/Iris.Components/icon-192.png" />
+    <style>
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 99998;
+        }
+
+        .canvas-bg-container {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+        }
+
+        #iris-splash {
+            position: fixed;
+            z-index: 99999;
+            top: 25%;
+            left: calc(50vw - 250px);
+            width: 500px;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            border-radius: 0.5em;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            font-family: Helvetica-Neue, Helvetica, Arial, sans-serif;
+        }
+
+        #iris-splash .loader {
+            width: 75%;
+            height: 4.8px;
+            display: inline-block;
+            position: relative;
+            background: color-mix(in srgb, var(--mud-palette-primary) 15%, transparent);
+            overflow: hidden;
+        }
+
+        #iris-splash .loader::after {
+            content: '';
+            width: 192px;
+            height: 4.8px;
+            background: var(--mud-palette-primary);
+            position: absolute;
+            top: 0;
+            left: -192px;
+            box-sizing: border-box;
+            animation: animloader 2s linear infinite;
+        }
+
+        @keyframes animloader {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(calc(500px + 192px));
+            }
+        }
+
+        #iris-splash.fade-out,
+        #particle-canvas.fade-out {
+            opacity: 0;
+            transition: opacity 1s ease-out;
+            pointer-events: none;
+        }
+    </style>
 </head>
 
 <body>
-<div id="app">
-    <svg class="loading-progress">
-        <circle r="40%" cx="50%" cy="50%" />
-        <circle r="40%" cx="50%" cy="50%" />
-    </svg>
-    <div class="loading-progress-text"></div>
+<div id="particle-canvas" class="canvas-bg-container"></div>
+<div id="iris-splash">
+    <img alt="Iris Logo" src="_content/Iris.Components/icon-512.png" style="width:150px;height:150px;object-fit:contain;margin-bottom:-2rem;" />
+    <h3>Initializing Iris...</h3>
+        <span class="loader mt-4"></span>
 </div>
+<div id="app"></div>
 
 <div id="blazor-error-ui">
     <span class="text-primary">An unhandled error has occurred.</span>
     <a href="" class="reload">Reload</a>
     <a class="dismiss text-decoration-none">❌</a>
 </div>
+<script src="js/particle-render-flow.js"></script>
 <script src="_framework/blazor.webview.js"></script>
 <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 <script src="_content/Mythetech.Framework/mythetech.js" type="module"></script>
@@ -85,6 +162,21 @@
 
 window.removeClickListener = () => {
     document.removeEventListener('click', handleClickOutside);
+};
+
+window.irisSplash = {
+    hide: function() {
+        var splash = document.getElementById('iris-splash');
+        var canvas = document.getElementById('particle-canvas');
+        if (splash) {
+            splash.classList.add('fade-out');
+            setTimeout(function() { splash.remove(); }, 1000);
+        }
+        if (canvas) {
+            canvas.classList.add('fade-out');
+            setTimeout(function() { canvas.remove(); }, 1000);
+        }
+    }
 };</script>
 </body>
 
