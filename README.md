@@ -18,6 +18,7 @@ Messages can be wrapped in framework-specific envelopes:
 - **NServiceBus**
 - **EasyNetQ**
 - **Wolverine**
+- **Rebus**
 
 ## Tech Stack
 

@@ -8,6 +8,8 @@ public class MessageRequest : IMessageRequest
 
     public string? MessageFullyQualifiedName { get; set; }
 
+    public string? MessageAssemblyName { get; set; }
+
     public required string Json { get; set; }
 
     public string? Framework { get; set; }
@@ -27,18 +29,20 @@ public class MessageRequest : IMessageRequest
         Json = framework.CreateWrappedMessage(this);
     }
 
-    public static MessageRequest Create(string messageType, 
-        string json, 
-        bool generateIrisHeaders, 
+    public static MessageRequest Create(string messageType,
+        string json,
+        bool generateIrisHeaders,
         string? messageFullyQualifiedName = default,
         string? framework = default,
         Dictionary<string, string>? headers = default,
-        Dictionary<string, string>? properties = default)
+        Dictionary<string, string>? properties = default,
+        string? messageAssemblyName = default)
     {
         var message = new MessageRequest()
         {
             MessageType = messageType,
             MessageFullyQualifiedName = messageFullyQualifiedName,
+            MessageAssemblyName = messageAssemblyName,
             Json = json,
             Framework = framework,
             Headers = headers ?? new Dictionary<string, string>(),
