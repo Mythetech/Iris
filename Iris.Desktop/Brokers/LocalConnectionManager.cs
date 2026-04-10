@@ -34,9 +34,11 @@ public class LocalConnectionManager : IBrokerService, IMessageService
     private readonly ICodeGenerator _codeGenerator;
     private readonly IPackageService _packageService;
     private readonly MessageState _state;
+    private readonly ConnectionRepository _connectionRepository;
 
     public LocalConnectionManager(IBrokerConnectionManager connectionManager, IMessageBus bus,
-        IFrameworkProvider frameworks, ICodeGenerator codeGenerator, IPackageService packageService, MessageState state)
+        IFrameworkProvider frameworks, ICodeGenerator codeGenerator, IPackageService packageService, MessageState state,
+        ConnectionRepository connectionRepository)
     {
         _connectionManager = connectionManager;
         _bus = bus;
@@ -44,6 +46,7 @@ public class LocalConnectionManager : IBrokerService, IMessageService
         _codeGenerator = codeGenerator;
         _packageService = packageService;
         _state = state;
+        _connectionRepository = connectionRepository;
     }
 
     public async Task<Result<CreateConnectionResponse>> CreateConnectionAsync(ConnectionData data)
@@ -70,6 +73,8 @@ public class LocalConnectionManager : IBrokerService, IMessageService
         await _connectionManager.AddConnectionAsync(connection);
         await _bus.PublishAsync(new ConnectionCreated(connection.Connector.Provider, connection.Address));
 
+        _connectionRepository.Save(SavedConnection.FromConnectionData(data.Provider, connection.Address, data));
+
         var endpoints = new List<EndpointDetails>();
 
         endpoints = (await connection.GetEndpointsAsync()).Select(x => new EndpointDetails()
@@ -89,6 +94,7 @@ public class LocalConnectionManager : IBrokerService, IMessageService
 
         if (success)
         {
+            _connectionRepository.Delete(address);
             await _bus.PublishAsync(new ConnectionDeleted(address, address));
             return new Success<DeleteConnectionResponse>(new(success));
         }
