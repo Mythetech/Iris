@@ -8,7 +8,9 @@ using Iris.Brokers.Models;
 
 namespace Iris.Brokers.RabbitMQ
 {
-    public class RabbitMqConnection : IConnection, IMessageReader
+    // Note: IMessageReader implementation is re-added in slice S1 of the
+    // broker-read-side feature, using the new formal contract.
+    public class RabbitMqConnection : IConnection
     {
         private readonly ConnectionMetadata _metadata;
         private readonly EasyNetQ.Management.Client.ManagementClient _client;
@@ -66,11 +68,6 @@ namespace Iris.Brokers.RabbitMQ
             _endpoints = endpoints;
 
             return endpoints;
-        }
-
-        public async Task ReadAsync(string messageId)
-        {
-            var message = await _client.GetMessagesFromQueueAsync(Rabbit.VHost ?? "", messageId, new GetMessagesFromQueueInfo(100, AckMode.AckRequeueFalse));
         }
 
         public async Task SendAsync(EndpointDetails endpoint, MessageRequest message)
