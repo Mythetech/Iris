@@ -171,6 +171,24 @@ public class LocalConnectionManager : IBrokerService, IMessageService
         }
     }
 
+    private string? ResolveMessageAssemblyName(string messageType)
+    {
+        if (string.IsNullOrWhiteSpace(messageType))
+            return null;
+
+        var normalized = messageType.Replace(":", ".");
+
+        if (_packageService is not LocalPackageService local)
+            return null;
+
+        var types = local.GetLoadedTypes().Distinct().ToList();
+
+        var type = types.FirstOrDefault(x => x.Name == normalized)
+                   ?? types.FirstOrDefault(x => x.FullName != null && x.FullName.Equals(normalized));
+
+        return type?.Assembly.GetName().Name;
+    }
+
     public Task<string> CreateMessageDataAsync(string messageType)
     {
         messageType = messageType.Replace(":", ".");
@@ -219,14 +237,17 @@ public class LocalConnectionManager : IBrokerService, IMessageService
     public async Task<Result<bool>> SendMessageAsync(Message message)
     {
         var connection = await _connectionManager.GetConnectionAsync(message.Address);
-        
+
+        var assemblyName = ResolveMessageAssemblyName(message.MessageType);
+
         var request = MessageRequest.Create(message.MessageType,
             message.Data,
             _state.SendIrisHeader,
             message.MessageType,
             message.Framework,
             message.Headers,
-            message.Properties);
+            message.Properties,
+            assemblyName);
 
         if (!string.IsNullOrWhiteSpace(request.Framework))
             request.WrapMessage(_frameworks);
