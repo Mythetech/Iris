@@ -1,8 +1,6 @@
-﻿@import url(../fonts/Gotu-Regular.ttf);
-
-@font-face {
+﻿@font-face {
     font-family: "Gotu";
-    src: url(../fonts/Gotu-Regular.ttf);
+    src: url(../fonts/Gotu-Regular.ttf) format('truetype');
 }
 
 :root {
@@ -22,6 +20,10 @@
 
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.app-header-font {
+    font-family: 'Gotu', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 h1:focus {
