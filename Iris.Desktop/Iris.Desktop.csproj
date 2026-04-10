@@ -15,6 +15,12 @@
       <PackageReference Include="LiteDB" />
       <PackageReference Include="Microsoft.Extensions.Http" />
       <PackageReference Include="Mythetech.Framework.Desktop" />
+      <!-- Referenced transitively via Iris.Components; declared here only so that
+           GeneratePathProperty exposes $(PkgPSC_Blazor_Components_Chartjs) for the
+           FixPscChartJsPublishLayout target below. -->
+      <PackageReference Include="PSC.Blazor.Components.Chartjs"
+                        GeneratePathProperty="true"
+                        PrivateAssets="all" />
     </ItemGroup>
 
     <ItemGroup>
@@ -37,5 +43,30 @@
     <ItemGroup>
       <AdditionalFiles Include="Layout\MainLayout.razor" />
     </ItemGroup>
+
+    <Target Name="FixPscChartJsPublishLayout" AfterTargets="Publish">
+      <!--
+        PSC.Blazor.Components.Chartjs 8.0.8 ships both `staticwebassets/Chart.js`
+        (the ES module that exports chartSetup) and `staticwebassets/lib/Chart.js/chart.js`
+        (the UMD Chart v3.9.1). `dotnet publish` flattens `lib/` into the root of
+        `_content/PSC.Blazor.Components.Chartjs/`; on case-insensitive filesystems
+        (macOS APFS, Windows NTFS) the lowercase `chart.js` then clobbers the uppercase
+        `Chart.js` ES module. PSC's ChartJsInterop imports
+        ./_content/PSC.Blazor.Components.Chartjs/Chart.js at runtime, so the import
+        succeeds against the UMD wrapper, returns an empty module namespace, and
+        `module.chartSetup(...)` throws "The value 'chartSetup' is not a function".
+
+        Fix: re-mirror the package's staticwebassets tree over the publish output
+        AFTER publish has finished. This restores the correct root-level ES module
+        and rebuilds the `lib/...` hierarchy that index.html's <script> tags expect.
+      -->
+      <ItemGroup>
+        <_PscChartJsStaticAssets Include="$(PkgPSC_Blazor_Components_Chartjs)\staticwebassets\**\*" />
+      </ItemGroup>
+      <Copy SourceFiles="@(_PscChartJsStaticAssets)"
+            DestinationFolder="$(PublishDir)wwwroot\_content\PSC.Blazor.Components.Chartjs\%(RecursiveDir)"
+            SkipUnchangedFiles="false"
+            OverwriteReadOnlyFiles="true" />
+    </Target>
 
 </Project>
