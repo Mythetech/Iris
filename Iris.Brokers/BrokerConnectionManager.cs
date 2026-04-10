@@ -1,4 +1,4 @@
-﻿namespace Iris.Brokers
+namespace Iris.Brokers
 {
     public class BrokerConnectionManager : IBrokerConnectionManager
     {

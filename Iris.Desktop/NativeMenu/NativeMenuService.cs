@@ -14,8 +14,6 @@ public class NativeMenuService : INativeMenuService
     private NativeMenuBar? _menuBar;
     private bool _isInitialized;
 
-    private Hermes.Menu.NativeMenu? _connectionsMenu;
-
     public NativeMenuService(ILogger<NativeMenuService> logger)
     {
         _logger = logger;
@@ -55,27 +53,20 @@ public class NativeMenuService : INativeMenuService
 
     public void RebuildConnectionsMenu(IEnumerable<Provider> connections)
     {
-        if (_connectionsMenu is null) return;
+        if (_menuBar is null) return;
 
-        // Remove all existing dynamic connection items
-        var existingIds = _connectionsMenu.Items
-            .Where(i => i.Id.StartsWith(MenuItemIds.ConnectionsPrefix))
-            .Select(i => i.Id)
-            .ToList();
+        if (_menuBar.ContainsMenu("Connections"))
+            _menuBar.RemoveMenu("Connections");
 
-        foreach (var id in existingIds)
+        _menuBar.AddMenu("Connections", menu =>
         {
-            _connectionsMenu.RemoveItem(id);
-        }
+            menu.AddItem("New Connection...", MenuItemIds.ConnectionsNew);
+            menu.AddSeparator();
 
-        var providers = connections.ToList();
-        if (providers.Count > 0)
-        {
-            // Add separator before dynamic items if not already present
-            foreach (var provider in providers)
+            foreach (var provider in connections)
             {
                 var sanitizedAddress = SanitizeId(provider.Address);
-                _connectionsMenu.AddSubmenu(provider.Name ?? provider.Address, sub =>
+                menu.AddSubmenu(provider.Name ?? provider.Address, sub =>
                 {
                     sub.AddItem("Send Message",
                         MenuItemIds.ConnectionsPrefix + sanitizedAddress + MenuItemIds.ConnectionsSendMessageSuffix);
@@ -84,7 +75,7 @@ public class NativeMenuService : INativeMenuService
                         item => item.WithEnabled(false));
                 });
             }
-        }
+        });
     }
 
     private void OnNativeMenuItemClicked(string itemId)
@@ -118,10 +109,8 @@ public class NativeMenuService : INativeMenuService
         // Connections menu
         _menuBar.AddMenu("Connections", menu =>
         {
-            _connectionsMenu = menu;
             menu.AddItem("New Connection...", MenuItemIds.ConnectionsNew);
             menu.AddSeparator();
-            // Dynamic connection items will be added by RebuildConnectionsMenu
         });
 
         // History menu
