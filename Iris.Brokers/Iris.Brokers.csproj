@@ -29,6 +29,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
 		<PackageReference Include="Azure.Messaging.ServiceBus"  />
 		<PackageReference Include="NServiceBus" />
+		<PackageReference Include="Rebus" />
 		<PackageReference Include="AWSSDK.SQS" />
 		<PackageReference Include="Azure.Storage.Queues" />
 		<PackageReference Include="WolverineFx" />

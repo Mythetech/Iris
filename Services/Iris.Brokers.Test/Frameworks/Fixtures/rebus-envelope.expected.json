@@ -1,0 +1,14 @@
+{
+  "body": "{\"id\":1,\"name\":\"hello\"}",
+  "headers": {
+    "rbs2-content-type": "application/json;charset=utf-8",
+    "rbs2-corr-id": "<guid>",
+    "rbs2-corr-seq": "0",
+    "rbs2-intent": "p2p",
+    "rbs2-msg-id": "<guid>",
+    "rbs2-msg-type": "MyApp.Messages.Greeting, MyApp.Contracts",
+    "rbs2-return-address": "iris",
+    "rbs2-sender-address": "iris",
+    "rbs2-senttime": "<timestamp>"
+  }
+}
