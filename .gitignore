@@ -405,3 +405,6 @@ Iris.Api/appsettings.Development.json
 Iris.Cloud.Client/wwwroot/appsettings.Development.json
 Iris.Cloud.Demo/appsettings.Development.json
 Iris.Cloud.Demo/appsettings.Local.json
+
+*.internal/
+*.claude/
