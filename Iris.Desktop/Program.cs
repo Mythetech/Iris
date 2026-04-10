@@ -71,6 +71,7 @@ public class Program
         builder.Services.AddTransient<ICodeGenerator, CodeGenerator>();
         builder.Services.AddTransient<IrisLiteDbContext>();
         builder.Services.AddTransient<HistoryRepository>();
+        builder.Services.AddTransient<ConnectionRepository>();
         builder.Services.AddTransient<AutoDiscovery>();
 
         // Native menu services
@@ -88,6 +89,7 @@ public class Program
         builder.Services.AddPluginStateProvider("Iris");
         builder.Services.AddPluginFramework();
         builder.Services.AddAsyncInitialization();
+        builder.Services.AddInitializationHook<RestoreConnectionsInitializationHook>();
         builder.Services.AddInitializationHook<AutoDiscoveryInitializationHook>();
 
         var app = builder.Build();
