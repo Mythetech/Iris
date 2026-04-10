@@ -282,4 +282,30 @@ public class LocalConnectionManager : IBrokerService, IMessageService
 
         return Success<bool>.Create();
     }
+
+    public Task<Result<IReadOnlyList<ReceivedMessageDto>>> PeekMessagesAsync(
+        string address,
+        string endpointName,
+        int count,
+        Iris.Contracts.Messaging.Models.ReadSource source = Iris.Contracts.Messaging.Models.ReadSource.Main,
+        CancellationToken cancellationToken = default)
+    {
+        // Real implementation lands in S5 (service wiring) once the broker
+        // readers from S1–S4 are in place.
+        return Task.FromResult<Result<IReadOnlyList<ReceivedMessageDto>>>(
+            new Failure<IReadOnlyList<ReceivedMessageDto>>("Peek is not yet implemented."));
+    }
+
+    public Task<Result<IReadOnlyList<ReceivedMessageDto>>> ReceiveMessagesAsync(
+        string address,
+        string endpointName,
+        int count,
+        Iris.Contracts.Messaging.Models.ReadSource source = Iris.Contracts.Messaging.Models.ReadSource.Main,
+        CancellationToken cancellationToken = default)
+    {
+        // Real implementation lands in S5 (service wiring) once the broker
+        // readers from S1–S4 are in place.
+        return Task.FromResult<Result<IReadOnlyList<ReceivedMessageDto>>>(
+            new Failure<IReadOnlyList<ReceivedMessageDto>>("Receive is not yet implemented."));
+    }
 }
