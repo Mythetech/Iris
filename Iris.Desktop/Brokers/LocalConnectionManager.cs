@@ -12,6 +12,7 @@ using Iris.Components.Messaging;
 using Iris.Components.PackageManagement;
 using Iris.Contracts.Brokers.Endpoints;
 using Iris.Contracts.Brokers.Models;
+using Iris.Contracts.Brokers.Events;
 using Iris.Contracts.Messaging.Events;
 using Iris.Contracts.Messaging.Models;
 using Iris.Contracts.Results;
@@ -67,6 +68,7 @@ public class LocalConnectionManager : IBrokerService, IMessageService
             return new Failure<CreateConnectionResponse>("Connection error");
 
         await _connectionManager.AddConnectionAsync(connection);
+        await _bus.PublishAsync(new ConnectionCreated(connection.Connector.Provider, connection.Address));
 
         var endpoints = new List<EndpointDetails>();
 
@@ -86,7 +88,10 @@ public class LocalConnectionManager : IBrokerService, IMessageService
         bool success = await _connectionManager.RemoveConnectionAsync(address);
 
         if (success)
+        {
+            await _bus.PublishAsync(new ConnectionDeleted(address, address));
             return new Success<DeleteConnectionResponse>(new(success));
+        }
 
         return new Failure<DeleteConnectionResponse>("Connection not found");
     }
