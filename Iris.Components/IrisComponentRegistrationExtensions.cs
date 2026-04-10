@@ -2,6 +2,7 @@ using Iris.Components.Admin;
 using Iris.Components.Breadcrumbs;
 using Iris.Components.Brokers;
 using Iris.Components.History;
+using Iris.Components.Theme;
 using Mythetech.Framework.Infrastructure.MessageBus;
 using Iris.Components.Messaging;
 using Iris.Components.PackageManagement;
@@ -37,6 +38,7 @@ namespace Iris.Components
             services.AddScoped<IPackageService, TPackageService>();
             services.AddTransient<IHistoryService, THistoryService>();
             services.AddSingleton<HistoryState>();
+            services.AddSingleton<IrisAppState>();
             services.AddScoped<IAdminService, TAdminService>();
 
             // Dynamic connection data provider lookup (maps normalized provider names to custom connection UI components)

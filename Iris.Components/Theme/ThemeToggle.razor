@@ -1,0 +1,56 @@
+@using Iris.Components.Theme
+@using Mythetech.Framework.Infrastructure.MessageBus
+
+<MudMenu ActivationEvent="@MudBlazor.MouseEvent.MouseOver" AnchorOrigin="Origin.TopRight">
+    <ActivatorContent>
+        <MudTooltip Text="Color Mode">
+            <MudIconButton Icon="@(AppState.IsDarkMode ? IrisIcons.DarkMode : IrisIcons.LightMode)"
+                           Color="Color.Primary" Variant="Variant.Text" />
+        </MudTooltip>
+    </ActivatorContent>
+    <ChildContent>
+        <MudToggleGroup T="string" Size="Size.Small" Value="@SelectedMode"
+                        ValueChanged="HandleModeChanged" Style="align-items: center">
+            <MudToggleItem Value="@("light")">
+                <MudTooltip Text="Light Mode">
+                    <MudIcon Icon="@IrisIcons.LightMode" />
+                </MudTooltip>
+            </MudToggleItem>
+            <MudToggleItem Value="@("dark")">
+                <MudTooltip Text="Dark Mode">
+                    <MudIcon Icon="@IrisIcons.DarkMode" />
+                </MudTooltip>
+            </MudToggleItem>
+            <MudToggleItem Value="@("system")">
+                <MudTooltip Text="System Default">
+                    <MudIcon Icon="@IrisIcons.SystemMode" />
+                </MudTooltip>
+            </MudToggleItem>
+        </MudToggleGroup>
+    </ChildContent>
+</MudMenu>
+
+@code {
+    [Inject] IrisAppState AppState { get; set; } = default!;
+    [Inject] IMessageBus Bus { get; set; } = default!;
+
+    private string SelectedMode => AppState.ThemeMode switch
+    {
+        ThemeMode.Light => "light",
+        ThemeMode.Dark => "dark",
+        _ => "system"
+    };
+
+    private async Task HandleModeChanged(string mode)
+    {
+        var themeMode = mode switch
+        {
+            "light" => ThemeMode.Light,
+            "dark" => ThemeMode.Dark,
+            _ => ThemeMode.System
+        };
+
+        AppState.ThemeMode = themeMode;
+        await Bus.PublishAsync(new ThemeChanged(themeMode));
+    }
+}

@@ -52,6 +52,12 @@ public static partial class IrisIcons
 
     public static string UploadPackage => Round("file_upload");
 
+    public static string LightMode => Round("light_mode");
+
+    public static string DarkMode => Round("dark_mode");
+
+    public static string SystemMode => Round("laptop");
+
     public static string Settings => Round("settings");
 
     public static string Home => Round("house");

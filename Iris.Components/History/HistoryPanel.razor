@@ -1,0 +1,58 @@
+@using Iris.Components.Theme
+@using Iris.Contracts.Audit.Models
+
+<MudStack Class="pa-2 w-100" Spacing="0">
+    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
+               EndIcon="@Icons.Material.Filled.OpenInNew" OnClick="OpenHistoryPage">
+        Open History Page
+    </MudButton>
+
+    <MudDivider Class="my-2" />
+
+    @if (_loading)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="align-self-center my-4" />
+    }
+    else if (_recentHistory == null || _recentHistory.Count == 0)
+    {
+        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 flex-grow-1">
+            <MudIcon Icon="@IrisIcons.NoHistory" Size="Size.Large" Class="mud-text-secondary mb-2" />
+            <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary">
+                No history yet
+            </MudText>
+        </MudStack>
+    }
+    else
+    {
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">Recent activity</MudText>
+
+        <MudList T="string" Dense="true" Style="overflow-y:auto;max-height:calc(100dvh - 200px);">
+            @foreach (var record in _recentHistory)
+            {
+                <MudListItem T="string" Dense="true">
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.body2" Class="text-truncate">@record.Target</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@record.Action @(record.When?.ToString("g"))</MudText>
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    }
+</MudStack>
+
+@code {
+    [Inject] IHistoryService HistoryService { get; set; } = default!;
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+
+    private List<AuditRecord>? _recentHistory;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _recentHistory = await HistoryService.GetUserHistoryAsync(page: 1, pageSize: 10);
+        _loading = false;
+    }
+
+    private void OpenHistoryPage() => NavigationManager.NavigateTo("/History");
+}

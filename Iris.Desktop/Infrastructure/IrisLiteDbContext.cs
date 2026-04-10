@@ -1,4 +1,5 @@
 using LiteDB;
+using Microsoft.Extensions.Logging;
 
 namespace Iris.Desktop.Infrastructure
 {
@@ -6,10 +7,12 @@ namespace Iris.Desktop.Infrastructure
     {
         private static string DatabaseName { get; } = "IrisDb.db";
         private readonly LiteDatabase _database;
+        private readonly ILogger<IrisLiteDbContext> _logger;
         private bool _disposed;
 
-        public IrisLiteDbContext()
+        public IrisLiteDbContext(ILogger<IrisLiteDbContext> logger)
         {
+            _logger = logger;
             var dbPath = GetDatabasePath();
             var connectionString = new ConnectionString
             {
@@ -17,7 +20,26 @@ namespace Iris.Desktop.Infrastructure
                 Connection = ConnectionType.Shared
             };
 
-            _database = new LiteDatabase(connectionString);
+            try
+            {
+                _database = new LiteDatabase(connectionString);
+                _database.GetCollectionNames();
+            }
+            catch (LiteException ex) when (ex.Message.Contains("encrypted", StringComparison.OrdinalIgnoreCase)
+                                           || ex.ErrorCode == LiteException.INVALID_DATABASE)
+            {
+                _logger.LogWarning(ex, "LiteDB database at {Path} is encrypted or corrupted. Recreating database.", dbPath);
+                _database?.Dispose();
+
+                try { File.Delete(dbPath); }
+                catch (IOException deleteEx)
+                {
+                    _logger.LogError(deleteEx, "Failed to delete encrypted database at {Path}", dbPath);
+                    throw;
+                }
+
+                _database = new LiteDatabase(connectionString);
+            }
         }
 
         private static string GetDatabasePath()
