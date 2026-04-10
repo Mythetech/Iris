@@ -9,6 +9,8 @@ namespace Iris.Desktop.Brokers;
 
 public class AutoDiscovery
 {
+    private static readonly TimeSpan DiscoveryTimeout = TimeSpan.FromSeconds(5);
+
     private readonly IBrokerConnectionManager _connectionManager;
     private readonly IMessageBus _bus;
     private readonly ILogger<AutoDiscovery> _logger;
@@ -32,13 +34,17 @@ public class AutoDiscovery
                 ConnectionString = "http://127.0.0.1:15672/",
                 Username = "guest",
                 Password = "guest",
-            });
+            }).WaitAsync(DiscoveryTimeout);
 
             if(connection != null)
             {
                await _connectionManager.AddConnectionAsync(connection);
                await _bus.PublishAsync(new ConnectionCreated(connection.Connector.Provider, connection.Address));
             }
+        }
+        catch (TimeoutException)
+        {
+            _logger.LogDebug("Local RabbitMQ discovery timed out after {Timeout}s", DiscoveryTimeout.TotalSeconds);
         }
         catch (Exception ex)
         {
@@ -50,13 +56,17 @@ public class AutoDiscovery
             var connection = await azureProvider.ConnectAsync(new ConnectionData()
             {
                 ConnectionString = "UseDevelopmentStorage=true",
-            });
+            }).WaitAsync(DiscoveryTimeout);
 
             if(connection != null)
             {
                 await _connectionManager.AddConnectionAsync(connection);
                 await _bus.PublishAsync(new ConnectionCreated(connection.Connector.Provider, connection.Address));
             }
+        }
+        catch (TimeoutException)
+        {
+            _logger.LogDebug("Local Azure storage emulator discovery timed out after {Timeout}s", DiscoveryTimeout.TotalSeconds);
         }
         catch (Exception ex)
         {
