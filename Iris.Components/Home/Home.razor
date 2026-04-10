@@ -118,6 +118,9 @@
     [Inject]
     public IAsyncInitializationHost InitializationHost { get; set; } = default!;
 
+    [Inject]
+    public IJSRuntime JS { get; set; } = default!;
+
     private List<EndpointDetails>? _endpoints { get; set; }
 
     private List<SupportedProvider>? _supportedProviders { get; set; }
@@ -181,6 +184,16 @@
             await InitializationHost.InitializeAsync();
             await LoadSupportedProviders();
             await LoadActiveProviders();
+
+            try
+            {
+                await JS.InvokeVoidAsync("irisSplash.hide");
+            }
+            catch
+            {
+                // Splash may already be removed
+            }
+
             await LoadEndpoints();
         }
     }
