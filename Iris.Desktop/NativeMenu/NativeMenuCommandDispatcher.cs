@@ -1,6 +1,7 @@
 using Iris.Components.Brokers;
 using Iris.Components.NativeMenu;
 using Iris.Components.NativeMenu.Commands;
+using Iris.Components.Settings;
 using Microsoft.Extensions.Logging;
 using MudBlazor;
 using Mythetech.Framework.Infrastructure.MessageBus;
@@ -24,11 +25,15 @@ public class NativeMenuCommandDispatcher : INativeMenuCommandDispatcher
         _handlers = new Dictionary<string, Func<Task>>
         {
             // App menu
-            [MenuItemIds.IrisSettings] = () => _messageBus.PublishAsync(new NavigateTo("/Settings")),
+            [MenuItemIds.IrisSettings] = () => _messageBus.PublishAsync(
+                new ShowDialog(typeof(SettingsDialog), "Settings",
+                    new DialogOptions { CloseOnEscapeKey = true, BackgroundClass = "iris-dialog", MaxWidth = MaxWidth.Large })),
 
             // File menu
             [MenuItemIds.FileNewMessage] = () => _messageBus.PublishAsync(new NavigateTo("/Messaging")),
-            [MenuItemIds.FileSettings] = () => _messageBus.PublishAsync(new NavigateTo("/Settings")),
+            [MenuItemIds.FileSettings] = () => _messageBus.PublishAsync(
+                new ShowDialog(typeof(SettingsDialog), "Settings",
+                    new DialogOptions { CloseOnEscapeKey = true, BackgroundClass = "iris-dialog", MaxWidth = MaxWidth.Large })),
 
             // Connections
             [MenuItemIds.ConnectionsNew] = () => _messageBus.PublishAsync(
