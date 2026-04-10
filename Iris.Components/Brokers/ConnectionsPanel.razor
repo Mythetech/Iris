@@ -1,0 +1,87 @@
+@using Iris.Components.Theme
+@implements IDisposable
+
+<MudStack Class="pa-2 w-100" Spacing="0">
+    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
+               EndIcon="@Icons.Material.Filled.OpenInNew" OnClick="OpenConnectionsPage">
+        Open Connections Page
+    </MudButton>
+
+    <MudDivider Class="my-2" />
+
+    @if (_loading)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="align-self-center my-4" />
+    }
+    else if (_providers == null || _providers.Count == 0)
+    {
+        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 flex-grow-1">
+            <MudIcon Icon="@IrisIcons.NoConnections" Size="Size.Large" Class="mud-text-secondary mb-2" />
+            <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary mb-3">
+                No active connections
+            </MudText>
+        </MudStack>
+    }
+    else
+    {
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">
+            @_providers.Count active connection@(_providers.Count != 1 ? "s" : "")
+        </MudText>
+
+        <MudList T="string" Dense="true">
+            @foreach (var provider in _providers)
+            {
+                <MudListItem T="string" Icon="@($"icon-{provider.Name}")" IconColor="Color.Primary">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudText Typo="Typo.body2" Class="text-truncate">@provider.Address</MudText>
+                        <MudSpacer />
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@provider.Endpoints</MudChip>
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    }
+
+    <MudSpacer />
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+               StartIcon="@IrisIcons.AddConnection" OnClick="AddConnectionAsync" Size="Size.Small">
+        Add Connection
+    </MudButton>
+</MudStack>
+
+@code {
+    [Inject] IBrokerService BrokerClient { get; set; } = default!;
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IDialogService DialogService { get; set; } = default!;
+
+    private List<Provider>? _providers;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _providers = await BrokerClient.GetProvidersAsync();
+        _loading = false;
+    }
+
+    private void OpenConnectionsPage() => NavigationManager.NavigateTo("/Connections");
+
+    private async Task AddConnectionAsync()
+    {
+        var supportedProviders = await BrokerClient.GetSupportedProvidersAsync();
+        var parameters = new DialogParameters { { "SupportedProviders", supportedProviders } };
+        var dialogRef = await DialogService.ShowAsync<AddConnectionDialog>("Add New Connection", parameters, new DialogOptions
+        {
+            MaxWidth = MaxWidth.Medium
+        });
+        var result = await dialogRef.Result;
+        if (result is { Canceled: false })
+        {
+            _providers = await BrokerClient.GetProvidersAsync();
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose() { }
+}

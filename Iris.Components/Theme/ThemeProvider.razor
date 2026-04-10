@@ -1,0 +1,40 @@
+@using Iris.Components.Theme
+@inherits Mythetech.Framework.Infrastructure.MessageBus.ComponentConsumer<ThemeChanged>
+
+<MudThemeProvider @ref="_themeProvider"
+                  @bind-IsDarkMode="@AppState.IsDarkMode"
+                  Theme="@Theme.Iris"
+                  DefaultScrollbar="false" />
+
+@code {
+    [Inject]
+    IrisAppState AppState { get; set; } = default!;
+
+    private MudThemeProvider _themeProvider = default!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ApplyThemeMode(AppState.ThemeMode);
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task Consume(ThemeChanged message, CancellationToken cancellationToken)
+    {
+        await ApplyThemeMode(message.Mode);
+        StateHasChanged();
+    }
+
+    private async Task ApplyThemeMode(ThemeMode mode)
+    {
+        AppState.IsDarkMode = mode switch
+        {
+            ThemeMode.Light => false,
+            ThemeMode.Dark => true,
+            ThemeMode.System => await _themeProvider.GetSystemDarkModeAsync(),
+            _ => true
+        };
+    }
+}

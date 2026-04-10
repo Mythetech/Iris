@@ -1,10 +1,11 @@
 ﻿@using Iris.Components.Theme
-<MudCarousel 
-    @ref="Carousel" 
-    Class="mud-width-full h-100" 
-    ShowArrows="true" 
-    ShowBullets="true" 
-    EnableSwipeGesture="true" 
+<MudCarousel
+    @ref="Carousel"
+    Class="mud-width-full"
+    Style="height:220px;"
+    ShowArrows="true"
+    ShowBullets="true"
+    EnableSwipeGesture="true"
     AutoCycle="false" T="Provider" ItemsSource="Providers" SelectedIndexChanged="IndexChanged" ArrowsPosition="MudBlazor.Position.End">
     <ItemTemplate>
         <MudStack Spacing="3">

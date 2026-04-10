@@ -33,10 +33,9 @@ public class LocalConnectionManager : IBrokerService, IMessageService
     private readonly ICodeGenerator _codeGenerator;
     private readonly IPackageService _packageService;
     private readonly MessageState _state;
-    private readonly AutoDiscovery _autoDiscovery;
 
     public LocalConnectionManager(IBrokerConnectionManager connectionManager, IMessageBus bus,
-        IFrameworkProvider frameworks, ICodeGenerator codeGenerator, IPackageService packageService, MessageState state, AutoDiscovery autoDiscovery)
+        IFrameworkProvider frameworks, ICodeGenerator codeGenerator, IPackageService packageService, MessageState state)
     {
         _connectionManager = connectionManager;
         _bus = bus;
@@ -44,7 +43,6 @@ public class LocalConnectionManager : IBrokerService, IMessageService
         _codeGenerator = codeGenerator;
         _packageService = packageService;
         _state = state;
-        _autoDiscovery = autoDiscovery;
     }
 
     public async Task<Result<CreateConnectionResponse>> CreateConnectionAsync(ConnectionData data)
@@ -110,12 +108,6 @@ public class LocalConnectionManager : IBrokerService, IMessageService
     public async Task<List<Provider>> GetProvidersAsync()
     {
         var connections = await _connectionManager.GetConnectionsAsync();
-
-        if (connections.Count < 1)
-        { 
-            await _autoDiscovery.DiscoverLocalConnectionsAsync();
-            connections = await _connectionManager.GetConnectionsAsync();
-        }
 
         return connections.Select(p => new Provider()
         {

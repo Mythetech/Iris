@@ -1,0 +1,63 @@
+@using Iris.Components.Theme
+@using Iris.Contracts.Assemblies.Models
+
+<MudStack Class="pa-2 w-100" Spacing="0">
+    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
+               EndIcon="@Icons.Material.Filled.OpenInNew" OnClick="OpenPackagesPage">
+        Open Packages Page
+    </MudButton>
+
+    <MudDivider Class="my-2" />
+
+    @if (_loading)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="align-self-center my-4" />
+    }
+    else if (_packages == null || _packages.Count == 0)
+    {
+        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 flex-grow-1">
+            <MudIcon Icon="@IrisIcons.NoPackages" Size="Size.Large" Class="mud-text-secondary mb-2" />
+            <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary">
+                No packages loaded
+            </MudText>
+        </MudStack>
+    }
+    else
+    {
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">
+            @_packages.Count package@(_packages.Count != 1 ? "s" : "") loaded
+        </MudText>
+
+        <MudList T="string" Dense="true" Style="overflow-y:auto;max-height:calc(100dvh - 200px);">
+            @foreach (var package in _packages)
+            {
+                <MudListItem T="string" Icon="@IrisIcons.Packages" Dense="true">
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.body2" Class="text-truncate">@package.Name</MudText>
+                        @if (!string.IsNullOrWhiteSpace(package.Version))
+                        {
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">v@package.Version</MudText>
+                        }
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    }
+</MudStack>
+
+@code {
+    [Inject] IPackageService PackageService { get; set; } = default!;
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+
+    private List<AssemblyData>? _packages;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _packages = await PackageService.GetLoadedAssembliesAsync();
+        _loading = false;
+    }
+
+    private void OpenPackagesPage() => NavigationManager.NavigateTo("/Packages");
+}

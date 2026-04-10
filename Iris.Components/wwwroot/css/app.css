@@ -6,7 +6,7 @@
 }
 
 :root {
-    --bs-breadcrumb-bg: transparent;
+    background: transparent;
     --iris-primary: rgb(54, 76, 126);
     --iris-primary-rgb: 54, 76, 126;
     --iris-accent: rgb(71, 35, 84);
@@ -29,11 +29,17 @@ h1:focus {
 }
 
 .content {
-    padding-top: 1.1rem;
+    padding-top: 0;
+}
+
+.context-item-active {
+    border-radius: 0%;
+    border-right: solid 2px var(--mud-palette-primary);
+    background-color: color-mix(in srgb, var(--mud-palette-primary) 20%, transparent 80%);
 }
 
 .valid.modified:not([type=checkbox]) {
-    outline: 1px solid var(--bs-primary);
+    outline: 1px solid var(--mud-palette-primary);
 }
 
 .invalid {
@@ -116,6 +122,13 @@ code {
     -webkit-backdrop-filter: blur(8px);
 }
 
+.iris-dialog {
+    display: none;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px) !important;
+    will-change: backdrop-filter;
+}
+
 .glassmorphic {
     background: linear-gradient(to right, rgba(54, 76, 126, 0.8), rgba(71, 35, 84, 0.8));
     backdrop-filter: blur(10px);
@@ -143,11 +156,11 @@ code {
 }
 
 .iris-primary-accent-hover:hover {
-    box-shadow: 0.1em 0.1em 0.4em 0.2em var(--bs-primary), -0.1em -0.1em 0.4em 0.2em var(--iris-accent);
+    box-shadow: 0.1em 0.1em 0.4em 0.2em var(--mud-palette-primary), -0.1em -0.1em 0.4em 0.2em var(--iris-accent);
 }
 
 .btn:hover {
-    box-shadow: 0.1em 0.1em 0.4em 0.2em var(--bs-primary), -0.1em -0.1em 0.4em 0.2em var(--iris-accent);
+    box-shadow: 0.1em 0.1em 0.4em 0.2em var(--mud-palette-primary), -0.1em -0.1em 0.4em 0.2em var(--iris-accent);
 }
 
 .icon-btn {
@@ -155,7 +168,7 @@ code {
     display: flex;
     cursor: pointer;
     background-color: rgba(0, 0, 0, 0.25);
-    /*color: var(--bs-light);*/
+    /*color: var(--mud-palette-text-primary);*/
     border: transparent;
     border-style: solid;
     border-width: 1px;
@@ -163,8 +176,8 @@ code {
 }
 
     .icon-btn:hover {
-        box-shadow: 0px 0px 8px 4px var(--bs-primary) !important;
-        color: var(--bs-primary) !important;
+        box-shadow: 0px 0px 8px 4px var(--mud-palette-primary) !important;
+        color: var(--mud-palette-primary) !important;
         border: solid 1px transparent !important;
         background-color: rgba(0, 0, 0, 0.5);
     }
@@ -175,7 +188,7 @@ code {
 }
 
 .icon-btn-danger {
-    color: var(--bs-danger) !important;
+    color: var(--mud-palette-error) !important;
     border: transparent;
     border-style: solid !important;
     border-width: 1px !important;
@@ -183,8 +196,8 @@ code {
 
     .icon-btn-danger:hover {
         background-color: rgba(0, 0, 0, 0.5);
-        box-shadow: 0px 0px 8px 4px var(--bs-danger) !important;
-        color: var(--bs-danger) !important;
+        box-shadow: 0px 0px 8px 4px var(--mud-palette-error) !important;
+        color: var(--mud-palette-error) !important;
     }
 
 .toggle-btn {
@@ -197,16 +210,16 @@ code {
     align-items: center;
     place-content: center;
     background-color: rgba(0, 0, 0, 0.25);
-    color: var(--bs-light);
+    color: var(--mud-palette-text-primary);
     border: transparent;
     border-style: solid;
     border-width: 1px;
 }
 
     .toggle-btn:hover {
-        box-shadow: 0px 0px 8px 4px var(--bs-primary) !important;
-        color: var(--bs-primary) !important;
-        border: var(--bs-primary) !important;
+        box-shadow: 0px 0px 8px 4px var(--mud-palette-primary) !important;
+        color: var(--mud-palette-primary) !important;
+        border: var(--mud-palette-primary) !important;
     }
 
 .grid-icon-col {
@@ -290,7 +303,7 @@ code {
 }
 
     .bb-grid-filter + .dropdown-menu {
-        background-color: var(--bs-dropdown-bg);
+        background-color: var(--mud-palette-surface);
     }
 
 .dropdown-menu {
@@ -326,24 +339,23 @@ code {
 }
 
 .offcanvas.offcanvas-end {
-    box-shadow: 1px 1px 20px 0px var(--bs-primary);
-    border-left-color: var(--bs-primary) !important;
+    box-shadow: 1px 1px 20px 0px var(--mud-palette-primary);
+    border-left-color: var(--mud-palette-primary) !important;
 }
 
 .iris-btn {
     border: solid 2px transparent;
     background-clip: padding-box, border-box;
     padding: 0em;
-    box-shadow: 0.1em 0.1em 0.2em 0.1em var(--bs-primary), -0.1em -0.1em 0.2em 0.1em var(--iris-accent);
-    --bs-btn-disabled-bg: var(--bs-primary);
-    --bs-btn-disabled-border-color: transparent;
+    box-shadow: 0.1em 0.1em 0.2em 0.1em var(--mud-palette-primary), -0.1em -0.1em 0.2em 0.1em var(--iris-accent);
+    opacity: 0.65;
     border-radius: 0.75em;
 }
 
 .iris-btn-inner {
     width: 100%;
     height: 100%;
-    background-color: var(--bs-black);
+    background-color: var(--mud-palette-black);
     opacity: 0.7;
     padding: 0.65em;
     border-radius: 0.5em;
@@ -354,7 +366,7 @@ code {
     }
 
 .row-divider {
-    border-right-color: var(--bs-primary);
+    border-right-color: var(--mud-palette-primary);
     border-right-width: 1px;
     border-right-style: solid;
 }
@@ -385,7 +397,7 @@ main {
 }
 
 .btn:disabled {
-    box-shadow: 0px 0px 0.3em var(--bs-primary);
+    box-shadow: 0px 0px 0.3em var(--mud-palette-primary);
 }
 
 .toast-container {
@@ -396,12 +408,12 @@ main {
     background-color: rgba(0, 0, 0, 0.25) !important;
     box-shadow: 0px 0px 8px 4px currentColor;
     backdrop-filter: blur(4px);
-    color: var(--bs-primary);
+    color: var(--mud-palette-primary);
 }
 
 .toast-header {
     background-color: black;
-    border-bottom-color: var(--bs-primary);
+    border-bottom-color: var(--mud-palette-primary);
 }
 
 .toast-body {
@@ -413,7 +425,7 @@ main {
     backdrop-filter: blur(4px);
     border: solid 1px currentColor;
     box-shadow: 0px 0px 8px 4px currentColor;
-    color: var(--bs-primary);
+    color: var(--mud-palette-primary);
 }
 
 .modal-header {
@@ -426,8 +438,8 @@ main {
 }
 
 .box-shadow-primary {
-    box-shadow: 0px 0px 0.5em 0.05em var(--bs-primary);
-    border: solid 1px var(--bs-primary);
+    box-shadow: 0px 0px 0.5em 0.05em var(--mud-palette-primary);
+    border: solid 1px var(--mud-palette-primary);
 }
 
 .boxshadow-primary {
@@ -461,7 +473,6 @@ main {
 }
 
 .iris-table {
-    background-color: var(--bs-black);
     --mud-palette-table-hover: rgb(55 90 127 / 20%);
 }
 
@@ -629,4 +640,13 @@ main {
 .custom-title-bar-layout .mud-main-content {
     padding-top: 38px;
     height: calc(100dvh);
+    overflow-x: hidden;
+}
+
+.h-100 {
+    height: 100%;
+}
+
+.w-100 {
+    width: 100%;
 }

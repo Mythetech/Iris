@@ -41,5 +41,9 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
+    
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="wwwroot\css\bootstrap\bootstrap.min.css" />
+    </ItemGroup>
 
 </Project>

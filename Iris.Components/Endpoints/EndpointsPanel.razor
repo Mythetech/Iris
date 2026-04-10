@@ -1,0 +1,76 @@
+@using Iris.Components.Theme
+@using Iris.Components.Brokers
+
+<MudStack Class="pa-2 w-100" Spacing="0">
+    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
+               EndIcon="@Icons.Material.Filled.OpenInNew" OnClick="OpenEndpointsPage">
+        Open Endpoints Page
+    </MudButton>
+
+    <MudDivider Class="my-2" />
+
+    @if (_loading)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="align-self-center my-4" />
+    }
+    else if (_endpoints == null || _endpoints.Count == 0)
+    {
+        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 flex-grow-1">
+            <MudIcon Icon="@IrisIcons.NoEndpoints" Size="Size.Large" Class="mud-text-secondary mb-2" />
+            <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary">
+                No endpoints discovered
+            </MudText>
+        </MudStack>
+    }
+    else
+    {
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">
+            @_endpoints.Count endpoint@(_endpoints.Count != 1 ? "s" : "") across @_groupedEndpoints.Count provider@(_groupedEndpoints.Count != 1 ? "s" : "")
+
+        </MudText>
+
+        <MudList T="string" Dense="true" Style="overflow-y:auto;max-height:calc(100dvh - 200px);">
+            @foreach (var group in _groupedEndpoints)
+            {
+                <MudListSubheader>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudText Typo="Typo.caption" Class="text-truncate">@group.Key</MudText>
+                        <MudSpacer />
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@(group.Count())</MudChip>
+                    </MudStack>
+                </MudListSubheader>
+                @foreach (var endpoint in group.Take(10))
+                {
+                    <MudListItem T="string" Dense="true">
+                        <MudText Typo="Typo.body2" Class="text-truncate">@endpoint.Name</MudText>
+                    </MudListItem>
+                }
+                @if (group.Count() > 10)
+                {
+                    <MudListItem T="string" Dense="true">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">+@(group.Count() - 10) more</MudText>
+                    </MudListItem>
+                }
+            }
+        </MudList>
+    }
+</MudStack>
+
+@code {
+    [Inject] IBrokerService BrokerClient { get; set; } = default!;
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+
+    private List<EndpointDetails>? _endpoints;
+    private List<IGrouping<string, EndpointDetails>> _groupedEndpoints = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _endpoints = await BrokerClient.GetEndpointsAsync();
+        _groupedEndpoints = _endpoints?.GroupBy(e => e.Address).ToList() ?? new();
+        _loading = false;
+    }
+
+    private void OpenEndpointsPage() => NavigationManager.NavigateTo("/Endpoints");
+}

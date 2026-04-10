@@ -1,8 +1,8 @@
-﻿@inherits IrisBaseComponent
+@inherits IrisBaseComponent
 
-<MudCard Outlined="true" Class="@($"glassmorphic box-shadow-primary pa-4 {Class}")" Style="@($"background:rgba(0,0,0,0.9);height:{Height};{Style};min-width:350px;")">
+<MudPaper Class="@($"rounded box-shadow-primary pa-4 {Class}")" Style="@($"height:{Height};{Style}")" Elevation="0">
     @ChildContent
-</MudCard>
+</MudPaper>
 
 @code {
     [Parameter]
@@ -10,6 +10,4 @@
 
     [Parameter]
     public string Height { get; set; } = "300px";
-
 }
-

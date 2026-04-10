@@ -19,7 +19,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Mythetech.Framework.Desktop;
 using Mythetech.Framework.Desktop.Hermes;
 using Mythetech.Framework.Infrastructure.Guards;
+using Mythetech.Framework.Infrastructure.Plugins;
 using Mythetech.Framework.Infrastructure.MessageBus;
+using Mythetech.Framework.Infrastructure.Initialization;
 using Mythetech.Framework.Infrastructure.Settings;
 using Velopack;
 
@@ -83,6 +85,10 @@ public class Program
         builder.Services.RegisterSettingsFromAssembly(typeof(Iris.Components.Messaging.MessagingSettings).Assembly);
         builder.Services.AddDesktopServices(DesktopHost.Hermes);
         builder.Services.AddJsGuards();
+        builder.Services.AddPluginStateProvider("Iris");
+        builder.Services.AddPluginFramework();
+        builder.Services.AddAsyncInitialization();
+        builder.Services.AddInitializationHook<AutoDiscoveryInitializationHook>();
 
         var app = builder.Build();
 
@@ -94,8 +100,6 @@ public class Program
 
         app.Services.UseMessageBus(typeof(Program).Assembly);
         app.Services.UseSettingsFramework();
-        app.Services.LoadPersistedSettingsAsync().GetAwaiter().GetResult();
-
         AppDomain.CurrentDomain.UnhandledException += (sender, error) =>
         {
             Console.Error.WriteLine($"Fatal exception: {error.ExceptionObject}");

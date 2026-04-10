@@ -23,6 +23,9 @@
 
         public Task AddConnectionAsync(IConnection connection)
         {
+            if (_connections.Any(x => x.Address.Equals(connection.Address, StringComparison.OrdinalIgnoreCase)))
+                return Task.CompletedTask;
+
             _connections.Add(connection);
             _active = connection;
             return Task.CompletedTask;

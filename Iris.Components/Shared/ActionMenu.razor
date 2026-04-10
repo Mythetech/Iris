@@ -1,13 +1,9 @@
 @using Iris.Components.Theme
 
 <div @onclick:stopPropagation="true">
-    <MudMenu Dense="true">
+    <MudMenu Dense="true" AnchorOrigin="Origin.BottomRight">
         <ActivatorContent>
-            <MudTooltip Text="Actions">
-                <div @onclick="@context.ToggleAsync">
-                    <MudIcon Class="icon-hover" Icon="@IrisIcons.MoreOptions" Style="cursor:pointer;" />
-                </div>
-            </MudTooltip>
+            <MudIconButton Size="Size.Small" Icon="@IrisIcons.MoreOptions" OnClick="@context.ToggleAsync" Title="Actions" />
         </ActivatorContent>
         <ChildContent>
             @foreach (var item in Actions)

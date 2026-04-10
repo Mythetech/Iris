@@ -3,11 +3,12 @@
 @using System.Text.Json
 @using Iris.Components.Brokers
 @using Iris.Components.Theme
+@using Mythetech.Framework.Infrastructure.Initialization
 @using Iris.Contracts.Brokers.Models;
 
 <PageTitle>Home</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex gap-4" Style="flex-direction:column;overflow-y:auto;max-height:90dvh;">
+<div class="d-flex flex-column gap-4 pa-4" style="overflow-y:auto;max-height:calc(100dvh - 38px);">
     <MudGrid>
         <MudItem xs="12" lg="4">
             <HomeCard>
@@ -106,13 +107,16 @@
 
     </MudGrid>
 
-</MudContainer>
+</div>
 
 @code {
     [Inject] public IBrokerService BrokerClient { get; set; } = default!;
-    
+
     [Inject]
     public IDialogService DialogService { get; set; } = default!;
+
+    [Inject]
+    public IAsyncInitializationHost InitializationHost { get; set; } = default!;
 
     private List<EndpointDetails>? _endpoints { get; set; }
 
@@ -170,12 +174,15 @@
         return endpoints?.Where(x => x.Address.Equals(provider.Address, StringComparison.OrdinalIgnoreCase)).ToList() ?? new();
     };
     
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await LoadSupportedProviders();
-        await LoadActiveProviders();
-        await LoadEndpoints();
-        StateHasChanged();
+        if (firstRender)
+        {
+            await InitializationHost.InitializeAsync();
+            await LoadSupportedProviders();
+            await LoadActiveProviders();
+            await LoadEndpoints();
+        }
     }
 
     private async Task LoadEndpoints()

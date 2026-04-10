@@ -30,8 +30,8 @@ namespace Iris.Components.Theme
             LayoutProperties = new LayoutProperties()
             {
                 DefaultBorderRadius = "0.5em",
-                DrawerWidthLeft = "245px",
-                DrawerWidthRight = "30vw;",
+                DrawerWidthLeft = "20vw",
+                DrawerWidthRight = "30vw",
             },
             Typography = new Typography()
             {

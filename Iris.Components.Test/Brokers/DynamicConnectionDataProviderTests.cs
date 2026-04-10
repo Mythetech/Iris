@@ -3,7 +3,7 @@ using Bunit;
 using FluentAssertions;
 using FluentAssertions.Common;
 using Iris.Components.Brokers;
-using Iris.Components.Shared;
+using Mythetech.Framework.Components.Input;
 using Iris.Contracts.Brokers.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
