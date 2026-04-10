@@ -51,7 +51,13 @@
 
     [Parameter]
     public List<SupportedProvider> SupportedProviders { get; set; } = default!;
-    
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (SupportedProviders is null)
+            SupportedProviders = await BrokerService.GetSupportedProvidersAsync();
+    }
+
     protected void CloseClicked() => MudDialog.Cancel();
 
     private SupportedProvider? _selectedProvider = default!;
