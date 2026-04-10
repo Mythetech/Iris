@@ -3,8 +3,8 @@
 <MudDropZone 
     T="DynamicTabView" 
     Identifier="@(Identifier ?? $"tab-dropzone-{Guid.NewGuid().ToString()[0..7]}")" 
-    Class="mud-width-full d-flex flex-row justify-center align-center gap-6 rounded mb-4" 
-    Style="background-color:var(--mud-palette-dark)" 
+    Class="mud-width-full d-flex flex-row justify-center align-center gap-6 rounded mb-4"
+    Style="background-color:rgba(var(--mud-palette-primary-rgb), 0.08)"
     
     AllowReorder="@AllowReorder"  />
 @{
