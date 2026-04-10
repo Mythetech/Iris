@@ -75,9 +75,19 @@ namespace Iris.Brokers.RabbitMQ
 
         public async Task SendAsync(EndpointDetails endpoint, MessageRequest message)
         {
-            var result = await _client.PublishAsync($"{Rabbit.VHost}", 
-                    endpoint?.Type?.Equals("queue", StringComparison.OrdinalIgnoreCase) ?? true ? "amq.default" : endpoint.Name, 
-                    new PublishInfo(endpoint?.Name ?? "/", message.Json, Properties: message.Headers.ToReadOnly()!));
+            // RabbitMQ's HTTP management API only honors a fixed set of standard AMQP basic-property
+            // names at the top level of `properties` (message_id, correlation_id, content_type, ...)
+            // - anything else is silently dropped. Custom headers (e.g. Rebus's rbs2-* keys, the
+            // iris-key tracker, MassTransit-set headers) must be nested under `properties.headers`
+            // so they reach the consumer as AMQP application headers.
+            var properties = new Dictionary<string, object?>
+            {
+                ["headers"] = message.Headers.ToDictionary(kvp => kvp.Key, kvp => (object?)kvp.Value),
+            };
+
+            var result = await _client.PublishAsync($"{Rabbit.VHost}",
+                    endpoint?.Type?.Equals("queue", StringComparison.OrdinalIgnoreCase) ?? true ? "amq.default" : endpoint.Name,
+                    new PublishInfo(endpoint?.Name ?? "/", message.Json, Properties: properties));
         }
 
         public async Task SendAsync(EndpointDetails endpoint, string json)
