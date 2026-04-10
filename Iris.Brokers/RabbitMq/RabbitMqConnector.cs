@@ -33,8 +33,13 @@ namespace Iris.Brokers.RabbitMQ
         }
 
 
-        public async Task<IConnection?> ConnectAsync(ConnectionData data, bool discoverEndpoints = true)
+        public Task<IConnection?> ConnectAsync(ConnectionData data, bool discoverEndpoints = true)
+            => ConnectAsync(data, CancellationToken.None, discoverEndpoints);
+
+        public async Task<IConnection?> ConnectAsync(ConnectionData data, CancellationToken cancellationToken, bool discoverEndpoints = true)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var client = CreateClient(data);
 
             VHost = (!string.IsNullOrWhiteSpace(data?.Username) && (!data?.Username.Equals("guest", StringComparison.OrdinalIgnoreCase) ?? true)) ? data?.Username! : "/";
@@ -47,6 +52,7 @@ namespace Iris.Brokers.RabbitMQ
 
             if (discoverEndpoints && connection != null)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 await connection.GetEndpointsAsync();
             }
 

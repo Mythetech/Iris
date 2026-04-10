@@ -15,7 +15,10 @@ namespace Iris.Brokers.Amazon
 
         public string Provider => "Amazon";
 
-        public async Task<IConnection?> ConnectAsync(ConnectionData data, bool discoverEndpoints = true)
+        public Task<IConnection?> ConnectAsync(ConnectionData data, bool discoverEndpoints = true)
+            => ConnectAsync(data, CancellationToken.None, discoverEndpoints);
+
+        public async Task<IConnection?> ConnectAsync(ConnectionData data, CancellationToken cancellationToken, bool discoverEndpoints = true)
         {
             RegionEndpoint regionEndpoint;
 
@@ -39,7 +42,7 @@ namespace Iris.Brokers.Amazon
                 throw new InvalidConnectionException(ex.Message);
             }
 
-            var queueResp = await client.ListQueuesAsync(new ListQueuesRequest());
+            var queueResp = await client.ListQueuesAsync(new ListQueuesRequest(), cancellationToken);
             var profile = queueResp.QueueUrls.FirstOrDefault();
             Uri? uri = null;
             string? fullAddress = default;
@@ -62,6 +65,7 @@ namespace Iris.Brokers.Amazon
 
             if (discoverEndpoints && connection != null)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var endpoints = await connection.GetEndpointsAsync();
             }
 
