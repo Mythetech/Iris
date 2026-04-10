@@ -9,6 +9,7 @@
 @using Iris.Components.PackageManagement
 @using Iris.Components.Settings
 @using Mythetech.Framework.Components.AppContextDrawer
+@using Mythetech.Framework.Desktop.Updates
 
 @inherits LayoutComponentBase
 
@@ -75,11 +76,22 @@
     [Inject]
     IDialogService DialogService { get; set; } = default!;
 
+    [Inject]
+    IUpdateService UpdateService { get; set; } = default!;
+
     private bool _drawerOpen;
 
     protected override void OnInitialized()
     {
         BreadcrumbService.OnChange += StateHasChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await UpdateService.CheckForUpdatesOnStartupAsync();
+        }
     }
 
     private async Task OpenSettingsDialog()
