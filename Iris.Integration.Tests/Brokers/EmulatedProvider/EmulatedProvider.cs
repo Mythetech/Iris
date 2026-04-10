@@ -15,6 +15,9 @@ namespace Iris.Integration.Tests.Brokers.EmulatedProvider
         private int _createdConnections = 0;
 
         public Task<IConnection?> ConnectAsync(ConnectionData data, bool discoverEndpoints = true)
+            => ConnectAsync(data, CancellationToken.None, discoverEndpoints);
+
+        public Task<IConnection?> ConnectAsync(ConnectionData data, CancellationToken cancellationToken, bool discoverEndpoints = true)
         {
             if (data == null || data.ConnectionString == null && data.Uri == null)
                 return Task.FromResult(default(IConnection?));
