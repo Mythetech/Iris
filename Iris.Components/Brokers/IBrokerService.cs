@@ -20,6 +20,13 @@ namespace Iris.Components.Brokers
         Task RefreshDataAsync();
 
         /// <summary>
+        /// Resolves a connection by its stable Guid Id (used by the
+        /// /connections/{id} route). Returns null if no connection with that
+        /// Id is currently registered.
+        /// </summary>
+        Task<Provider?> GetConnectionByIdAsync(Guid id);
+
+        /// <summary>
         /// Returns the read capabilities of the broker at <paramref name="address"/>,
         /// built by probing which read interfaces the connection implements.
         /// Returns null if no connection exists at that address.

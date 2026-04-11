@@ -1,0 +1,40 @@
+@implements Iris.Components.Brokers.ConnectionDetails.IConnectionEndpointsView
+@inject IBrokerService BrokerService
+@using Iris.Contracts.Brokers.Models
+
+@if (_endpoints is null)
+{
+    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+}
+else if (_endpoints.Count == 0)
+{
+    <MudText Typo="Typo.body2">No endpoints found for this connection.</MudText>
+}
+else
+{
+    <MudList T="EndpointDetails" Dense="true">
+        @foreach (var endpoint in _endpoints)
+        {
+            <MudListItem T="EndpointDetails" Value="endpoint">
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Default">@endpoint.Type</MudChip>
+                    <MudText Typo="Typo.body1">@endpoint.Name</MudText>
+                </MudStack>
+            </MudListItem>
+        }
+    </MudList>
+}
+
+@code {
+    [Parameter] public required Provider Provider { get; set; }
+
+    private IReadOnlyList<EndpointDetails>? _endpoints;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var all = await BrokerService.GetEndpointsAsync();
+        _endpoints = all
+            .Where(e => string.Equals(e.Address, Provider.Address, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+}

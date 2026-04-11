@@ -42,6 +42,8 @@ namespace Iris.Integration.Tests.Brokers.EmulatedProvider
 
         public IConnector Connector { get => _mockProvider; set => _override = value; }
 
+        public Guid Id { get; } = Guid.NewGuid();
+
         public string Name => nameof(EmulatedConnection);
 
         public int EndpointCount => _endpointCount;
