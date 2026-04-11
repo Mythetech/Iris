@@ -7,6 +7,8 @@ namespace Iris.Brokers
     {
         public IConnector Connector { get; set; }
 
+        public Guid Id { get; }
+
         public string Name { get; }
 
         public string Address { get; }
