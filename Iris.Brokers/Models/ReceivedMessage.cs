@@ -6,7 +6,7 @@ namespace Iris.Brokers.Models;
 /// (lock tokens, receipt handles, etc.) is retained on <see cref="Native"/>
 /// for diagnostic display only.
 /// </summary>
-public sealed class ReceivedMessage
+public sealed record ReceivedMessage
 {
     /// <summary>Payload as a string — JSON in the common case, raw text otherwise.</summary>
     public required string Body { get; init; }

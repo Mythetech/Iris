@@ -6,14 +6,18 @@
             <MudIconButton Size="Size.Small" Icon="@IrisIcons.MoreOptions" OnClick="@context.ToggleAsync" Title="Actions" />
         </ActivatorContent>
         <ChildContent>
-        @*
-                <DropdownItem Class="d-flex" @onclick="HandleViewClicked">View <FlexSpacer /> <Icon Name="@IconName.Eye"></Icon></DropdownItem>
-            *@
         <MudMenuItem Class="d-flex w-100" OnClick="HandleSendClicked">
             <MudStack Row="true">
                 <MudText Class="mr-4">Send</MudText> <MudIcon Icon="@IrisIcons.Send"></MudIcon>
             </MudStack>
         </MudMenuItem>
+        <MudTooltip Text="@(CanRead ? "Peek or receive messages" : ReadDisabledReason)">
+            <MudMenuItem Class="d-flex w-100" OnClick="HandleReadClicked" Disabled="@(!CanRead)">
+                <MudStack Row="true">
+                    <MudText Class="mr-4">Read</MudText> <MudIcon Icon="@Icons.Material.Filled.Inbox"></MudIcon>
+                </MudStack>
+            </MudMenuItem>
+        </MudTooltip>
         </ChildContent>
     </MudMenu>
 </div>
@@ -22,6 +26,9 @@
 
     [Parameter] public EventCallback OnViewClicked { get; set; }
     [Parameter] public EventCallback OnSendClicked { get; set; }
+    [Parameter] public EventCallback OnReadClicked { get; set; }
+    [Parameter] public bool CanRead { get; set; }
+    [Parameter] public string ReadDisabledReason { get; set; } = "Broker does not support reading messages";
 
     private async Task HandleViewClicked()
     {
@@ -31,5 +38,10 @@
     private async Task HandleSendClicked()
     {
         await OnSendClicked.InvokeAsync(null);
+    }
+
+    private async Task HandleReadClicked()
+    {
+        await OnReadClicked.InvokeAsync(null);
     }
 }

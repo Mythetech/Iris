@@ -8,10 +8,13 @@ using Iris.Brokers.Models;
 
 namespace Iris.Brokers.RabbitMQ
 {
-    // Note: IMessageReader implementation is re-added in slice S1 of the
-    // broker-read-side feature, using the new formal contract.
-    public class RabbitMqConnection : IConnection
+    public class RabbitMqConnection : IConnection, IMessagePeeker, IMessageReceiver
     {
+        // The RabbitMQ HTTP management API's GET-messages endpoint accepts
+        // arbitrary counts; 100 is a sane UI cap.
+        public int MaxPeekBatchSize => 100;
+        public int MaxReceiveBatchSize => 100;
+
         private readonly ConnectionMetadata _metadata;
         private readonly EasyNetQ.Management.Client.ManagementClient _client;
         private readonly string _address = "";
@@ -90,6 +93,93 @@ namespace Iris.Brokers.RabbitMQ
         public async Task SendAsync(EndpointDetails endpoint, string json)
         {
             var result = await _client.PublishAsync($"{Rabbit.VHost}", endpoint?.Type?.Equals("queue", StringComparison.OrdinalIgnoreCase) ?? true ? "amq.default" : endpoint.Name, new PublishInfo(endpoint?.Name ?? "/", json));
+        }
+
+        public Task<IReadOnlyList<ReceivedMessage>> PeekAsync(
+            EndpointDetails endpoint, int count, CancellationToken cancellationToken = default)
+            => GetMessagesAsync(endpoint, count, AckMode.AckRequeueTrue, cancellationToken);
+
+        public Task<IReadOnlyList<ReceivedMessage>> ReceiveAsync(
+            EndpointDetails endpoint, int count, CancellationToken cancellationToken = default)
+            => GetMessagesAsync(endpoint, count, AckMode.AckRequeueFalse, cancellationToken);
+
+        private async Task<IReadOnlyList<ReceivedMessage>> GetMessagesAsync(
+            EndpointDetails endpoint, int count, AckMode ackMode, CancellationToken cancellationToken)
+        {
+            var vhost = await _client.GetVhostAsync(Rabbit.VHost, cancellationToken);
+            var criteria = new GetMessagesFromQueueInfo(count, ackMode, "auto");
+            var messages = await _client.GetMessagesFromQueueAsync(
+                vhost, endpoint.Name, criteria, cancellationToken);
+            return messages.Select(Map).ToList();
+        }
+
+        private ReceivedMessage Map(Message msg)
+        {
+            // Message.Properties is IReadOnlyDictionary<string, object> — a loosely
+            // typed bag of AMQP basic-properties. Pull well-known fields out into
+            // strongly-typed slots; keep the rest as headers.
+            var allProperties = msg.Properties;
+
+            string? messageId = null;
+            string? correlationId = null;
+            string? contentType = null;
+            var headers = new Dictionary<string, string>();
+
+            foreach (var kvp in allProperties)
+            {
+                switch (kvp.Key)
+                {
+                    case "message_id":
+                        messageId = kvp.Value?.ToString();
+                        break;
+                    case "correlation_id":
+                        correlationId = kvp.Value?.ToString();
+                        break;
+                    case "content_type":
+                        contentType = kvp.Value?.ToString();
+                        break;
+                    case "headers" when kvp.Value is IReadOnlyDictionary<string, object?> nested:
+                        foreach (var header in nested)
+                            headers[header.Key] = header.Value?.ToString() ?? string.Empty;
+                        break;
+                    case "headers" when kvp.Value is IDictionary<string, object?> nestedMut:
+                        foreach (var header in nestedMut)
+                            headers[header.Key] = header.Value?.ToString() ?? string.Empty;
+                        break;
+                    default:
+                        if (kvp.Value is not null)
+                            headers[kvp.Key] = kvp.Value.ToString() ?? string.Empty;
+                        break;
+                }
+            }
+
+            var properties = new Dictionary<string, string>
+            {
+                ["routing_key"] = msg.RoutingKey ?? string.Empty,
+                ["exchange"] = msg.Exchange ?? string.Empty,
+                ["redelivered"] = msg.Redelivered.ToString(),
+            };
+
+            if (string.Equals(msg.PayloadEncoding, "base64", StringComparison.OrdinalIgnoreCase))
+                headers["iris.payload_encoding"] = "base64";
+
+            return new ReceivedMessage
+            {
+                Body = msg.Payload ?? string.Empty,
+                MessageId = messageId,
+                CorrelationId = correlationId,
+                ContentType = contentType,
+                Headers = headers,
+                Properties = properties,
+                SizeInBytes = msg.PayloadBytes,
+                Provider = "RabbitMQ",
+                Source = Models.ReadSource.Main,
+                Native = new NativeMessageMetadata
+                {
+                    RoutingKey = msg.RoutingKey,
+                    Exchange = msg.Exchange,
+                },
+            };
         }
     }
 }

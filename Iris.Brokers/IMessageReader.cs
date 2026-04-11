@@ -3,53 +3,72 @@ using Iris.Brokers.Models;
 namespace Iris.Brokers;
 
 /// <summary>
-/// Read-side contract for a broker connection. Implemented alongside
-/// <see cref="IConnection"/> on broker classes that support peek/receive.
-/// Call sites should probe with <c>connection is IMessageReader</c> or via
-/// the helper extensions in <c>MessageReaderExtensions</c>.
+/// Marker base for broker connections that expose any read capability.
+/// Not useful on its own — probe for one of the operation-specific
+/// sub-interfaces (<see cref="IMessagePeeker"/>, <see cref="IMessageReceiver"/>,
+/// <see cref="IDeadLetterPeeker"/>, <see cref="IDeadLetterReceiver"/>).
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>Semantics.</b> <c>ReceiveAsync</c> is destructive and irrevocable —
-/// Iris uses auto-ack (ReceiveAndDelete) semantics across all brokers so
-/// the service/UI layers don't have to care about lock tokens or
-/// visibility timeouts. Native handles are retained on
-/// <see cref="ReceivedMessage.Native"/> for diagnostic display only.
+/// Each read capability is its own interface. A broker implements only
+/// those it actually supports. Callers pattern-match on the specific
+/// interface they need (<c>connection is IMessagePeeker peeker</c>).
+/// This encodes broker capabilities in the type system instead of as
+/// runtime flags, avoiding LSP-violating <c>NotSupportedException</c>
+/// throws on opted-out operations.
 /// </para>
 /// <para>
-/// <b>Capabilities.</b> Brokers report honest capability flags via
-/// <see cref="Capabilities"/>. Unsupported operations additionally throw
-/// <see cref="NotSupportedException"/> as defense-in-depth for non-UI
-/// callers.
+/// <b>Semantics.</b> <c>Receive</c> methods are destructive and
+/// irrevocable — Iris uses auto-ack (ReceiveAndDelete) semantics across
+/// all brokers so the service/UI layers don't have to care about lock
+/// tokens or visibility timeouts. Native per-broker handles are retained
+/// on <see cref="ReceivedMessage.Native"/> for diagnostic display only.
 /// </para>
 /// </remarks>
-public interface IMessageReader
+public interface IMessageReader { }
+
+/// <summary>Non-destructive read from the main queue.</summary>
+public interface IMessagePeeker : IMessageReader
 {
-    ReaderCapabilities Capabilities { get; }
+    /// <summary>Upper bound on <c>count</c> the broker will honor in a single call.</summary>
+    int MaxPeekBatchSize { get; }
 
-    /// <summary>Non-destructively read a single message.</summary>
-    Task<ReceivedMessage?> PeekAsync(
-        EndpointDetails endpoint,
-        ReadSource source = ReadSource.Main,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>Non-destructively read up to <paramref name="count"/> messages.</summary>
+    /// <summary>Non-destructively read up to <paramref name="count"/> messages from the main queue.</summary>
     Task<IReadOnlyList<ReceivedMessage>> PeekAsync(
         EndpointDetails endpoint,
         int count,
-        ReadSource source = ReadSource.Main,
         CancellationToken cancellationToken = default);
+}
 
-    /// <summary>Destructively consume a single message (auto-ack).</summary>
-    Task<ReceivedMessage?> ReceiveAsync(
-        EndpointDetails endpoint,
-        ReadSource source = ReadSource.Main,
-        CancellationToken cancellationToken = default);
+/// <summary>Destructive read from the main queue (auto-ack).</summary>
+public interface IMessageReceiver : IMessageReader
+{
+    /// <summary>Upper bound on <c>count</c> the broker will honor in a single call.</summary>
+    int MaxReceiveBatchSize { get; }
 
-    /// <summary>Destructively consume up to <paramref name="count"/> messages (auto-ack).</summary>
+    /// <summary>Destructively consume up to <paramref name="count"/> messages from the main queue.</summary>
     Task<IReadOnlyList<ReceivedMessage>> ReceiveAsync(
         EndpointDetails endpoint,
         int count,
-        ReadSource source = ReadSource.Main,
+        CancellationToken cancellationToken = default);
+}
+
+/// <summary>Non-destructive read from the broker's dead-letter sub-queue.</summary>
+public interface IDeadLetterPeeker : IMessageReader
+{
+    /// <summary>Non-destructively read up to <paramref name="count"/> messages from the dead-letter sub-queue.</summary>
+    Task<IReadOnlyList<ReceivedMessage>> PeekDeadLetterAsync(
+        EndpointDetails endpoint,
+        int count,
+        CancellationToken cancellationToken = default);
+}
+
+/// <summary>Destructive read from the broker's dead-letter sub-queue (auto-ack).</summary>
+public interface IDeadLetterReceiver : IMessageReader
+{
+    /// <summary>Destructively consume up to <paramref name="count"/> messages from the dead-letter sub-queue.</summary>
+    Task<IReadOnlyList<ReceivedMessage>> ReceiveDeadLetterAsync(
+        EndpointDetails endpoint,
+        int count,
         CancellationToken cancellationToken = default);
 }

@@ -284,28 +284,121 @@ public class LocalConnectionManager : IBrokerService, IMessageService
     }
 
     public Task<Result<IReadOnlyList<ReceivedMessageDto>>> PeekMessagesAsync(
-        string address,
-        string endpointName,
-        int count,
-        Iris.Contracts.Messaging.Models.ReadSource source = Iris.Contracts.Messaging.Models.ReadSource.Main,
-        CancellationToken cancellationToken = default)
-    {
-        // Real implementation lands in S5 (service wiring) once the broker
-        // readers from S1–S4 are in place.
-        return Task.FromResult<Result<IReadOnlyList<ReceivedMessageDto>>>(
-            new Failure<IReadOnlyList<ReceivedMessageDto>>("Peek is not yet implemented."));
-    }
+        string address, string endpointName, int count, CancellationToken cancellationToken = default)
+        => ReadAsync<IMessagePeeker>(
+            address, endpointName, count, cancellationToken,
+            "peek",
+            (peeker, ep, c, ct) => peeker.PeekAsync(ep, Math.Min(c, peeker.MaxPeekBatchSize), ct));
 
     public Task<Result<IReadOnlyList<ReceivedMessageDto>>> ReceiveMessagesAsync(
+        string address, string endpointName, int count, CancellationToken cancellationToken = default)
+        => ReadAsync<IMessageReceiver>(
+            address, endpointName, count, cancellationToken,
+            "receive",
+            (receiver, ep, c, ct) => receiver.ReceiveAsync(ep, Math.Min(c, receiver.MaxReceiveBatchSize), ct));
+
+    public Task<Result<IReadOnlyList<ReceivedMessageDto>>> PeekDeadLetterMessagesAsync(
+        string address, string endpointName, int count, CancellationToken cancellationToken = default)
+        => ReadAsync<IDeadLetterPeeker>(
+            address, endpointName, count, cancellationToken,
+            "dead-letter peek",
+            (peeker, ep, c, ct) => peeker.PeekDeadLetterAsync(ep, c, ct));
+
+    public Task<Result<IReadOnlyList<ReceivedMessageDto>>> ReceiveDeadLetterMessagesAsync(
+        string address, string endpointName, int count, CancellationToken cancellationToken = default)
+        => ReadAsync<IDeadLetterReceiver>(
+            address, endpointName, count, cancellationToken,
+            "dead-letter receive",
+            (receiver, ep, c, ct) => receiver.ReceiveDeadLetterAsync(ep, c, ct));
+
+    private async Task<Result<IReadOnlyList<ReceivedMessageDto>>> ReadAsync<TReader>(
         string address,
         string endpointName,
         int count,
-        Iris.Contracts.Messaging.Models.ReadSource source = Iris.Contracts.Messaging.Models.ReadSource.Main,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken,
+        string operationName,
+        Func<TReader, Iris.Brokers.EndpointDetails, int, CancellationToken, Task<IReadOnlyList<Iris.Brokers.Models.ReceivedMessage>>> read)
+        where TReader : class
     {
-        // Real implementation lands in S5 (service wiring) once the broker
-        // readers from S1–S4 are in place.
-        return Task.FromResult<Result<IReadOnlyList<ReceivedMessageDto>>>(
-            new Failure<IReadOnlyList<ReceivedMessageDto>>("Receive is not yet implemented."));
+        var connection = await _connectionManager.GetConnectionAsync(address);
+        if (connection is null)
+            return new Failure<IReadOnlyList<ReceivedMessageDto>>("Connection not found.");
+        if (connection is not TReader reader)
+            return new Failure<IReadOnlyList<ReceivedMessageDto>>(
+                $"{connection.Connector.Provider} does not support {operationName}.");
+
+        var endpoint = new Iris.Brokers.EndpointDetails
+        {
+            Address = address,
+            Name = endpointName,
+            Provider = connection.Connector.Provider,
+            Type = "Queue",
+        };
+
+        try
+        {
+            var messages = await read(reader, endpoint, count, cancellationToken);
+            return new Success<IReadOnlyList<ReceivedMessageDto>>(messages.Select(MapMessage).ToList());
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            return new Failure<IReadOnlyList<ReceivedMessageDto>>($"{operationName} failed: {ex.Message}");
+        }
+    }
+
+    private static ReceivedMessageDto MapMessage(Iris.Brokers.Models.ReceivedMessage msg)
+    {
+        var dto = new ReceivedMessageDto
+        {
+            Body = msg.Body,
+            MessageId = msg.MessageId,
+            CorrelationId = msg.CorrelationId,
+            ContentType = msg.ContentType,
+            Headers = new Dictionary<string, string>(msg.Headers),
+            Properties = new Dictionary<string, string>(msg.Properties),
+            DeliveryCount = msg.DeliveryCount,
+            EnqueuedTimeUtc = msg.EnqueuedTimeUtc,
+            ExpiresAtUtc = msg.ExpiresAtUtc,
+            SizeInBytes = msg.SizeInBytes,
+            Source = (Iris.Contracts.Messaging.Models.ReadSource)msg.Source,
+            Provider = msg.Provider,
+        };
+
+        if (msg.Native is not null)
+        {
+            if (msg.Native.LockToken is not null) dto.Native["LockToken"] = msg.Native.LockToken;
+            if (msg.Native.ReceiptHandle is not null) dto.Native["ReceiptHandle"] = msg.Native.ReceiptHandle;
+            if (msg.Native.PopReceipt is not null) dto.Native["PopReceipt"] = msg.Native.PopReceipt;
+            if (msg.Native.RoutingKey is not null) dto.Native["RoutingKey"] = msg.Native.RoutingKey;
+            if (msg.Native.Exchange is not null) dto.Native["Exchange"] = msg.Native.Exchange;
+            foreach (var kvp in msg.Native.Extra)
+                dto.Native[kvp.Key] = kvp.Value;
+        }
+
+        return dto;
+    }
+
+    public Task<Iris.Contracts.Brokers.Models.ReaderCapabilitiesDto?> GetReaderCapabilitiesAsync(string address)
+    {
+        return GetReaderCapabilitiesInternalAsync(address);
+    }
+
+    private async Task<Iris.Contracts.Brokers.Models.ReaderCapabilitiesDto?> GetReaderCapabilitiesInternalAsync(string address)
+    {
+        var connection = await _connectionManager.GetConnectionAsync(address);
+        if (connection is null)
+            return null;
+
+        return new Iris.Contracts.Brokers.Models.ReaderCapabilitiesDto(
+            CanPeek: connection is IMessagePeeker,
+            CanReceive: connection is IMessageReceiver,
+            CanPeekDeadLetter: connection is IDeadLetterPeeker,
+            CanReceiveDeadLetter: connection is IDeadLetterReceiver,
+            MaxPeekBatchSize: (connection as IMessagePeeker)?.MaxPeekBatchSize ?? 0,
+            MaxReceiveBatchSize: (connection as IMessageReceiver)?.MaxReceiveBatchSize ?? 0);
     }
 }
