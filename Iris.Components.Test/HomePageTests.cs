@@ -6,6 +6,7 @@ using Iris.Contracts.Brokers.Models;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using MudBlazor.Services;
+using Mythetech.Framework.Infrastructure.Initialization;
 using NSubstitute;
 
 namespace Iris.Components.Test;
@@ -13,12 +14,17 @@ namespace Iris.Components.Test;
 public class HomePageTests : TestContext
 {
     private IBrokerService _mockBrokerService;
+    private IAsyncInitializationHost _mockInitializationHost;
 
     public HomePageTests()
     {
         _mockBrokerService = Substitute.For<IBrokerService>();
         Services.AddSingleton(_mockBrokerService);
-        
+
+        _mockInitializationHost = Substitute.For<IAsyncInitializationHost>();
+        _mockInitializationHost.InitializeAsync(Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+        Services.AddSingleton(_mockInitializationHost);
+
         Services.AddMudServices();
         JSInterop.Mode = JSRuntimeMode.Loose;
         RenderComponent<MudPopoverProvider>();
