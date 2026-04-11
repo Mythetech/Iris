@@ -76,7 +76,15 @@ public class NativeMenuCommandDispatcher : INativeMenuCommandDispatcher
 
                 if (suffix.EndsWith(MenuItemIds.ConnectionsInfoSuffix))
                 {
-                    // No-op for now — connection info dialog not yet implemented
+                    var idToken = suffix[..^MenuItemIds.ConnectionsInfoSuffix.Length];
+                    if (Guid.TryParseExact(idToken, "N", out var providerId))
+                    {
+                        await _messageBus.PublishAsync(new NavigateTo($"/connections/{providerId}"));
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Could not parse provider id token from {ItemId}", itemId);
+                    }
                     return;
                 }
             }

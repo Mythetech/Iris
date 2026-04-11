@@ -122,11 +122,29 @@ public class LocalConnectionManager : IBrokerService, IMessageService
 
         return connections.Select(p => new Provider()
         {
+            Id = p.Id,
             Name = p.Connector.Provider,
             Address = p.Address,
             Endpoints = p.EndpointCount,
             Transport = p.Name
         }).ToList();
+    }
+
+    public async Task<Provider?> GetConnectionByIdAsync(Guid id)
+    {
+        var connections = await _connectionManager.GetConnectionsAsync();
+        var match = connections.FirstOrDefault(c => c.Id == id);
+        if (match is null)
+            return null;
+
+        return new Provider
+        {
+            Id = match.Id,
+            Name = match.Connector.Provider,
+            Address = match.Address,
+            Endpoints = match.EndpointCount,
+            Transport = match.Name,
+        };
     }
 
     public Task<List<SupportedProvider>> GetSupportedProvidersAsync()

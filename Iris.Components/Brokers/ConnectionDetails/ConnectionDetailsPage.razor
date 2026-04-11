@@ -1,0 +1,178 @@
+@page "/connections/{Id:guid}"
+@inherits IrisPageBase
+@using Iris.Components.Brokers
+@using Iris.Components.Brokers.ConnectionDetails
+@using Iris.Contracts.Brokers.Models
+@using Mythetech.Framework.Components.SimpleTabs
+@inject IBrokerService BrokerService
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_provider is null)
+{
+    <MudPaper Class="pa-4">
+        <MudText Typo="Typo.h6">Connection not found</MudText>
+        <MudText Typo="Typo.body2" Class="mt-2">
+            No connection exists with id @Id.
+        </MudText>
+        <MudButton Href="/Connections" Variant="Variant.Text" Class="mt-4">
+            Back to Connections
+        </MudButton>
+    </MudPaper>
+}
+else
+{
+    <MudStack Spacing="4">
+        <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center">
+            <MudIcon Size="Size.Large" Icon="@($"icon-{_provider.Name}")" />
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h5">@_provider.Name</MudText>
+                <MudText Typo="Typo.body2">@_provider.Address</MudText>
+            </MudStack>
+        </MudStack>
+
+        <MudPaper Class="pa-4">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.subtitle1">Capabilities</MudText>
+                <MudStack Row="true" Spacing="1">
+                    @if (_capabilities is not null)
+                    {
+                        @if (_capabilities.CanPeek)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info">Peek</MudChip>
+                        }
+                        @if (_capabilities.CanReceive)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info">Receive</MudChip>
+                        }
+                        @if (_capabilities.CanPeekDeadLetter)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">Peek DLQ</MudChip>
+                        }
+                        @if (_capabilities.CanReceiveDeadLetter)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning">Receive DLQ</MudChip>
+                        }
+                    }
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+
+        <SimpleTabs>
+            <Tab Name="Endpoints">
+                <DynamicComponent Type="@_endpointsViewType"
+                                  Parameters="@_endpointsParameters" />
+            </Tab>
+            <Tab Name="Send">
+                <DynamicComponent Type="@_sendViewType"
+                                  Parameters="@_sendParameters" />
+            </Tab>
+            @if (_showReadTab)
+            {
+                <Tab Name="Read">
+                    <DynamicComponent Type="@_readViewType"
+                                      Parameters="@_readParameters" />
+                </Tab>
+            }
+        </SimpleTabs>
+    </MudStack>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    [Inject] private EndpointsViewRegistry EndpointsRegistry { get; set; } = default!;
+    [Inject] private ReadViewRegistry ReadRegistry { get; set; } = default!;
+    [Inject] private SendViewRegistry SendRegistry { get; set; } = default!;
+
+    public override string Identifier { get; set; } = "ConnectionDetails";
+
+    private bool _loading = true;
+    private Provider? _provider;
+    private ReaderCapabilitiesDto? _capabilities;
+
+    private Type _endpointsViewType = typeof(DefaultEndpointsView);
+    private Type _readViewType = typeof(DefaultReadView);
+    private Type _sendViewType = typeof(DefaultSendView);
+
+    private IDictionary<string, object> _endpointsParameters = new Dictionary<string, object>();
+    private IDictionary<string, object> _sendParameters = new Dictionary<string, object>();
+    private IDictionary<string, object> _readParameters = new Dictionary<string, object>();
+
+    private bool _showReadTab;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        _provider = await BrokerService.GetConnectionByIdAsync(Id);
+        if (_provider is null)
+        {
+            _loading = false;
+            return;
+        }
+
+        _capabilities = await BrokerService.GetReaderCapabilitiesAsync(_provider.Address)
+                        ?? new ReaderCapabilitiesDto(false, false, false, false, 0, 0);
+
+        _showReadTab = _capabilities.CanPeek || _capabilities.CanReceive;
+
+        _endpointsViewType = ResolveView(EndpointsRegistry, _provider, typeof(DefaultEndpointsView));
+        _readViewType      = ResolveView(ReadRegistry, _provider, typeof(DefaultReadView));
+        _sendViewType      = ResolveView(SendRegistry, _provider, typeof(DefaultSendView));
+
+        _endpointsParameters = new Dictionary<string, object> { ["Provider"] = _provider };
+        _sendParameters      = new Dictionary<string, object> { ["Provider"] = _provider };
+        _readParameters      = new Dictionary<string, object>
+        {
+            ["Provider"] = _provider,
+            ["Capabilities"] = _capabilities,
+        };
+
+        _loading = false;
+    }
+
+    /// <summary>
+    /// Resolves a per-broker view type from <paramref name="registry"/> using a
+    /// two-step lookup: first the normalized <see cref="Provider.Transport"/>, then
+    /// the normalized <see cref="Provider.Name"/>. Falls back to the supplied
+    /// <paramref name="fallback"/> when neither key matches.
+    /// </summary>
+    /// <remarks>
+    /// Both keys are necessary because the underlying broker model produces them
+    /// in two different shapes:
+    /// <list type="bullet">
+    ///   <item>
+    ///     Both Azure adapters share <c>IConnector.Provider == "Azure"</c>
+    ///     (so <see cref="Provider.Name"/> is "Azure" for both). Only
+    ///     <see cref="Provider.Transport"/> distinguishes "AzureServiceBus" from
+    ///     "AzureQueueStorage" — the Transport-first lookup catches that.
+    ///   </item>
+    ///   <item>
+    ///     RabbitMq's <c>IConnection.Name</c> mutates to "Docker" or "CloudAmpq"
+    ///     depending on the connection string, so <see cref="Provider.Transport"/>
+    ///     can take values that no registry would sensibly key off. The fallback
+    ///     to normalized <see cref="Provider.Name"/> ("RabbitMq" → "rabbitmq")
+    ///     keeps RabbitMq instances pointing at the right view regardless.
+    ///   </item>
+    /// </list>
+    /// When adding a new adapter, register the view under whichever of the two
+    /// normalized strings is stable across instances of that broker.
+    /// </remarks>
+    private static Type ResolveView(IDictionary<string, Type> registry, Provider provider, Type fallback)
+    {
+        var transportKey = Normalize(provider.Transport);
+        if (transportKey.Length > 0 && registry.TryGetValue(transportKey, out var t1))
+            return t1;
+
+        var nameKey = Normalize(provider.Name);
+        if (nameKey.Length > 0 && registry.TryGetValue(nameKey, out var t2))
+            return t2;
+
+        return fallback;
+    }
+
+    private static string Normalize(string? s)
+        => new string((s ?? string.Empty).Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+}

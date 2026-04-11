@@ -5,6 +5,8 @@ namespace Iris.Contracts.Brokers.Models
 {
     public partial class Provider
     {
+        public Guid Id { get; init; }
+
         public string Name { get; set; } = "";
         
         public int Endpoints { get; set; }

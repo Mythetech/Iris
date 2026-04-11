@@ -37,6 +37,8 @@ namespace Iris.Brokers.RabbitMQ
 
         public IConnector Connector { get; set; }
 
+        public Guid Id { get; } = Guid.NewGuid();
+
         private RabbitMqConnector Rabbit => (RabbitMqConnector)Connector;
 
         public string Name { get; set; } = "RabbitMq";

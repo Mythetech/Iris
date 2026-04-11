@@ -28,6 +28,8 @@ namespace Iris.Brokers.Azure
 
         public IConnector Connector { get; set; }
 
+        public Guid Id { get; } = Guid.NewGuid();
+
         public string Name => "AzureServiceBus";
 
         public int EndpointCount => _endpoints.Count;
