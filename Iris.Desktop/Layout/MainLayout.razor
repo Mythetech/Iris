@@ -35,7 +35,9 @@
     <MudDrawer @bind-Open="@_drawerOpen" Variant="DrawerVariant.Mini" Style="overflow: hidden;">
         <AppContextDrawer @bind-IsOpen="_drawerOpen">
             <IconBarHeader>
-                <MudIcon Icon="icon-iris" Size="Size.Large" Class="my-2" Color="Color.Primary" />
+                <MudTooltip Text="About Iris">
+                    <MudIconButton Icon="icon-iris" Size="Size.Large" Class="my-2" Color="Color.Primary" OnClick="OpenAboutDialog" />
+                </MudTooltip>
             </IconBarHeader>
             <PanelNavContent>
                 <HomeNavButton />
@@ -103,6 +105,16 @@
             CloseOnEscapeKey = true,
             BackgroundClass = "iris-dialog",
             MaxWidth = MaxWidth.Large
+        });
+    }
+
+    private async Task OpenAboutDialog()
+    {
+        await DialogService.ShowAsync<AboutIrisDialog>("About", new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackgroundClass = "iris-dialog",
+            MaxWidth = MaxWidth.Small
         });
     }
 
