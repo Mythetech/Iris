@@ -18,5 +18,12 @@ namespace Iris.Components.Brokers
         Task<List<SupportedProvider>> GetSupportedProvidersAsync();
 
         Task RefreshDataAsync();
+
+        /// <summary>
+        /// Returns the read capabilities of the broker at <paramref name="address"/>,
+        /// built by probing which read interfaces the connection implements.
+        /// Returns null if no connection exists at that address.
+        /// </summary>
+        Task<ReaderCapabilitiesDto?> GetReaderCapabilitiesAsync(string address);
     }
 }

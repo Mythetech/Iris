@@ -5,8 +5,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Iris.Brokers.Azure
 {
-    public class AzureQueueStorageConnection : IConnection
+    public class AzureQueueStorageConnection : IConnection, IMessagePeeker, IMessageReceiver
     {
+        // Azure Queue Storage hard-caps peek/receive at 32 messages per call.
+        public int MaxPeekBatchSize => 32;
+        public int MaxReceiveBatchSize => 32;
+
         private readonly ConnectionMetadata _metadata;
         private readonly QueueServiceClient _queueClient;
         private List<EndpointDetails> _endpoints;
@@ -56,6 +60,74 @@ namespace Iris.Brokers.Azure
                 _logger.LogError(ex, "Error sending message to Azure Queue Storage {Endpoint}", endpoint.Name);
             }
 
+        }
+
+        public async Task<IReadOnlyList<ReceivedMessage>> PeekAsync(
+            EndpointDetails endpoint, int count, CancellationToken cancellationToken = default)
+        {
+            var queue = _queueClient.GetQueueClient(endpoint.Name);
+            var response = await queue.PeekMessagesAsync(
+                maxMessages: Math.Min(count, MaxPeekBatchSize), cancellationToken);
+
+            return response.Value.Select(m => Map(
+                messageId: m.MessageId,
+                body: m.Body?.ToString() ?? string.Empty,
+                insertedOn: m.InsertedOn,
+                expiresOn: m.ExpiresOn,
+                dequeueCount: null,
+                popReceipt: null)).ToList();
+        }
+
+        public async Task<IReadOnlyList<ReceivedMessage>> ReceiveAsync(
+            EndpointDetails endpoint, int count, CancellationToken cancellationToken = default)
+        {
+            // Azure Queue Storage has no atomic ReceiveAndDelete — synthesize it
+            // by receiving with a 30s visibility window, then deleting each
+            // message before returning. The visibility window is the "honor
+            // visibility timeout" requirement: during the delete window, a
+            // competing consumer cannot re-dequeue the same message.
+            var queue = _queueClient.GetQueueClient(endpoint.Name);
+            var response = await queue.ReceiveMessagesAsync(
+                maxMessages: Math.Min(count, MaxReceiveBatchSize),
+                visibilityTimeout: TimeSpan.FromSeconds(30),
+                cancellationToken: cancellationToken);
+
+            var received = response.Value;
+
+            await Task.WhenAll(received.Select(m =>
+                queue.DeleteMessageAsync(m.MessageId, m.PopReceipt, cancellationToken)));
+
+            return received.Select(m => Map(
+                messageId: m.MessageId,
+                body: m.Body?.ToString() ?? string.Empty,
+                insertedOn: m.InsertedOn,
+                expiresOn: m.ExpiresOn,
+                dequeueCount: (int?)m.DequeueCount,
+                popReceipt: m.PopReceipt)).ToList();
+        }
+
+        private ReceivedMessage Map(
+            string messageId,
+            string body,
+            DateTimeOffset? insertedOn,
+            DateTimeOffset? expiresOn,
+            int? dequeueCount,
+            string? popReceipt)
+        {
+            return new ReceivedMessage
+            {
+                Body = body,
+                MessageId = messageId,
+                DeliveryCount = dequeueCount,
+                EnqueuedTimeUtc = insertedOn,
+                ExpiresAtUtc = expiresOn,
+                Provider = "AzureQueueStorage",
+                Source = ReadSource.Main,
+                Native = new NativeMessageMetadata
+                {
+                    PopReceipt = popReceipt,
+                },
+            };
         }
     }
 }

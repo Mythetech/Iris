@@ -1,33 +1,29 @@
 namespace Iris.Brokers.Extensions;
 
 /// <summary>
-/// Capability probes and helpers for treating an <see cref="IConnection"/>
-/// as an <see cref="IMessageReader"/>.
+/// Capability probes for <see cref="IConnection"/>. Each probe is a
+/// thin type-check against the operation-specific interface; there are
+/// no runtime capability flags to query.
 /// </summary>
 public static class MessageReaderExtensions
 {
-    /// <summary>True if the connection implements <see cref="IMessageReader"/> at all.</summary>
+    /// <summary>True if the connection implements any read interface at all.</summary>
     public static bool SupportsRead(this IConnection connection)
         => connection is IMessageReader;
 
-    /// <summary>True if the connection can non-destructively peek messages.</summary>
+    /// <summary>True if the connection can non-destructively peek the main queue.</summary>
     public static bool SupportsPeek(this IConnection connection)
-        => connection is IMessageReader reader && reader.Capabilities.SupportsPeek;
+        => connection is IMessagePeeker;
 
-    /// <summary>True if the connection can destructively receive messages.</summary>
+    /// <summary>True if the connection can destructively receive from the main queue.</summary>
     public static bool SupportsReceive(this IConnection connection)
-        => connection is IMessageReader reader && reader.Capabilities.SupportsReceive;
+        => connection is IMessageReceiver;
 
-    /// <summary>True if the connection exposes a dead-letter sub-queue.</summary>
-    public static bool SupportsDeadLetter(this IConnection connection)
-        => connection is IMessageReader reader && reader.Capabilities.SupportsDeadLetter;
+    /// <summary>True if the connection can non-destructively peek the dead-letter sub-queue.</summary>
+    public static bool SupportsDeadLetterPeek(this IConnection connection)
+        => connection is IDeadLetterPeeker;
 
-    /// <summary>
-    /// Get the reader view of a connection, throwing a friendly exception
-    /// if the broker doesn't support reading.
-    /// </summary>
-    public static IMessageReader AsReader(this IConnection connection)
-        => connection as IMessageReader
-            ?? throw new NotSupportedException(
-                $"Connection '{connection.Name}' ({connection.Address}) does not support reading.");
+    /// <summary>True if the connection can destructively receive from the dead-letter sub-queue.</summary>
+    public static bool SupportsDeadLetterReceive(this IConnection connection)
+        => connection is IDeadLetterReceiver;
 }

@@ -1,6 +1,8 @@
 ﻿@inherits IrisPageBase
 @using Iris.Components.Brokers
+@using Iris.Components.Messaging
 @using Iris.Components.Theme
+@using Iris.Contracts.Brokers.Models
 @page "/Endpoints"
 
 <IrisCard>
@@ -33,7 +35,11 @@
             <PropertyColumn Property="x => x!.Type" Title="Type" />
             <TemplateColumn CellClass="grid-icon-col" Filterable="false">
                 <CellTemplate>
-                    <GridActionsMenu OnSendClicked="@(() => HandleSendClicked(context?.Item!))" />
+                    <GridActionsMenu
+                        OnSendClicked="@(() => HandleSendClicked(context?.Item!))"
+                        OnReadClicked="@(() => HandleReadClicked(context?.Item!))"
+                        CanRead="@CanRead(context?.Item)"
+                        ReadDisabledReason="@GetReadDisabledReason(context?.Item)" />
                 </CellTemplate>
             </TemplateColumn>
         </Columns>
@@ -79,12 +85,15 @@
     [Inject]
     public IBrokerService Client { get; set; } = default!;
 
-    private MudDrawer offcanvas = default!;
+    [Inject]
+    public IDialogService DialogService { get; set; } = default!;
 
     private List<Contracts.Brokers.Models.EndpointDetails> _endpoints = new();
 
+    private readonly Dictionary<string, ReaderCapabilitiesDto?> _caps = new();
+
     private MudDataGrid<Contracts.Brokers.Models.EndpointDetails> _grid { get; set; } = default!;
-    
+
     private bool Loading = true;
 
     private string? _searchString;
@@ -99,12 +108,49 @@
 
             _endpoints = await Client.GetEndpointsAsync();
 
+            // Probe reader capabilities once per distinct connection address.
+            // The dialog uses these to decide which Peek/Receive/DLQ buttons
+            // to show; the actions menu uses CanReceive as the floor for
+            // enabling the Read item.
+            foreach (var addr in _endpoints.Select(e => e.Address).Distinct())
+                _caps[addr] = await Client.GetReaderCapabilitiesAsync(addr);
+
             Loading = false;
         }
 
         StateHasChanged();
 
         await base.OnInitializedAsync();
+    }
+
+    private bool CanRead(Contracts.Brokers.Models.EndpointDetails? e) =>
+        e is not null
+        && string.Equals(e.Type, "Queue", StringComparison.OrdinalIgnoreCase)
+        && _caps.TryGetValue(e.Address, out var c)
+        && c?.CanReceive == true;
+
+    private string GetReadDisabledReason(Contracts.Brokers.Models.EndpointDetails? e)
+    {
+        if (e is null)
+            return "Unknown endpoint";
+        if (!string.Equals(e.Type, "Queue", StringComparison.OrdinalIgnoreCase))
+            return "Reading is only supported for queue endpoints";
+        return "Broker does not support reading messages";
+    }
+
+    private async Task HandleReadClicked(Contracts.Brokers.Models.EndpointDetails endpoint)
+    {
+        if (!_caps.TryGetValue(endpoint.Address, out var caps) || caps is null)
+            return;
+
+        var parameters = new DialogParameters
+        {
+            ["Endpoint"] = endpoint,
+            ["Capabilities"] = caps,
+        };
+        await DialogService.ShowAsync<MessageReaderDialog>(
+            $"Read {endpoint.Name}", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
     }
 
     protected void EndpointRowClicked(DataGridRowClickEventArgs<Contracts.Brokers.Models.EndpointDetails> args)

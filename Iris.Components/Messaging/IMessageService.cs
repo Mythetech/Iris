@@ -1,4 +1,4 @@
-﻿using Iris.Contracts.Messaging.Models;
+using Iris.Contracts.Messaging.Models;
 using Iris.Contracts.Results;
 
 namespace Iris.Components.Messaging
@@ -14,24 +14,45 @@ namespace Iris.Components.Messaging
         public Task<Result<bool>> SendMessageAsync(Message message);
 
         /// <summary>
-        /// Non-destructively read up to <paramref name="count"/> messages from the endpoint.
+        /// Non-destructively read up to <paramref name="count"/> messages from the main queue.
+        /// Returns a failure result if the broker does not implement non-destructive peek.
         /// </summary>
         public Task<Result<IReadOnlyList<ReceivedMessageDto>>> PeekMessagesAsync(
             string address,
             string endpointName,
             int count,
-            ReadSource source = ReadSource.Main,
             CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Destructively consume up to <paramref name="count"/> messages from the endpoint.
+        /// Destructively consume up to <paramref name="count"/> messages from the main queue.
         /// This is irrevocable — messages are auto-acknowledged before return.
+        /// Returns a failure result if the broker does not implement destructive receive.
         /// </summary>
         public Task<Result<IReadOnlyList<ReceivedMessageDto>>> ReceiveMessagesAsync(
             string address,
             string endpointName,
             int count,
-            ReadSource source = ReadSource.Main,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Non-destructively read up to <paramref name="count"/> messages from the dead-letter sub-queue.
+        /// Returns a failure result if the broker does not expose a peekable DLQ.
+        /// </summary>
+        public Task<Result<IReadOnlyList<ReceivedMessageDto>>> PeekDeadLetterMessagesAsync(
+            string address,
+            string endpointName,
+            int count,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Destructively consume up to <paramref name="count"/> messages from the dead-letter sub-queue.
+        /// This is irrevocable — messages are auto-acknowledged before return.
+        /// Returns a failure result if the broker does not expose a receivable DLQ.
+        /// </summary>
+        public Task<Result<IReadOnlyList<ReceivedMessageDto>>> ReceiveDeadLetterMessagesAsync(
+            string address,
+            string endpointName,
+            int count,
             CancellationToken cancellationToken = default);
     }
 }
