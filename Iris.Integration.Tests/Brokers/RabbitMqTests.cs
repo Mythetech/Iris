@@ -132,15 +132,159 @@ namespace Iris.Integration.Tests.Brokers
             return connection!;
         }
 
-        [Fact(DisplayName = "RabbitMqConnection implements IMessagePeeker and IMessageReceiver")]
+        [Fact(DisplayName = "RabbitMqConnection implements all four read interfaces")]
         public async Task RabbitMqConnection_implements_reader_interfaces()
         {
             var connection = await CreateAndSeedAsync("iris-iface-probe", 0);
 
             connection.Should().BeAssignableTo<IMessagePeeker>();
             connection.Should().BeAssignableTo<IMessageReceiver>();
-            connection.Should().NotBeAssignableTo<IDeadLetterPeeker>();
-            connection.Should().NotBeAssignableTo<IDeadLetterReceiver>();
+            connection.Should().BeAssignableTo<IDeadLetterPeeker>();
+            connection.Should().BeAssignableTo<IDeadLetterReceiver>();
+        }
+
+        /// <summary>
+        /// Declare a DLX exchange + DLQ target queue + source queue whose
+        /// <c>x-dead-letter-exchange</c> points at the DLX and whose
+        /// <c>x-message-ttl</c> is short enough that every sent message
+        /// auto-dead-letters almost immediately. Publishes <paramref name="count"/>
+        /// messages to the source and waits for the TTL to flush them into the DLQ.
+        /// </summary>
+        private async Task<IConnection> CreateDlxTopologyAndSeedAsync(
+            string sourceQueue, string dlxExchange, string dlqQueue, int count, int ttlMs = 100)
+        {
+            var port = _rabbitMqContainer.GetMappedPublicPort(15672);
+            var data = new ConnectionData
+            {
+                ConnectionString = $"http://localhost:{port}",
+                Username = "guest",
+                Password = "guest"
+            };
+            var connector = new RabbitMqConnector();
+            var connection = await connector.ConnectAsync(data, false);
+
+            var mgmt = new EasyNetQ.Management.Client.ManagementClient(
+                new Uri($"http://localhost:{port}"), "guest", "guest");
+            var vhost = await mgmt.GetVhostAsync("/");
+
+            // 1) DLX — a fanout exchange is fine; we only bind one DLQ to it.
+            await mgmt.CreateExchangeAsync(vhost, dlxExchange,
+                new EasyNetQ.Management.Client.Model.ExchangeInfo(
+                    Type: "fanout", AutoDelete: false, Durable: true),
+                CancellationToken.None);
+
+            // 2) DLQ target — plain queue, no args.
+            await mgmt.CreateQueueAsync(vhost, dlqQueue,
+                new EasyNetQ.Management.Client.Model.QueueInfo(
+                    AutoDelete: false, Durable: true, Arguments: null),
+                CancellationToken.None);
+
+            // 3) Bind DLQ to DLX — fanout ignores routing key.
+            await mgmt.CreateQueueBindingAsync(vhost, dlxExchange, dlqQueue,
+                new EasyNetQ.Management.Client.Model.BindingInfo(RoutingKey: ""),
+                CancellationToken.None);
+
+            // 4) Source queue with DLX pointer + TTL so messages auto-dead-letter.
+            await mgmt.CreateQueueAsync(vhost, sourceQueue,
+                new EasyNetQ.Management.Client.Model.QueueInfo(
+                    AutoDelete: false,
+                    Durable: true,
+                    Arguments: new Dictionary<string, object?>
+                    {
+                        ["x-dead-letter-exchange"] = dlxExchange,
+                        ["x-message-ttl"] = ttlMs,
+                    }),
+                CancellationToken.None);
+
+            for (var i = 0; i < count; i++)
+            {
+                await connection!.SendAsync(new EndpointDetails
+                {
+                    Provider = "rabbitmq",
+                    Address = _rabbitMqContainer.IpAddress,
+                    Type = "queue",
+                    Name = sourceQueue
+                }, $"{{\"dlq-index\":{i}}}");
+            }
+
+            // Give TTL enough time to fire and messages to land on DLQ.
+            await Task.Delay(ttlMs * 5);
+            return connection!;
+        }
+
+        [Fact(DisplayName = "PeekDeadLetter returns dead-lettered messages non-destructively")]
+        public async Task PeekDeadLetter_returns_dead_lettered_messages()
+        {
+            const string source = "iris-dlq-peek-source";
+            const string dlx = "iris-dlq-peek-dlx";
+            const string dlq = "iris-dlq-peek-target";
+            var connection = await CreateDlxTopologyAndSeedAsync(source, dlx, dlq, count: 3);
+            var peeker = (IDeadLetterPeeker)connection;
+
+            var endpoint = new EndpointDetails
+            {
+                Provider = "rabbitmq",
+                Address = connection.Address,
+                Type = "Queue",
+                Name = source
+            };
+
+            var first = await peeker.PeekDeadLetterAsync(endpoint, 10);
+            var second = await peeker.PeekDeadLetterAsync(endpoint, 10);
+
+            first.Should().HaveCount(3);
+            second.Should().HaveCount(3);
+            first.Select(m => m.Body).Should().BeEquivalentTo(second.Select(m => m.Body));
+            first.Should().OnlyContain(m => m.Source == ReadSource.DeadLetter);
+        }
+
+        [Fact(DisplayName = "ReceiveDeadLetter removes dead-lettered messages from the DLQ")]
+        public async Task ReceiveDeadLetter_removes_dead_lettered_messages()
+        {
+            const string source = "iris-dlq-receive-source";
+            const string dlx = "iris-dlq-receive-dlx";
+            const string dlq = "iris-dlq-receive-target";
+            var connection = await CreateDlxTopologyAndSeedAsync(source, dlx, dlq, count: 3);
+            var peeker = (IDeadLetterPeeker)connection;
+            var receiver = (IDeadLetterReceiver)connection;
+
+            var endpoint = new EndpointDetails
+            {
+                Provider = "rabbitmq",
+                Address = connection.Address,
+                Type = "Queue",
+                Name = source
+            };
+
+            var received = await receiver.ReceiveDeadLetterAsync(endpoint, 10);
+            var afterReceive = await peeker.PeekDeadLetterAsync(endpoint, 10);
+
+            received.Should().HaveCount(3);
+            received.Should().OnlyContain(m => m.Source == ReadSource.DeadLetter);
+            afterReceive.Should().BeEmpty();
+        }
+
+        [Fact(DisplayName = "ReceiveDeadLetter returns empty when no DLX configured")]
+        public async Task ReceiveDeadLetter_returns_empty_when_no_DLX_configured()
+        {
+            // CreateAndSeedAsync declares a plain queue with null Arguments — no
+            // x-dead-letter-exchange. The honest answer to "what's in the DLQ?" is
+            // "nothing, because there isn't one." No exception.
+            const string queue = "iris-dlq-none";
+            var connection = await CreateAndSeedAsync(queue, 2);
+            var receiver = (IDeadLetterReceiver)connection;
+
+            var endpoint = new EndpointDetails
+            {
+                Provider = "rabbitmq",
+                Address = connection.Address,
+                Type = "Queue",
+                Name = queue
+            };
+
+            var received = await receiver.ReceiveDeadLetterAsync(endpoint, 10);
+
+            received.Should().BeEmpty();
         }
 
         [Fact(DisplayName = "Peek returns sent messages without removing them")]
