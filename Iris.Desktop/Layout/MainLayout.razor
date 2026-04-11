@@ -4,6 +4,7 @@
 @using Iris.Components.Shared.Time
 @using Iris.Components.Brokers
 @using Iris.Components.Endpoints
+@using Iris.Components.Home
 @using Iris.Components.Messaging
 @using Iris.Components.History
 @using Iris.Components.PackageManagement
@@ -37,6 +38,7 @@
                 <MudIcon Icon="icon-iris" Size="Size.Large" Class="my-2" Color="Color.Primary" />
             </IconBarHeader>
             <PanelNavContent>
+                <HomeNavButton />
                 <ContextPanelItem Id="messaging" Icon="@IrisIcons.Send" Title="Messaging">
                     <PanelContent><MessagingPanel /></PanelContent>
                 </ContextPanelItem>
