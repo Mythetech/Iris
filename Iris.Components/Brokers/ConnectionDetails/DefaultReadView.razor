@@ -1,0 +1,48 @@
+@implements Iris.Components.Brokers.ConnectionDetails.IConnectionReadView
+@using Iris.Contracts.Brokers.Models
+
+<MudStack Spacing="3">
+    <MudStack Row="true" Spacing="2">
+        @if (Capabilities.CanPeek)
+        {
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Visibility">
+                Peek
+            </MudButton>
+        }
+        @if (Capabilities.CanReceive)
+        {
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Inbox">
+                Receive
+            </MudButton>
+        }
+    </MudStack>
+
+    @if (Capabilities.CanPeekDeadLetter || Capabilities.CanReceiveDeadLetter)
+    {
+        <MudDivider />
+        <MudText Typo="Typo.subtitle2">Dead Letter</MudText>
+        <MudStack Row="true" Spacing="2">
+            @if (Capabilities.CanPeekDeadLetter)
+            {
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Visibility">
+                    Peek Dead Letter
+                </MudButton>
+            }
+            @if (Capabilities.CanReceiveDeadLetter)
+            {
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Inbox">
+                    Receive Dead Letter
+                </MudButton>
+            }
+        </MudStack>
+    }
+
+    <MudText Typo="Typo.caption" Class="mt-2">
+        Read results panel coming with the read-side wiring task.
+    </MudText>
+</MudStack>
+
+@code {
+    [Parameter] public required Provider Provider { get; set; }
+    [Parameter] public required ReaderCapabilitiesDto Capabilities { get; set; }
+}

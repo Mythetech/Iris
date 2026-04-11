@@ -1,0 +1,91 @@
+@implements Iris.Components.Brokers.ConnectionDetails.IConnectionSendView
+@using Iris.Components.Brokers
+@using Iris.Components.Messaging
+@using Iris.Components.Shared.Snackbar
+@inject IBrokerService BrokerService
+@inject IMessageSendOrchestrator SendOrchestrator
+@inject IMessageService MessageService
+@inject ISnackbar Snackbar
+
+<MudStack Spacing="3" Class="d-flex" Style="flex-direction:column;height:65dvh;">
+    <MudToolBar Class="darkmorphic gap-4 flex-grow-0">
+        <EndpointSelector
+            Endpoints="@_endpoints"
+            @bind-Value="@_selectedEndpoint"
+            SelectedProviderAddress="@Provider.Address"
+            SelectedEndpointChanged="@TrySetMessageStructure" />
+        <FlexSpacer />
+        <IrisLoadingButton
+            Loading="@_loading"
+            OnClick="@SendClicked"
+            Icon="@IrisIcons.Send"
+            Text="Send"
+            LoadingText="Sending" />
+    </MudToolBar>
+    <div class="d-flex flex-grow-1" style="min-height:0;">
+        <MessageEditor @ref="@_editor" />
+    </div>
+</MudStack>
+
+@code {
+    [Parameter] public required Provider Provider { get; set; }
+
+    private List<EndpointDetails> _endpoints = new();
+    private EndpointDetails? _selectedEndpoint;
+    private MessageEditor _editor = default!;
+    private bool _loading;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var all = await BrokerService.GetEndpointsAsync();
+        _endpoints = all
+            .Where(e => string.Equals(e.Address, Provider.Address, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+    private async Task TrySetMessageStructure(string name)
+    {
+        string message = await MessageService.GetMessageStructureAsync(name);
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            await _editor.SetTextAsync(message);
+        }
+    }
+
+    private async Task SendClicked()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        string json = await _editor.GetTextAsync() ?? "";
+
+        // Surface every iteration's result through the snackbar — mirrors how
+        // /Messaging handles its own send via IrisPageBase.HandleResult.
+        var progress = new Progress<Result<bool>>(ReportResult);
+
+        await SendOrchestrator.SendAsync(
+            new SendContext
+            {
+                Json = json,
+                Provider = Provider,
+                Endpoint = _selectedEndpoint,
+            },
+            progress);
+
+        _loading = false;
+        StateHasChanged();
+    }
+
+    private void ReportResult(Result<bool> result)
+    {
+        if (result is null || result.Error || !result.Value)
+        {
+            var message = string.IsNullOrWhiteSpace(result?.Message) ? "Send failed" : result.Message;
+            Snackbar.AddIrisNotification(message, Severity.Error);
+        }
+        else
+        {
+            Snackbar.AddIrisNotification("Message sent", Severity.Success);
+        }
+    }
+}
