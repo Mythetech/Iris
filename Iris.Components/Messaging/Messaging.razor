@@ -63,6 +63,9 @@
     [Inject]
     public MessageState MessageState { get; set; } = default!;
 
+    [Inject]
+    public IMessageSendOrchestrator SendOrchestrator { get; set; } = default!;
+
     [SupplyParameterFromQuery]
     public string? Provider { get; set; }
 
@@ -204,69 +207,22 @@
 
         string json = await _editor.GetTextAsync() ?? "";
 
-        MessageState.GetFrameworkProperties().TryGetValue("MessageType", out string? messageTypeOverride);
+        // Per-iteration progress: matches the pre-extraction behaviour where every
+        // send in a Repeat run surfaced its own success/failure snackbar.
+        var progress = new Progress<Result<bool>>(r => HandleResult(r));
 
-        string? messageType = !string.IsNullOrWhiteSpace(messageTypeOverride) ? messageTypeOverride : _selectedEndpoint?.Name;
-
-        if (MessageState.Repeat > 0)
-        {
-            await SendRepeatingMessages(messageType, json, MessageState.Repeat);
-        }
-        else
-        {
-            await SendMessageAsync(messageType, json);
-        }
+        await SendOrchestrator.SendAsync(
+            new SendContext
+            {
+                Json = json,
+                Provider = _selectedProvider,
+                Endpoint = _selectedEndpoint,
+            },
+            progress);
 
         _loading = false;
 
         StateHasChanged();
-    }
-
-    private async Task SendRepeatingMessages(string messageType, string messageJson, int repeatCount)
-    {
-        //We want to send + 1 messages to the repeat count for the original 0th message
-        for (int i = 0; i < repeatCount + 1; i++)
-        {
-            MessageState.RepeatText = $"{repeatCount + 1 - i} remaining";
-            MessageState.NotifyStateChanged();
-            await SendMessageAsync(messageType, messageJson);
-        }
-
-        MessageState.RepeatText = "";
-        MessageState.NotifyStateChanged();
-    }
-
-    private async Task SendMessageAsync(string messageType, string messageJson)
-    {
-        _loading = true;
-
-        if (MessageState.Delay > 0)
-        {
-            await HandleDelay(MessageState.Delay);
-        }
-
-        MessageState.SetEndpointMetadata(_selectedEndpoint);
-
-        var response = await MessageService.SendMessageAsync(messageType, messageJson, _selectedProvider?.Address, MessageState.SelectedFramework, MessageState.GetFrameworkProperties(), MessageState.Headers);
-
-        HandleResult(response);
-
-        _loading = false;
-    }
-
-    private async Task HandleDelay(int delay)
-    {
-        for (int i = 0; i < delay; i++)
-        {
-            int delayCount = delay - (i + 1);
-
-            MessageState.DelayText = delayCount > 0 ? $"Sending in {delayCount}..." : "Sending...";
-            MessageState.NotifyStateChanged();
-            await Task.Delay(1000);
-        }
-
-        MessageState.DelayText = "";
-        MessageState.NotifyStateChanged();
     }
 
     protected async Task DeleteTemplate(Contracts.Templates.Models.Template template)

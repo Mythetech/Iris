@@ -1,0 +1,83 @@
+@implements Iris.Components.Brokers.ConnectionDetails.IConnectionEndpointsView
+@inject IBrokerService BrokerService
+@using Iris.Contracts.Brokers.Models
+
+@if (_endpoints is null)
+{
+    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+}
+else
+{
+    <MudStack Spacing="4">
+        <section>
+            <MudText Typo="Typo.subtitle1">Queues</MudText>
+            @if (_queues.Count == 0)
+            {
+                <MudText Typo="Typo.body2">No queues.</MudText>
+            }
+            else
+            {
+                <MudList T="EndpointDetails" Dense="true">
+                    @foreach (var q in _queues)
+                    {
+                        <MudListItem T="EndpointDetails" Value="q">@q.Name</MudListItem>
+                    }
+                </MudList>
+            }
+        </section>
+
+        <section>
+            <MudText Typo="Typo.subtitle1">Topics</MudText>
+            @if (_topics.Count == 0)
+            {
+                <MudText Typo="Typo.body2">No topics.</MudText>
+            }
+            else
+            {
+                <MudList T="EndpointDetails" Dense="true">
+                    @foreach (var t in _topics)
+                    {
+                        <MudListItem T="EndpointDetails" Value="t">@t.Name</MudListItem>
+                    }
+                </MudList>
+            }
+        </section>
+
+        <section>
+            <MudText Typo="Typo.subtitle1">Subscriptions</MudText>
+            @if (_subscriptions.Count == 0)
+            {
+                <MudText Typo="Typo.body2">No subscriptions.</MudText>
+            }
+            else
+            {
+                <MudList T="EndpointDetails" Dense="true">
+                    @foreach (var s in _subscriptions)
+                    {
+                        <MudListItem T="EndpointDetails" Value="s">@s.Name</MudListItem>
+                    }
+                </MudList>
+            }
+        </section>
+    </MudStack>
+}
+
+@code {
+    [Parameter] public required Provider Provider { get; set; }
+
+    private IReadOnlyList<EndpointDetails>? _endpoints;
+    private IReadOnlyList<EndpointDetails> _queues        = Array.Empty<EndpointDetails>();
+    private IReadOnlyList<EndpointDetails> _topics        = Array.Empty<EndpointDetails>();
+    private IReadOnlyList<EndpointDetails> _subscriptions = Array.Empty<EndpointDetails>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var all = await BrokerService.GetEndpointsAsync();
+        _endpoints = all
+            .Where(e => string.Equals(e.Address, Provider.Address, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        _queues        = _endpoints.Where(e => string.Equals(e.Type, "Queue",        StringComparison.OrdinalIgnoreCase)).ToList();
+        _topics        = _endpoints.Where(e => string.Equals(e.Type, "Topic",        StringComparison.OrdinalIgnoreCase)).ToList();
+        _subscriptions = _endpoints.Where(e => string.Equals(e.Type, "Subscription", StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+}

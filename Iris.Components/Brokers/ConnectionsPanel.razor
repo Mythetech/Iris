@@ -28,10 +28,14 @@
             @_providers.Count active connection@(_providers.Count != 1 ? "s" : "")
         </MudText>
 
-        <MudList T="string" Dense="true">
+        <MudList T="Provider" Dense="true">
             @foreach (var provider in _providers)
             {
-                <MudListItem T="string" Icon="@($"icon-{provider.Name}")" IconColor="Color.Primary">
+                <MudListItem T="Provider"
+                             Value="provider"
+                             Icon="@($"icon-{provider.Name}")"
+                             IconColor="Color.Primary"
+                             OnClick="@(() => OpenConnectionDetails(provider))">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                         <MudText Typo="Typo.body2" Class="text-truncate">@provider.Address</MudText>
                         <MudSpacer />
@@ -66,6 +70,9 @@
     }
 
     private void OpenConnectionsPage() => NavigationManager.NavigateTo("/Connections");
+
+    private void OpenConnectionDetails(Provider provider)
+        => NavigationManager.NavigateTo($"/connections/{provider.Id}");
 
     private async Task AddConnectionAsync()
     {

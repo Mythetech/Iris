@@ -66,13 +66,13 @@ public class NativeMenuService : INativeMenuService
             foreach (var provider in connections)
             {
                 var sanitizedAddress = SanitizeId(provider.Address);
+                var idToken = provider.Id.ToString("N");
                 menu.AddSubmenu(provider.Name ?? provider.Address, sub =>
                 {
                     sub.AddItem("Send Message",
                         MenuItemIds.ConnectionsPrefix + sanitizedAddress + MenuItemIds.ConnectionsSendMessageSuffix);
                     sub.AddItem("Connection Info",
-                        MenuItemIds.ConnectionsPrefix + sanitizedAddress + MenuItemIds.ConnectionsInfoSuffix,
-                        item => item.WithEnabled(false));
+                        MenuItemIds.ConnectionsPrefix + idToken + MenuItemIds.ConnectionsInfoSuffix);
                 });
             }
         });

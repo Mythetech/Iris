@@ -1,0 +1,64 @@
+@implements Iris.Components.Brokers.ConnectionDetails.IConnectionEndpointsView
+@inject IBrokerService BrokerService
+@using Iris.Contracts.Brokers.Models
+
+@if (_endpoints is null)
+{
+    <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+}
+else
+{
+    <MudStack Spacing="4">
+        <section>
+            <MudText Typo="Typo.subtitle1">Queues</MudText>
+            @if (_queues.Count == 0)
+            {
+                <MudText Typo="Typo.body2">No queues.</MudText>
+            }
+            else
+            {
+                <MudList T="EndpointDetails" Dense="true">
+                    @foreach (var q in _queues)
+                    {
+                        <MudListItem T="EndpointDetails" Value="q">@q.Name</MudListItem>
+                    }
+                </MudList>
+            }
+        </section>
+
+        <section>
+            <MudText Typo="Typo.subtitle1">Exchanges</MudText>
+            @if (_exchanges.Count == 0)
+            {
+                <MudText Typo="Typo.body2">No exchanges.</MudText>
+            }
+            else
+            {
+                <MudList T="EndpointDetails" Dense="true">
+                    @foreach (var x in _exchanges)
+                    {
+                        <MudListItem T="EndpointDetails" Value="x">@x.Name</MudListItem>
+                    }
+                </MudList>
+            }
+        </section>
+    </MudStack>
+}
+
+@code {
+    [Parameter] public required Provider Provider { get; set; }
+
+    private IReadOnlyList<EndpointDetails>? _endpoints;
+    private IReadOnlyList<EndpointDetails> _queues = Array.Empty<EndpointDetails>();
+    private IReadOnlyList<EndpointDetails> _exchanges = Array.Empty<EndpointDetails>();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var all = await BrokerService.GetEndpointsAsync();
+        _endpoints = all
+            .Where(e => string.Equals(e.Address, Provider.Address, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        _queues    = _endpoints.Where(e => string.Equals(e.Type, "Queue",    StringComparison.OrdinalIgnoreCase)).ToList();
+        _exchanges = _endpoints.Where(e => string.Equals(e.Type, "Exchange", StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+}

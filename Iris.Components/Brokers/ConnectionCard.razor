@@ -18,7 +18,7 @@
         <MudText Typo="Typo.body1">Address</MudText>
         <MudText Typo="Typo.body2">@Provider.Address</MudText>
     </MudStack>
-    <MudStack Row="true" Spacing="1" Class="pr-4">
+    <MudStack Row="true" Spacing="1" Class="pr-4" AlignItems="AlignItems.Center">
         <MudTooltip Text="Endpoints" Class="d-flex">
             <MudStack Row="true" Class="pl-4" AlignItems="AlignItems.Center">
                 <MudIcon Size="Size.Small" Icon="@IrisIcons.Endpoints"/>
@@ -26,6 +26,11 @@
             </MudStack>
         </MudTooltip>
         <MudSpacer />
+        <MudButton Href="@($"/connections/{Provider.Id}")"
+                   Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Outlined.OpenInNew">
+            View details
+        </MudButton>
         <DeleteButton Title="Delete Connection" T="Provider" Item="Provider" ItemDeleted="async (_) => await RaiseOnDelete()" />
     </MudStack>
 </MudStack>

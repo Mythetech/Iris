@@ -30,6 +30,7 @@ namespace Iris.Components
             services.AddScoped<IBrokerService, TBrokerService>();
             services.AddScoped<IMessageService, TMessageService>();
             services.AddScoped<MessageState>();
+            services.AddScoped<IMessageSendOrchestrator, MessageSendOrchestrator>();
             services.AddScoped<IMessagingLayoutService, TMessageLayoutService>();
             services.AddScoped<LayoutState>();
             services.AddScoped<ITemplateService, TTemplateService>();
@@ -47,6 +48,15 @@ namespace Iris.Components
                 { "rabbitmq", typeof(Brokers.RabbitMqConnectionData) },
                 { "amazon", typeof(Brokers.AmazonConnectionData) },
             });
+
+            // Connection details slot registries — defaults are filled in below per broker.
+            services.AddSingleton(new Brokers.ConnectionDetails.EndpointsViewRegistry
+            {
+                { "rabbitmq",        typeof(Brokers.ConnectionDetails.RabbitMqEndpointsView) },
+                { "azureservicebus", typeof(Brokers.ConnectionDetails.AzureServiceBusEndpointsView) },
+            });
+            services.AddSingleton(new Brokers.ConnectionDetails.ReadViewRegistry());
+            services.AddSingleton(new Brokers.ConnectionDetails.SendViewRegistry());
 
             // Add MudBlazor and other UI services
             services.AddMudServices(config =>

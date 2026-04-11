@@ -35,6 +35,7 @@ public class NativeMenuConnectionConsumer : IConsumer<ConnectionCreated>, IConsu
         var connections = await _connectionManager.GetConnectionsAsync();
         var providers = connections.Select(c => new Provider
         {
+            Id = c.Id,
             Name = c.Connector.Provider,
             Address = c.Address,
             Endpoints = c.EndpointCount,
