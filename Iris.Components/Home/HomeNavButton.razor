@@ -1,0 +1,49 @@
+@using Iris.Components.Theme
+@using Microsoft.AspNetCore.Components.Routing
+@implements IDisposable
+@inject NavigationManager Nav
+
+<div class="context-panel-item-wrapper">
+    @if (IsActive)
+    {
+        <MudIconButton Class="context-item-active"
+                       Color="Color.Primary"
+                       Icon="@IrisIcons.Home"
+                       OnClick="HandleClick" />
+    }
+    else
+    {
+        <MudTooltip Text="Home" Color="Color.Primary">
+            <MudIconButton Color="Color.Surface"
+                           Icon="@IrisIcons.Home"
+                           OnClick="HandleClick" />
+        </MudTooltip>
+    }
+</div>
+
+@code {
+    private bool IsActive => Nav.ToBaseRelativePath(Nav.Uri).TrimStart('/').Length == 0;
+
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleClick()
+    {
+        if (IsActive)
+            return;
+
+        Nav.NavigateTo("/");
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+    }
+}
