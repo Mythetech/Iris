@@ -1,0 +1,68 @@
+@using System.Reflection
+@using Iris.Components.Theme
+@using Mythetech.Framework.Infrastructure
+@using Mythetech.Framework.Components.Links
+
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="w-100">
+            <MudText Typo="Typo.h6">About</MudText>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudTooltip Text="Report Issue">
+                    <MudIconButton Icon="@IrisIcons.Bug" Color="Color.Primary" OnClick="OpenReportIssue" />
+                </MudTooltip>
+                <MudTooltip Text="GitHub">
+                    <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Primary" OnClick="OpenGitHub" />
+                </MudTooltip>
+            </MudStack>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="6" Class="pt-0">
+                <MudImage ObjectFit="ObjectFit.Contain" Class="w-100 h-100" Src="_content/Iris.Components/icons/iris.png" />
+            </MudItem>
+            <MudItem xs="6">
+                <MudStack Class="w-100 h-100" Spacing="3" AlignItems="AlignItems.Center" Justify="Justify.Center">
+                    <MudText Class="app-header-font" Typo="Typo.h4">Iris</MudText>
+                    <MudText Typo="Typo.h5" Class="mud-text-secondary">Message across brokers</MudText>
+                    <MudText Typo="Typo.h6">Test, debug, and explore messaging across RabbitMQ, Azure Service Bus, AWS SQS, and more. One tool built for broker developer experience.</MudText>
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexStart" Class="pt-4 px-1 mb-n2">
+            <ExternalLink Typo="Typo.h6" Color="Color.Inherit" Link="@MythetechUrl" Class="app-header-font">Mythetech</ExternalLink>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudText Typo="Typo.body1" Class="mud-text-secondary pl-3">Version @Version</MudText>
+        <MudSpacer />
+        <MudButton OnClick="Cancel">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private const string GitHubUrl = "https://github.com/Mythetech/Iris";
+    private const string ReportIssueUrl = "https://github.com/Mythetech/Iris/issues/new";
+    private const string MythetechUrl = "https://www.mythetech.com";
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Inject]
+    protected ILinkOpenService LinkOpenService { get; set; } = default!;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private string Version => Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? string.Empty;
+
+    protected async Task OpenReportIssue()
+    {
+        await LinkOpenService.OpenLinkAsync(ReportIssueUrl);
+    }
+
+    protected async Task OpenGitHub()
+    {
+        await LinkOpenService.OpenLinkAsync(GitHubUrl);
+    }
+}
