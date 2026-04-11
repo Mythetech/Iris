@@ -8,7 +8,7 @@ using Iris.Brokers.Models;
 
 namespace Iris.Brokers.RabbitMQ
 {
-    public class RabbitMqConnection : IConnection, IMessagePeeker, IMessageReceiver
+    public class RabbitMqConnection : IConnection, IMessagePeeker, IMessageReceiver, IDeadLetterPeeker, IDeadLetterReceiver
     {
         // The RabbitMQ HTTP management API's GET-messages endpoint accepts
         // arbitrary counts; 100 is a sane UI cap.
@@ -103,14 +103,113 @@ namespace Iris.Brokers.RabbitMQ
             EndpointDetails endpoint, int count, CancellationToken cancellationToken = default)
             => GetMessagesAsync(endpoint, count, AckMode.AckRequeueFalse, cancellationToken);
 
+        public async Task<IReadOnlyList<ReceivedMessage>> PeekDeadLetterAsync(
+            EndpointDetails endpoint, int count, CancellationToken cancellationToken = default)
+        {
+            var dlqEndpoint = await BuildDlqEndpointAsync(endpoint, cancellationToken);
+            if (dlqEndpoint is null)
+                return Array.Empty<ReceivedMessage>();
+
+            return await GetMessagesAsync(
+                dlqEndpoint, count, AckMode.AckRequeueTrue, cancellationToken, ReadSource.DeadLetter);
+        }
+
+        public async Task<IReadOnlyList<ReceivedMessage>> ReceiveDeadLetterAsync(
+            EndpointDetails endpoint, int count, CancellationToken cancellationToken = default)
+        {
+            var dlqEndpoint = await BuildDlqEndpointAsync(endpoint, cancellationToken);
+            if (dlqEndpoint is null)
+                return Array.Empty<ReceivedMessage>();
+
+            return await GetMessagesAsync(
+                dlqEndpoint, count, AckMode.AckRequeueFalse, cancellationToken, ReadSource.DeadLetter);
+        }
+
+        private async Task<EndpointDetails?> BuildDlqEndpointAsync(
+            EndpointDetails source, CancellationToken cancellationToken)
+        {
+            var dlqName = await ResolveDlqNameAsync(source.Name, cancellationToken);
+            if (dlqName is null)
+                return null;
+
+            return new EndpointDetails
+            {
+                Address = source.Address,
+                Provider = source.Provider,
+                Type = source.Type,
+                Name = dlqName,
+            };
+        }
+
+        /// <summary>
+        /// Resolves the "dead-letter queue" for a RabbitMQ source queue by:
+        /// (1) reading the source queue's <c>x-dead-letter-exchange</c> argument,
+        /// (2) asking the broker which queues are bound to that exchange, and
+        /// (3) picking the binding whose routing key matches the source queue's
+        /// <c>x-dead-letter-routing-key</c> if set, otherwise the first queue binding.
+        /// Returns <c>null</c> when the source queue has no DLX configured —
+        /// i.e. when dead-lettering is simply not set up for this queue. That's
+        /// a runtime configuration state, not an architectural limitation, and
+        /// is mirrored by the SQS RedrivePolicy path in
+        /// <see cref="Iris.Brokers.Amazon.AmazonSimpleQueueServiceConnection"/>.
+        /// </summary>
+        private async Task<string?> ResolveDlqNameAsync(
+            string sourceQueueName, CancellationToken cancellationToken)
+        {
+            var vhost = await _client.GetVhostAsync(Rabbit.VHost, cancellationToken);
+            var queue = await _client.GetQueueAsync(
+                vhost, sourceQueueName, cancellationToken: cancellationToken);
+
+            if (!queue.Arguments.TryGetValue("x-dead-letter-exchange", out var dlxValue)
+                || dlxValue is null)
+            {
+                return null;
+            }
+
+            var dlxName = dlxValue.ToString();
+            if (string.IsNullOrWhiteSpace(dlxName))
+                return null;
+
+            string? dlxRoutingKey = null;
+            if (queue.Arguments.TryGetValue("x-dead-letter-routing-key", out var rkValue)
+                && rkValue is not null)
+            {
+                dlxRoutingKey = rkValue.ToString();
+            }
+
+            var bindings = await _client.GetBindingsWithSourceAsync(
+                vhost, dlxName, cancellationToken);
+
+            var queueBindings = bindings
+                .Where(b => string.Equals(b.DestinationType, "queue", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (queueBindings.Count == 0)
+                return null;
+
+            if (!string.IsNullOrEmpty(dlxRoutingKey))
+            {
+                var match = queueBindings.FirstOrDefault(
+                    b => string.Equals(b.RoutingKey, dlxRoutingKey, StringComparison.Ordinal));
+                if (match is not null)
+                    return match.Destination;
+            }
+
+            return queueBindings[0].Destination;
+        }
+
         private async Task<IReadOnlyList<ReceivedMessage>> GetMessagesAsync(
-            EndpointDetails endpoint, int count, AckMode ackMode, CancellationToken cancellationToken)
+            EndpointDetails endpoint,
+            int count,
+            AckMode ackMode,
+            CancellationToken cancellationToken,
+            ReadSource source = ReadSource.Main)
         {
             var vhost = await _client.GetVhostAsync(Rabbit.VHost, cancellationToken);
             var criteria = new GetMessagesFromQueueInfo(count, ackMode, "auto");
             var messages = await _client.GetMessagesFromQueueAsync(
                 vhost, endpoint.Name, criteria, cancellationToken);
-            return messages.Select(Map).ToList();
+            return messages.Select(m => Map(m) with { Source = source }).ToList();
         }
 
         private ReceivedMessage Map(Message msg)

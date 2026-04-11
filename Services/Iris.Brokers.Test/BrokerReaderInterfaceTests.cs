@@ -33,7 +33,7 @@ public class BrokerReaderInterfaceTests
     }
 
     [Fact]
-    public void RabbitMqConnection_implements_peek_and_receive_only()
+    public void RabbitMqConnection_implements_all_four_read_interfaces()
     {
         var client = new EasyNetQ.Management.Client.ManagementClient(
             new Uri("http://localhost:15672"), "guest", "guest");
@@ -42,10 +42,16 @@ public class BrokerReaderInterfaceTests
 
         var connection = new RabbitMqConnection(metadata, client);
 
+        // RabbitMQ supports dead-lettering natively via DLX (dead-letter exchanges);
+        // the DLQ is just another named queue discovered through the source queue's
+        // x-dead-letter-exchange argument and the bindings on that exchange. Unlike
+        // ASB's first-class $DeadLetterQueue sub-entity, it's a per-queue runtime
+        // configuration — but from the caller's perspective the capability is the
+        // same, so the interfaces are implemented.
         connection.Should().BeAssignableTo<IMessagePeeker>();
         connection.Should().BeAssignableTo<IMessageReceiver>();
-        connection.Should().NotBeAssignableTo<IDeadLetterPeeker>();
-        connection.Should().NotBeAssignableTo<IDeadLetterReceiver>();
+        connection.Should().BeAssignableTo<IDeadLetterPeeker>();
+        connection.Should().BeAssignableTo<IDeadLetterReceiver>();
     }
 
     [Fact]
