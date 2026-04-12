@@ -1,0 +1,108 @@
+.iris-cmd-palette-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    /* The dialog itself sets MaxWidth.Small + FullWidth, so we just fill it. */
+    width: 100%;
+    outline: none;
+}
+
+.iris-cmd-palette-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.iris-cmd-palette-group {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--mud-palette-text-secondary);
+    padding: 0.5rem 0.75rem 0.25rem;
+}
+
+.iris-cmd-palette-row {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 80ms ease-out;
+    outline: none;
+}
+
+    .iris-cmd-palette-row:hover {
+        /* Reuses the same hover tint as Iris tables. */
+        background-color: rgb(55 90 127 / 20%);
+    }
+
+    .iris-cmd-palette-row--selected,
+    .iris-cmd-palette-row--selected:hover {
+        /* More pronounced for the focused/active row. */
+        background-color: rgb(55 90 127 / 45%);
+        box-shadow: inset 2px 0 0 0 var(--mud-palette-primary);
+    }
+
+::deep .iris-cmd-palette-row__icon {
+    flex: 0 0 auto;
+    color: var(--mud-palette-text-secondary);
+}
+
+.iris-cmd-palette-row--selected ::deep .iris-cmd-palette-row__icon {
+    color: var(--mud-palette-primary);
+}
+
+.iris-cmd-palette-row__text {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+::deep .iris-cmd-palette-row__title {
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+::deep .iris-cmd-palette-row__desc {
+    color: var(--mud-palette-text-secondary);
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.iris-cmd-palette-empty {
+    text-align: center;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.875rem;
+}
+
+.iris-cmd-palette-warning {
+    font-size: 0.75rem;
+    color: var(--mud-palette-warning);
+    padding: 0.25rem 0.75rem;
+}
+
+.iris-cmd-palette-footer {
+    display: flex;
+    gap: 1rem;
+    padding: 0.5rem 0.25rem 0;
+    border-top: 1px solid var(--mud-palette-divider);
+    font-size: 0.7rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+    .iris-cmd-palette-footer kbd {
+        display: inline-block;
+        padding: 1px 5px;
+        margin: 0 2px;
+        border-radius: 3px;
+        border: 1px solid var(--mud-palette-divider);
+        background-color: var(--mud-palette-action-default-hover);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.65rem;
+        line-height: 1;
+    }

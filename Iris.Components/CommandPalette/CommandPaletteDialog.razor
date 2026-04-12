@@ -1,0 +1,29 @@
+@namespace Iris.Components.CommandPalette
+
+@*
+    Thin MudDialog wrapper around CommandPalettePanel. The panel does all the
+    real work; this file exists so the palette can be hosted as a dialog while
+    keeping the panel testable in isolation (the panel has no MudDialog
+    dependency, only EventCallbacks).
+*@
+
+<MudDialog Class="iris-cmd-palette" Gutters="false">
+    <DialogContent>
+        <CommandPalettePanel OnCancel="HandleCancel" OnInvoked="HandleInvoked" />
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private void HandleCancel()
+    {
+        MudDialog.Close(DialogResult.Cancel());
+    }
+
+    private void HandleInvoked(string commandId)
+    {
+        MudDialog.Close(DialogResult.Ok(commandId));
+    }
+}
