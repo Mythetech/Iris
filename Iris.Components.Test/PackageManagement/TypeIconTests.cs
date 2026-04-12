@@ -104,6 +104,6 @@ public class TypeIconTests : IrisTestContext
             .Add(p => p.Type, null));
 
         cut.Markup.Should().Contain("material-symbols-rounded");
-        cut.Markup.Should().Contain("slash");
+        cut.Markup.Should().Contain("block");
     }
 }
