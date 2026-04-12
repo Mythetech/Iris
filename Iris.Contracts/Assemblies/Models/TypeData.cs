@@ -6,7 +6,7 @@
 
         public string FullyQualifiedName { get; set; } = "";
 
-        public Dictionary<string, string>? Properties { get; set; }
+        public List<PropertyData>? Properties { get; set; }
     }
 }
 

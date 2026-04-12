@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Runtime.Loader;
 using Microsoft.Extensions.Logging;
 
@@ -13,26 +12,24 @@ public class AssemblyLoader : IAssemblyLoadService
         _logger = logger;
     }
 
-    private AssemblyLoadContext GetDefaultAssemblyContext()
+    public Task<LoadedAssembly?> LoadAssemblyAsync(Stream assembly)
     {
-        return new AssemblyLoadContext("Iris");
-    }
-    
-    public Task<Assembly?> LoadAssemblyAsync(Stream assembly)
-    {
-        var context = GetDefaultAssemblyContext();
+        var context = new AssemblyLoadContext($"Iris-{Guid.NewGuid():N}", isCollectible: true);
 
-        Assembly? asm = default;
-        
         try
         {
-            asm = context.LoadFromStream(assembly);
+            var asm = context.LoadFromStream(assembly);
+            return Task.FromResult<LoadedAssembly?>(new LoadedAssembly
+            {
+                Assembly = asm,
+                Context = context
+            });
         }
         catch (Exception e)
         {
             _logger.LogError("Unable to load assembly from stream: {Message}", e.Message);
+            context.Unload();
+            return Task.FromResult<LoadedAssembly?>(null);
         }
-
-        return Task.FromResult(asm);
     }
 }
