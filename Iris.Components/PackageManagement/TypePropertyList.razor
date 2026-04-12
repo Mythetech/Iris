@@ -1,15 +1,37 @@
 @using Iris.Contracts.Assemblies.Models
-<MudPaper Outlined="true" Elevation="0" class="pa-4 m-2" >
-    <MudList T="TypeData" Dense="true">
-        @foreach (var prop in Data?.Properties ?? new())
+<MudPaper Outlined="true" Elevation="0" class="pa-4 m-2">
+    <MudList T="PropertyData" Dense="true">
+        @foreach (var prop in Data?.Properties ?? [])
         {
             <MudListItem>
                 <MudStack Row AlignItems="AlignItems.Center">
-                    <TypeIcon Type="@(prop.Value)"/>
-                    <MudText>@prop.Key</MudText>
-                    <MudSpacer /> 
-                    <MudChip Variant="Variant.Text" Size="Size.Small" Color="Color.Info">@prop.Value</MudChip>
+                    <TypeIcon Type="@prop.TypeName" Kind="@prop.Kind"/>
+                    <MudText>@prop.Name</MudText>
+                    <MudSpacer />
+                    <MudChip Variant="Variant.Text" Size="Size.Small" Color="Color.Info">@prop.TypeName</MudChip>
                 </MudStack>
+                @if (prop.Children is { Count: > 0 } && prop.Kind == TypeKind.Complex)
+                {
+                    <MudList T="PropertyData" Dense="true" Class="ml-6">
+                        @foreach (var child in prop.Children)
+                        {
+                            <MudListItem>
+                                <MudStack Row AlignItems="AlignItems.Center">
+                                    <TypeIcon Type="@child.TypeName" Kind="@child.Kind"/>
+                                    <MudText>@child.Name</MudText>
+                                    <MudSpacer />
+                                    <MudChip Variant="Variant.Text" Size="Size.Small" Color="Color.Info">@child.TypeName</MudChip>
+                                </MudStack>
+                            </MudListItem>
+                        }
+                    </MudList>
+                }
+                @if (prop.Kind == TypeKind.Enum && prop.EnumValues is { Count: > 0 })
+                {
+                    <MudText Typo="Typo.caption" Class="ml-10 mt-1" Style="color: var(--mud-palette-text-secondary);">
+                        Values: @string.Join(", ", prop.EnumValues)
+                    </MudText>
+                }
             </MudListItem>
         }
     </MudList>

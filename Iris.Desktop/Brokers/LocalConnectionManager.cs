@@ -1,6 +1,4 @@
 using System.Text.Json;
-using AutoFixture;
-using AutoFixture.Kernel;
 using Iris.Assemblies.CodeGeneration;
 using Iris.Brokers;
 using Iris.Brokers.Exceptions;
@@ -205,33 +203,6 @@ public class LocalConnectionManager : IBrokerService, IMessageService
                    ?? types.FirstOrDefault(x => x.FullName != null && x.FullName.Equals(normalized));
 
         return type?.Assembly.GetName().Name;
-    }
-
-    public Task<string> CreateMessageDataAsync(string messageType)
-    {
-        messageType = messageType.Replace(":", ".");
-        
-        var types = ((LocalPackageService)_packageService).GetLoadedTypes().Distinct().ToList();
-
-        var type = types.FirstOrDefault(x => x.Name == messageType);
-
-        type ??= types.FirstOrDefault(x => x.FullName.Equals(messageType));
-
-        try
-        {
-            var dynamicType = _codeGenerator.Create(type);
-
-            var fixture = new Fixture();
-
-            var sample = fixture.Create(dynamicType, new SpecimenContext(fixture));
-
-            return Task.FromResult(JsonSerializer.Serialize(sample));
-        }
-        catch
-        {
-            return Task.FromResult("");
-        }
-
     }
 
     public async Task<Result<bool>> SendMessageAsync(string messageType, string messageJson, string? address,

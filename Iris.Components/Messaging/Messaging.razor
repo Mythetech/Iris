@@ -2,6 +2,9 @@
 @using Iris.Components.Brokers
 @using Iris.Components.Templates
 @using Iris.Components.Theme
+@using Iris.Contracts.Assemblies
+@using Iris.Contracts.Assemblies.Models
+@using Iris.Components.PackageManagement
 @inherits IrisPageBase
 @implements IDisposable
 
@@ -39,6 +42,7 @@
                     <MessageEditor
                         @ref="@_editor"
                         OnCreateSampleData="CreateSampleMessageDataAsync"
+                        OnImportFromPackage="ImportFromPackageAsync"
                         OnTemplateSaved="SaveTemplateAsync"
                         />
                 </Panel1>
@@ -65,6 +69,15 @@
 
     [Inject]
     public IMessageSendOrchestrator SendOrchestrator { get; set; } = default!;
+
+    [Inject]
+    public ISampleJsonGenerator SampleGenerator { get; set; } = default!;
+
+    [Inject]
+    public IPackageService PackageService { get; set; } = default!;
+
+    [Inject]
+    public IDialogService DialogService { get; set; } = default!;
 
     [SupplyParameterFromQuery]
     public string? Provider { get; set; }
@@ -242,12 +255,45 @@
     
     private async Task CreateSampleMessageDataAsync()
     {
-        if(string.IsNullOrWhiteSpace(_selectedEndpoint?.Name))
+        if (string.IsNullOrWhiteSpace(_selectedEndpoint?.Name))
             return;
 
-        string data = await MessageService.CreateMessageDataAsync(_selectedEndpoint.Name);
+        try
+        {
+            var assemblies = await PackageService.GetLoadedAssembliesAsync();
+            var endpointName = _selectedEndpoint.Name.Replace(":", ".");
+            var typeData = assemblies
+                .SelectMany(a => a.ExportedTypes ?? [])
+                .FirstOrDefault(t => t.Name == endpointName || t.FullyQualifiedName == endpointName);
 
-        if (!string.IsNullOrWhiteSpace(data))
-            await SetEditorTextAsync(data);
+            if (typeData?.Properties == null)
+                return;
+
+            await GenerateSampleForType(typeData);
+        }
+        catch
+        {
+            // Silently fail — matches previous behavior
+        }
+    }
+
+    private async Task ImportFromPackageAsync()
+    {
+        var dialogRef = await DialogService.ShowAsync<TypePickerDialog>(
+            string.Empty,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+
+        var result = await dialogRef.Result;
+
+        if (result is { Canceled: false, Data: TypeData typeData })
+        {
+            await GenerateSampleForType(typeData);
+        }
+    }
+
+    private async Task GenerateSampleForType(TypeData typeData)
+    {
+        var sample = SampleGenerator.GenerateSample(typeData);
+        await SetEditorTextAsync(sample.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
     }
 }

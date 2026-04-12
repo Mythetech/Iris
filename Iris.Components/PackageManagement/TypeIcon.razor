@@ -1,18 +1,38 @@
+@using Iris.Contracts.Assemblies.Models
 <MudIcon Icon="@GetIcon()" Size="@Size"/>
 
 @code {
     [Parameter] public string? Type { get; set; }
 
+    [Parameter] public TypeKind? Kind { get; set; }
+
     [Parameter] public Size Size { get; set; } = Size.Small;
 
     private string GetIcon()
     {
+        if (Kind.HasValue)
+        {
+            return Kind.Value switch
+            {
+                TypeKind.Enum => IrisIcons.Types.Enum,
+                TypeKind.Collection => IrisIcons.Types.Array,
+                TypeKind.Dictionary => IrisIcons.Types.Object,
+                TypeKind.Complex => IrisIcons.Types.Object,
+                _ => GetIconByTypeName()
+            };
+        }
+
+        return GetIconByTypeName();
+    }
+
+    private string GetIconByTypeName()
+    {
         if (string.IsNullOrWhiteSpace(Type))
             return IrisIcons.Types.None;
-        
+
         if (Type.EndsWith("[]"))
             return IrisIcons.Types.Array;
-        
+
         return Type switch
         {
             "String" => IrisIcons.Types.String,
@@ -35,5 +55,4 @@
             _ => IrisIcons.Types.Object
         };
     }
-
 }

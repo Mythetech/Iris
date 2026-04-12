@@ -100,6 +100,8 @@ public static partial class IrisIcons
 
     public static string Import => Round("file_import");
 
+    public static string ImportPackage => Round("deployed_code_update");
+
     public static string Refresh => Round("directory_sync");
 
     public static string Copy => Round("content_copy");
