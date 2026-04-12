@@ -11,11 +11,16 @@ using Testcontainers.Azurite;
 
 namespace Iris.Integration.Tests.Brokers
 {
+    [Trait("Category", "Container")]
     public class AzureStorageQueueServiceContainerTests : IAsyncLifetime
     {
         private const string QueueName = "integration-test";
-        private readonly string ConnectionString = "UseDevelopmentStorage=true";
-        private readonly DockerContainer _azuriteContainer;
+        private const string AzuriteAccountName = "devstoreaccount1";
+        private const string AzuriteAccountKey =
+            "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
+
+        private string ConnectionString = null!;
+        private readonly AzuriteContainer _azuriteContainer;
         private readonly ILogger<AzureQueueStorageConnection> _logger;
 
         public AzureStorageQueueServiceContainerTests()
@@ -25,21 +30,18 @@ namespace Iris.Integration.Tests.Brokers
             _azuriteContainer = new AzuriteBuilder()
                     .WithImage("mcr.microsoft.com/azure-storage/azurite")
                     .WithCommand("--skipApiVersionCheck")
-                    .WithPortBinding(10000)
-                    .WithExposedPort(10000)
-                    .WithPortBinding(10001)
-                    .WithExposedPort(10001)
                 .Build();
         }
 
-        public Task InitializeAsync()
+        public async Task InitializeAsync()
         {
-            return _azuriteContainer.StartAsync();
+            await _azuriteContainer.StartAsync();
+            ConnectionString = _azuriteContainer.GetConnectionString();
         }
 
-        public Task DisposeAsync()
+        public async Task DisposeAsync()
         {
-            return _azuriteContainer.DisposeAsync().AsTask();
+            await _azuriteContainer.DisposeAsync();
         }
 
         [Fact(DisplayName = "Can connect to Azure Queue Storage")]
@@ -116,10 +118,10 @@ namespace Iris.Integration.Tests.Brokers
             return connection;
         }
 
-        private static EndpointDetails Endpoint(string name) => new()
+        private EndpointDetails Endpoint(string name) => new()
         {
             Name = name,
-            Address = "UseDevelopmentStorage=true",
+            Address = ConnectionString,
             Provider = "Azure",
             Type = "Queue",
         };

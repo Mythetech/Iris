@@ -23,6 +23,7 @@
     <PackageReference Include="Rebus" />
     <PackageReference Include="Rebus.RabbitMq" />
     <PackageReference Include="FluentAssertions"  />
+    <PackageReference Include="Xunit.SkippableFact" />
     <PackageReference Include="Testcontainers.PostgreSql"  />
     <PackageReference Include="Testcontainers.Azurite" />
     <PackageReference Include="FastEndpoints.Testing"  />

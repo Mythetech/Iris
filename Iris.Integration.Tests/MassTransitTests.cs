@@ -16,6 +16,7 @@ namespace Iris.Integration.Tests
     // (it replaces '/' with ':' in the supplied MessageType string).
     public record IrisMtTestMessage(int Red, int Green, int Blue);
 
+    [Trait("Category", "Container")]
     public class MassTransitTests : IAsyncLifetime
     {
         private const string QueueName = "iris-mt-test";

@@ -75,6 +75,7 @@
     <PackageVersion Include="Testcontainers.RabbitMq" Version="4.0.0" />
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.0.0" />
     <PackageVersion Include="Testcontainers.Azurite" Version="4.0.0" />
+    <PackageVersion Include="Xunit.SkippableFact" Version="1.5.61" />
     <PackageVersion Include="Mythetech.Framework" Version="0.13.2" />
     <PackageVersion Include="Mythetech.Framework.Desktop" Version="0.13.0" />
   </ItemGroup>
