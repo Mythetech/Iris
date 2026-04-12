@@ -1,6 +1,7 @@
 using Iris.Components.Admin;
 using Iris.Components.Breadcrumbs;
 using Iris.Components.Brokers;
+using Iris.Components.CommandPalette;
 using Iris.Components.History;
 using Iris.Components.Theme;
 using Mythetech.Framework.Infrastructure.MessageBus;
@@ -70,6 +71,7 @@ namespace Iris.Components
             services.AddBreadcrumbService();
             services.AddViewTransition();
             services.AddBrowserTimeProvider();
+            services.AddCommandPalette();
 
             return services;
         }
