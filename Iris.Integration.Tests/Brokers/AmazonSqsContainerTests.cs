@@ -18,7 +18,7 @@ namespace Iris.Integration.Tests.Brokers
     /// Uses ElasticMQ (Apache 2.0, single-container, SQS-compatible) so the
     /// suite can run committable tests without real AWS credentials.
     /// </summary>
-    [Trait("Category", "Slow")]
+    [Trait("Category", "Container")]
     public class AmazonSqsContainerTests : IAsyncLifetime
     {
         private const ushort SqsPort = 9324;

@@ -1,0 +1,31 @@
+# Azure Service Bus Emulator for local development/testing on macOS.
+#
+# Usage:
+#   docker compose -f docker-compose.asb-emulator.yml up -d
+#   IRIS_RUN_ASB_TESTS=true dotnet test --filter "FullyQualifiedName~AzureServiceBusContainerTests"
+#   docker compose -f docker-compose.asb-emulator.yml down
+#
+# Note: The Testcontainers-based setup in AzureServiceBusContainerTests.cs
+# works reliably on Linux (CI) but can be flaky on macOS due to Docker
+# Desktop's VM translation layer. This compose file provides a stable
+# alternative for local macOS development.
+
+services:
+  sqledge:
+    image: mcr.microsoft.com/azure-sql-edge:latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrongPassword123!"
+
+  servicebus:
+    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
+    depends_on:
+      - sqledge
+    environment:
+      ACCEPT_EULA: "Y"
+      SQL_SERVER: sqledge
+      MSSQL_SA_PASSWORD: "YourStrongPassword123!"
+    ports:
+      - "5672:5672"
+    volumes:
+      - ./Brokers/Resources/Config.json:/ServiceBus_Emulator/ConfigFiles/Config.json

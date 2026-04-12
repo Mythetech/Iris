@@ -19,6 +19,7 @@ namespace Iris.Integration.Tests
     // the type via Type.GetType(name), so the type must be loadable from the test assembly.
     public record IrisRebusTestMessage(int Red, int Green, int Blue);
 
+    [Trait("Category", "Container")]
     public class RebusTests : IAsyncLifetime
     {
         private const string QueueName = "iris-rebus-test";

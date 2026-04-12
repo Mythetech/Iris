@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 using DotNet.Testcontainers.Builders;
@@ -25,32 +26,27 @@ namespace Iris.Integration.Tests.Brokers
     /// - <c>iris-main-test</c>: MaxDeliveryCount=10, no expiration-DLQ. Used for peek/receive tests.
     /// - <c>iris-dlq-test</c>:  TTL=5s, DeadLetteringOnMessageExpiration=true. Used for DLQ tests.
     /// </summary>
-    [Trait("Category", "Slow")]
+    [Trait("Category", "Container")]
     public class AzureServiceBusContainerTests : IAsyncLifetime
     {
         // The Azure Service Bus emulator only loads queues/topics from a
         // mounted Config.json (it does NOT support dynamic queue creation
         // via ServiceBusAdministrationClient). The Dockerfile-baked image
-        // approach below works in a manual `docker run` invocation but is
-        // intermittently flaky inside Testcontainers .NET on macOS — the
-        // legacy Docker builder hangs on the COPY layer or the emulator
-        // container fails to expose port 5672 in time. Tracked separately;
-        // the architectural read-capability contract for AzureServiceBusConnection
-        // is fully validated by Iris.Brokers.Test.BrokerReaderInterfaceTests
-        // (.AzureServiceBusConnection_implements_all_four_read_interfaces),
-        // which runs as a fast unit test against constructed clients.
+        // approach works reliably on Linux but is intermittently flaky
+        // inside Testcontainers .NET on macOS — the legacy Docker builder
+        // hangs on the COPY layer or the emulator container fails to
+        // expose port 5672 in time.
         //
-        // To run these tests locally:
-        //   1. Remove the Skip = AsbEmulatorSkipReason on each [Fact] below.
-        //   2. Ensure Docker Desktop has BuildKit enabled OR pre-build the
-        //      derived image manually:
-        //        cd Iris.Integration.Tests/bin/Debug/net10.0/Brokers/Resources
-        //        docker build -t iris-sb-emulator-test:manual .
-        //   3. Re-run: dotnet test --filter "FullyQualifiedName~AzureServiceBusContainerTests"
-        private const string AsbEmulatorSkipReason =
-            "Azure SB emulator + Testcontainers .NET integration is environmentally flaky " +
-            "(see class XML doc). The architectural contract is covered by " +
-            "Iris.Brokers.Test.BrokerReaderInterfaceTests.";
+        // On macOS, these tests auto-skip unless IRIS_RUN_ASB_TESTS=true
+        // is set. On Linux (CI), they run unconditionally.
+        //
+        // To run locally on macOS:
+        //   Option A: IRIS_RUN_ASB_TESTS=true dotnet test --filter "FullyQualifiedName~AzureServiceBusContainerTests"
+        //   Option B: docker compose -f docker-compose.asb-emulator.yml up -d
+        //             then run the tests with IRIS_RUN_ASB_TESTS=true
+        private static bool ShouldSkipAsbTests =>
+            RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+            && Environment.GetEnvironmentVariable("IRIS_RUN_ASB_TESTS") != "true";
 
         private const string MainQueue = "iris-main-test";
         private const string DlqQueue = "iris-dlq-test";
@@ -129,6 +125,8 @@ namespace Iris.Integration.Tests.Brokers
 
         public async Task InitializeAsync()
         {
+            if (ShouldSkipAsbTests) return;
+
             await _network.CreateAsync();
             await _serviceBusImage.CreateAsync();
             await _sqlContainer.StartAsync();
@@ -160,6 +158,8 @@ namespace Iris.Integration.Tests.Brokers
 
         public async Task DisposeAsync()
         {
+            if (ShouldSkipAsbTests) return;
+
             await _serviceBusContainer.DisposeAsync();
             await _sqlContainer.DisposeAsync();
             await _serviceBusImage.DisposeAsync();
@@ -186,9 +186,11 @@ namespace Iris.Integration.Tests.Brokers
             Name = queueName,
         };
 
-        [Fact(DisplayName = "Can connect to Azure Service Bus emulator", Timeout = 300000, Skip = AsbEmulatorSkipReason)]
+        [SkippableFact(DisplayName = "Can connect to Azure Service Bus emulator", Timeout = 300000)]
         public Task Can_Construct_Connection_From_Emulator()
         {
+            Skip.If(ShouldSkipAsbTests, "ASB emulator tests are opt-in on macOS (set IRIS_RUN_ASB_TESTS=true)");
+
             var connection = CreateConnection();
 
             connection.Should().NotBeNull();
@@ -196,9 +198,10 @@ namespace Iris.Integration.Tests.Brokers
             return Task.CompletedTask;
         }
 
-        [Fact(DisplayName = "Peek returns sent messages without removing them", Timeout = 300000, Skip = AsbEmulatorSkipReason)]
+        [SkippableFact(DisplayName = "Peek returns sent messages without removing them", Timeout = 300000)]
         public async Task Peek_is_non_destructive()
         {
+            Skip.If(ShouldSkipAsbTests, "ASB emulator tests are opt-in on macOS (set IRIS_RUN_ASB_TESTS=true)");
             var connection = CreateConnection();
             await using var seeder = new ServiceBusClient(ConnectionString);
             await using var sender = seeder.CreateSender(MainQueue);
@@ -219,9 +222,10 @@ namespace Iris.Integration.Tests.Brokers
             second.Select(m => m.Body).Should().Contain(first.Select(m => m.Body));
         }
 
-        [Fact(DisplayName = "Receive removes messages from the main queue", Timeout = 300000, Skip = AsbEmulatorSkipReason)]
+        [SkippableFact(DisplayName = "Receive removes messages from the main queue", Timeout = 300000)]
         public async Task Receive_is_destructive()
         {
+            Skip.If(ShouldSkipAsbTests, "ASB emulator tests are opt-in on macOS (set IRIS_RUN_ASB_TESTS=true)");
             var connection = CreateConnection();
             await using var seeder = new ServiceBusClient(ConnectionString);
             await using var sender = seeder.CreateSender(MainQueue);
@@ -245,9 +249,10 @@ namespace Iris.Integration.Tests.Brokers
             afterPeek.Should().BeEmpty();
         }
 
-        [Fact(DisplayName = "Dead-lettered messages are readable via ReceiveDeadLetterAsync", Timeout = 300000, Skip = AsbEmulatorSkipReason)]
+        [SkippableFact(DisplayName = "Dead-lettered messages are readable via ReceiveDeadLetterAsync", Timeout = 300000)]
         public async Task DeadLetter_receive_reads_from_dlq_subqueue()
         {
+            Skip.If(ShouldSkipAsbTests, "ASB emulator tests are opt-in on macOS (set IRIS_RUN_ASB_TESTS=true)");
             var connection = CreateConnection();
             var dlqReceiver = (IDeadLetterReceiver)connection;
 

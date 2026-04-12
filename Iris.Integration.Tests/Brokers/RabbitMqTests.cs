@@ -10,6 +10,7 @@ using Testcontainers.RabbitMq;
 
 namespace Iris.Integration.Tests.Brokers
 {
+    [Trait("Category", "Container")]
     public class RabbitMqTests : IAsyncLifetime
     {
         private readonly RabbitMqContainer _rabbitMqContainer = new RabbitMqBuilder()
