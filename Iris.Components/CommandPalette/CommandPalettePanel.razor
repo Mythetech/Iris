@@ -1,0 +1,243 @@
+@namespace Iris.Components.CommandPalette
+@implements IDisposable
+@inject CommandPaletteService Palette
+
+<div class="iris-cmd-palette-content pa-2"
+     @onkeydown="OnKeyDownAsync"
+     @onkeydown:stopPropagation="true">
+    <MudTextField @ref="_searchField"
+                  @bind-Value="_query"
+                  @bind-Value:after="OnQueryChangedAsync"
+                  Immediate="true"
+                  Placeholder="Type a command…"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense"
+                  FullWidth="true"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  UserAttributes="@_inputAttributes" />
+
+    @if (_results.Count == 0)
+    {
+        <div class="iris-cmd-palette-empty pa-4" role="status">
+            No commands match '@_query'
+        </div>
+    }
+    else
+    {
+        <div role="listbox" id="iris-cmd-palette-list" class="iris-cmd-palette-list mt-2">
+            @{
+                string? lastGroup = null;
+            }
+            @for (var i = 0; i < _results.Count; i++)
+            {
+                var idx = i;
+                var cmd = _results[idx];
+                if (cmd.Group is not null && cmd.Group != lastGroup)
+                {
+                    lastGroup = cmd.Group;
+                    <div class="iris-cmd-palette-group" role="presentation">@cmd.Group</div>
+                }
+                <div role="option"
+                     id="@($"cmd-{cmd.Id}")"
+                     data-command-id="@cmd.Id"
+                     class="@RowClass(idx)"
+                     aria-selected="@(idx == _selectedIndex ? "true" : "false")"
+                     @onmouseover="() => Select(idx)"
+                     @onclick="() => InvokeCommandAsync(cmd)">
+                    <MudStack Row="true"
+                              AlignItems="AlignItems.Center"
+                              Spacing="3"
+                              Class="mud-width-full">
+                        <MudIcon Icon="@cmd.Icon" Class="iris-cmd-palette-row__icon" />
+                        <MudStack Spacing="0" Class="iris-cmd-palette-row__text">
+                            <MudText Typo="Typo.body1" Class="iris-cmd-palette-row__title">@cmd.Title</MudText>
+                            @if (!string.IsNullOrWhiteSpace(cmd.Description))
+                            {
+                                <MudText Typo="Typo.caption" Class="iris-cmd-palette-row__desc">@cmd.Description</MudText>
+                            }
+                        </MudStack>
+                    </MudStack>
+                </div>
+            }
+        </div>
+    }
+
+    @if (_hasErrors)
+    {
+        <div class="iris-cmd-palette-warning mt-2" role="status">
+            Some commands unavailable
+        </div>
+    }
+
+    <div class="iris-cmd-palette-footer mt-2">
+        <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+        <span><kbd>↵</kbd> select</span>
+        <span><kbd>esc</kbd> close</span>
+    </div>
+</div>
+
+@code {
+    /// <summary>Fired when the user dismisses the palette without choosing a command (Escape).</summary>
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    /// <summary>
+    /// Fired after a command's <see cref="PaletteCommand.InvokeAsync"/> has run.
+    /// The argument is the invoked command's <see cref="PaletteCommand.Id"/>.
+    /// </summary>
+    [Parameter] public EventCallback<string> OnInvoked { get; set; }
+
+    private MudTextField<string>? _searchField;
+    private string _query = string.Empty;
+    private List<PaletteCommand> _results = new();
+    private int _selectedIndex;
+    private bool _hasErrors;
+    private Dictionary<string, object> _inputAttributes = new();
+
+    private string SelectedDescendantId =>
+        _results.Count == 0 || _selectedIndex < 0 || _selectedIndex >= _results.Count
+            ? string.Empty
+            : $"cmd-{_results[_selectedIndex].Id}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Palette.MarkOpened();
+        await LoadAsync();
+        UpdateInputAttributes();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        // MudDialog wraps content in a MudFocusTrap whose OnAfterRenderAsync runs
+        // its own "focus first tabbable" pass. Because child components fire
+        // OnAfterRenderAsync before their parents, any FocusAsync call we make
+        // here would race the focus trap and lose. A small delay lets the focus
+        // trap's JS interop complete first, then we explicitly focus the search
+        // input, which is what the user expects when the palette opens.
+        await Task.Delay(50);
+        if (_searchField is not null)
+        {
+            await _searchField.FocusAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        var result = await Palette.GetCommandsAsync(_query, CancellationToken.None);
+        _results = result.Commands.ToList();
+        _hasErrors = result.HasProviderErrors;
+        _selectedIndex = _results.Count == 0 ? -1 : 0;
+    }
+
+    private async Task OnQueryChangedAsync()
+    {
+        await LoadAsync();
+        UpdateInputAttributes();
+    }
+
+    private void UpdateInputAttributes()
+    {
+        // MudTextField doesn't expose aria-activedescendant directly, so we set it
+        // through UserAttributes which the underlying <input> renders verbatim.
+        var attrs = new Dictionary<string, object>
+        {
+            ["role"] = "combobox",
+            ["aria-controls"] = "iris-cmd-palette-list",
+            ["aria-expanded"] = "true",
+            ["aria-autocomplete"] = "list",
+        };
+
+        if (!string.IsNullOrEmpty(SelectedDescendantId))
+        {
+            attrs["aria-activedescendant"] = SelectedDescendantId;
+        }
+
+        _inputAttributes = attrs;
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "ArrowDown":
+                if (_results.Count > 0)
+                {
+                    _selectedIndex = (_selectedIndex + 1) % _results.Count;
+                    UpdateInputAttributes();
+                    StateHasChanged();
+                }
+                break;
+            case "ArrowUp":
+                if (_results.Count > 0)
+                {
+                    _selectedIndex = (_selectedIndex - 1 + _results.Count) % _results.Count;
+                    UpdateInputAttributes();
+                    StateHasChanged();
+                }
+                break;
+            case "Home":
+                if (_results.Count > 0)
+                {
+                    _selectedIndex = 0;
+                    UpdateInputAttributes();
+                    StateHasChanged();
+                }
+                break;
+            case "End":
+                if (_results.Count > 0)
+                {
+                    _selectedIndex = _results.Count - 1;
+                    UpdateInputAttributes();
+                    StateHasChanged();
+                }
+                break;
+            case "Enter":
+                if (_results.Count > 0 && _selectedIndex >= 0 && _selectedIndex < _results.Count)
+                {
+                    await InvokeCommandAsync(_results[_selectedIndex]);
+                }
+                break;
+            case "Escape":
+                await OnCancel.InvokeAsync();
+                break;
+        }
+    }
+
+    private void Select(int idx)
+    {
+        if (idx < 0 || idx >= _results.Count)
+        {
+            return;
+        }
+        _selectedIndex = idx;
+        UpdateInputAttributes();
+        StateHasChanged();
+    }
+
+    private async Task InvokeCommandAsync(PaletteCommand cmd)
+    {
+        try
+        {
+            await cmd.InvokeAsync(CancellationToken.None);
+        }
+        finally
+        {
+            await OnInvoked.InvokeAsync(cmd.Id);
+        }
+    }
+
+    private string RowClass(int idx) =>
+        idx == _selectedIndex
+            ? "iris-cmd-palette-row iris-cmd-palette-row--selected"
+            : "iris-cmd-palette-row";
+
+    public void Dispose()
+    {
+        Palette.MarkClosed();
+    }
+}

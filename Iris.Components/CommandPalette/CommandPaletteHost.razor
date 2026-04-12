@@ -1,0 +1,49 @@
+@namespace Iris.Components.CommandPalette
+@using MudBlazor.Utilities
+@inject CommandPaletteService Palette
+@inject IDialogService DialogService
+
+@*
+    Headless mount point for the command palette. Drop a single
+    <CommandPaletteHost /> into MainLayout (or any host's main layout) and the
+    palette becomes available app-wide via Cmd-K (macOS) and Ctrl-K (Win/Linux).
+
+    Two MudHotkey instances are required because MudHotkey treats KeyModifiers
+    as logical AND, not OR — there's no single binding that means "Ctrl OR Meta".
+    Cheap to add the right-side variants later if anyone presses the right Ctrl
+    or right Cmd key.
+*@
+
+<MudHotkey Key="JsKey.KeyK"
+           KeyModifiers="@_ctrlOnly"
+           OnHotkeyPressed="OpenPaletteAsync" />
+<MudHotkey Key="JsKey.KeyK"
+           KeyModifiers="@_metaOnly"
+           OnHotkeyPressed="OpenPaletteAsync" />
+
+@code {
+    private static readonly IEnumerable<JsKeyModifier> _ctrlOnly = new[] { JsKeyModifier.ControlLeft };
+    private static readonly IEnumerable<JsKeyModifier> _metaOnly = new[] { JsKeyModifier.MetaLeft };
+
+    private static readonly DialogOptions _options = new()
+    {
+        NoHeader = true,
+        CloseOnEscapeKey = true,
+        BackdropClick = true,
+        Position = DialogPosition.TopCenter,
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true,
+    };
+
+    private async Task OpenPaletteAsync()
+    {
+        // Guard against stacking: if the palette is already on screen, the
+        // hotkey is a no-op. (A future enhancement could toggle it closed.)
+        if (Palette.IsOpen)
+        {
+            return;
+        }
+
+        await DialogService.ShowAsync(typeof(CommandPaletteDialog), string.Empty, _options);
+    }
+}
