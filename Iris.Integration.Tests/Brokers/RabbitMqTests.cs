@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
 using EasyNetQ.Management.Client;
-using FastEndpoints;
 using FluentAssertions;
 using Iris.Brokers;
 using Iris.Brokers.Models;
