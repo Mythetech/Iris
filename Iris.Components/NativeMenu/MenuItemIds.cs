@@ -23,4 +23,7 @@ public static class MenuItemIds
     // Packages menu
     public const string PackagesView = "packages.view";
     public const string PackagesUpload = "packages.upload";
+
+    // Help menu
+    public const string HelpKeyboardShortcuts = "help.keyboardshortcuts";
 }
