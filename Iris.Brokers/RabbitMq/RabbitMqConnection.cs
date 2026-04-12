@@ -8,7 +8,7 @@ using Iris.Brokers.Models;
 
 namespace Iris.Brokers.RabbitMQ
 {
-    public class RabbitMqConnection : IConnection, IMessagePeeker, IMessageReceiver, IDeadLetterPeeker, IDeadLetterReceiver
+    public class RabbitMqConnection : IConnection, IMessagePeeker, IMessageReceiver, IDeadLetterPeeker, IDeadLetterReceiver, IEndpointInspector
     {
         // The RabbitMQ HTTP management API's GET-messages endpoint accepts
         // arbitrary counts; 100 is a sane UI cap.
@@ -282,6 +282,92 @@ namespace Iris.Brokers.RabbitMQ
                 },
             };
         }
+
+        public async Task<Iris.Contracts.Brokers.Models.EndpointPropertiesDto> InspectAsync(
+            string endpointName,
+            string? type,
+            CancellationToken cancellationToken = default)
+        {
+            var entries = new List<Iris.Contracts.Brokers.Models.EndpointPropertyEntry>();
+            var vhost = await _client.GetVhostAsync(Rabbit.VHost, cancellationToken);
+
+            if (string.Equals(type, "Exchange", StringComparison.OrdinalIgnoreCase))
+            {
+                var exchange = await _client.GetExchangeAsync(
+                    vhost, endpointName, cancellationToken: cancellationToken);
+
+                entries.Add(new("Type", exchange.Type));
+                entries.Add(new("Vhost", exchange.Vhost));
+                entries.Add(new("Durable", exchange.Durable.ToString()));
+                entries.Add(new("Auto Delete", exchange.AutoDelete.ToString()));
+                entries.Add(new("Internal", exchange.Internal.ToString()));
+
+                if (exchange.Arguments is { Count: > 0 })
+                    entries.Add(new("Arguments", FormatArguments(exchange.Arguments)));
+
+                var bindings = await _client.GetBindingsWithSourceAsync(
+                    vhost, endpointName, cancellationToken);
+                entries.Add(new("Bindings", FormatBindings(bindings, fromExchange: true)));
+            }
+            else
+            {
+                var queue = await _client.GetQueueAsync(
+                    vhost, endpointName, cancellationToken: cancellationToken);
+
+                entries.Add(new("Vhost", queue.Vhost));
+                entries.Add(new("State", queue.State));
+                entries.Add(new("Node", queue.Node));
+                entries.Add(new("Messages", queue.Messages.ToString()));
+                entries.Add(new("Messages Ready", queue.MessagesReady.ToString()));
+                entries.Add(new("Messages Unacknowledged", queue.MessagesUnacknowledged.ToString()));
+                entries.Add(new("Consumers", queue.Consumers.ToString()));
+                entries.Add(new("Durable", queue.Durable.ToString()));
+                entries.Add(new("Auto Delete", queue.AutoDelete.ToString()));
+                entries.Add(new("Exclusive", queue.Exclusive.ToString()));
+                entries.Add(new("Memory", queue.Memory.ToString()));
+
+                if (!string.IsNullOrWhiteSpace(queue.Policy))
+                    entries.Add(new("Policy", queue.Policy));
+
+                if (queue.Arguments is not null)
+                {
+                    if (queue.Arguments.TryGetValue("x-dead-letter-exchange", out var dlx) && dlx is not null)
+                        entries.Add(new("Dead Letter Exchange", dlx.ToString()));
+                    if (queue.Arguments.TryGetValue("x-dead-letter-routing-key", out var dlrk) && dlrk is not null)
+                        entries.Add(new("Dead Letter Routing Key", dlrk.ToString()));
+                    if (queue.Arguments.TryGetValue("x-message-ttl", out var ttl) && ttl is not null)
+                        entries.Add(new("Message TTL (ms)", ttl.ToString()));
+                    if (queue.Arguments.TryGetValue("x-max-length", out var maxLen) && maxLen is not null)
+                        entries.Add(new("Max Length", maxLen.ToString()));
+                }
+
+                var bindings = await _client.GetBindingsForQueueAsync(
+                    vhost, endpointName, cancellationToken);
+                entries.Add(new("Bindings", FormatBindings(bindings, fromExchange: false)));
+            }
+
+            return new Iris.Contracts.Brokers.Models.EndpointPropertiesDto(entries);
+        }
+
+        private static string FormatBindings(IReadOnlyList<Binding> bindings, bool fromExchange)
+        {
+            if (bindings is null || bindings.Count == 0)
+                return "(none)";
+
+            // For an exchange we list its destinations; for a queue we list its sources.
+            return string.Join("; ", bindings.Select(b =>
+            {
+                var label = fromExchange
+                    ? $"→ {b.DestinationType}:{b.Destination}"
+                    : $"{b.Source} →";
+                return string.IsNullOrEmpty(b.RoutingKey)
+                    ? label
+                    : $"{label} ({b.RoutingKey})";
+            }));
+        }
+
+        private static string FormatArguments(IReadOnlyDictionary<string, object> args)
+            => string.Join(", ", args.Select(kvp => $"{kvp.Key}={kvp.Value}"));
     }
 }
 
