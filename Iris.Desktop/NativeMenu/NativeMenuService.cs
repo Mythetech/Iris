@@ -129,6 +129,13 @@ public class NativeMenuService : INativeMenuService
             menu.AddSeparator();
             menu.AddItem("Upload Package...", MenuItemIds.PackagesUpload);
         });
+
+        // Help menu
+        _menuBar.AddMenu("Help", menu =>
+        {
+            menu.AddItem("Keyboard Shortcuts", MenuItemIds.HelpKeyboardShortcuts, item =>
+                item.WithAccelerator(OperatingSystem.IsMacOS() ? "Cmd+?" : "Ctrl+?"));
+        });
     }
 
     private static string SanitizeId(string input)

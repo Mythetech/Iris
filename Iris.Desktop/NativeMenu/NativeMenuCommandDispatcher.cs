@@ -1,4 +1,5 @@
 using Iris.Components.Brokers;
+using Iris.Components.Help;
 using Iris.Components.NativeMenu;
 using Iris.Components.NativeMenu.Commands;
 using Iris.Components.Settings;
@@ -48,6 +49,11 @@ public class NativeMenuCommandDispatcher : INativeMenuCommandDispatcher
             // Packages
             [MenuItemIds.PackagesView] = () => _messageBus.PublishAsync(new NavigateTo("/Packages")),
             [MenuItemIds.PackagesUpload] = () => _messageBus.PublishAsync(new TriggerPackageUpload()),
+
+            // Help
+            [MenuItemIds.HelpKeyboardShortcuts] = () => _messageBus.PublishAsync(
+                new ShowDialog(typeof(KeyboardShortcutsDialog), "Keyboard Shortcuts",
+                    new DialogOptions { CloseOnEscapeKey = true, BackgroundClass = "iris-dialog", MaxWidth = MaxWidth.Small })),
         };
     }
 

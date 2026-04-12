@@ -1,19 +1,20 @@
 @namespace Iris.Components.CommandPalette
 @using MudBlazor.Utilities
+@using Iris.Components.Help
 @inject CommandPaletteService Palette
 @inject IDialogService DialogService
 
 @*
-    Headless mount point for the command palette. Drop a single
-    <CommandPaletteHost /> into MainLayout (or any host's main layout) and the
-    palette becomes available app-wide via Cmd-K (macOS) and Ctrl-K (Win/Linux).
+    Headless mount point for the command palette and global hotkeys.
+    Drop a single <CommandPaletteHost /> into MainLayout (or any host's
+    main layout) and global shortcuts become available app-wide.
 
-    Two MudHotkey instances are required because MudHotkey treats KeyModifiers
-    as logical AND, not OR — there's no single binding that means "Ctrl OR Meta".
-    Cheap to add the right-side variants later if anyone presses the right Ctrl
-    or right Cmd key.
+    Two MudHotkey instances per shortcut are required because MudHotkey
+    treats KeyModifiers as logical AND, not OR — there's no single binding
+    that means "Ctrl OR Meta".
 *@
 
+@* Command Palette: Cmd/Ctrl + K *@
 <MudHotkey Key="JsKey.KeyK"
            KeyModifiers="@_ctrlOnly"
            OnHotkeyPressed="OpenPaletteAsync" />
@@ -21,11 +22,21 @@
            KeyModifiers="@_metaOnly"
            OnHotkeyPressed="OpenPaletteAsync" />
 
+@* Keyboard Shortcuts: Cmd/Ctrl + ? (Shift + /) *@
+<MudHotkey Key="JsKey.Slash"
+           KeyModifiers="@_ctrlShift"
+           OnHotkeyPressed="OpenKeyboardShortcutsAsync" />
+<MudHotkey Key="JsKey.Slash"
+           KeyModifiers="@_metaShift"
+           OnHotkeyPressed="OpenKeyboardShortcutsAsync" />
+
 @code {
     private static readonly IEnumerable<JsKeyModifier> _ctrlOnly = new[] { JsKeyModifier.ControlLeft };
     private static readonly IEnumerable<JsKeyModifier> _metaOnly = new[] { JsKeyModifier.MetaLeft };
+    private static readonly IEnumerable<JsKeyModifier> _ctrlShift = new[] { JsKeyModifier.ControlLeft, JsKeyModifier.ShiftLeft };
+    private static readonly IEnumerable<JsKeyModifier> _metaShift = new[] { JsKeyModifier.MetaLeft, JsKeyModifier.ShiftLeft };
 
-    private static readonly DialogOptions _options = new()
+    private static readonly DialogOptions _paletteOptions = new()
     {
         NoHeader = true,
         CloseOnEscapeKey = true,
@@ -35,15 +46,25 @@
         FullWidth = true,
     };
 
+    private static readonly DialogOptions _shortcutsOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        BackgroundClass = "iris-dialog",
+        MaxWidth = MaxWidth.Small,
+    };
+
     private async Task OpenPaletteAsync()
     {
-        // Guard against stacking: if the palette is already on screen, the
-        // hotkey is a no-op. (A future enhancement could toggle it closed.)
         if (Palette.IsOpen)
         {
             return;
         }
 
-        await DialogService.ShowAsync(typeof(CommandPaletteDialog), string.Empty, _options);
+        await DialogService.ShowAsync(typeof(CommandPaletteDialog), string.Empty, _paletteOptions);
+    }
+
+    private async Task OpenKeyboardShortcutsAsync()
+    {
+        await DialogService.ShowAsync(typeof(KeyboardShortcutsDialog), "Keyboard Shortcuts", _shortcutsOptions);
     }
 }

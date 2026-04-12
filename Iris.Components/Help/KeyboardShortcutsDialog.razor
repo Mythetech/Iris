@@ -1,0 +1,51 @@
+@using Iris.Components.Theme
+
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudIcon Color="Color.Primary" Class="mr-4" Icon="@IrisIcons.Keyboard" />
+            <MudText Typo="Typo.h6">Keyboard Shortcuts</MudText>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="Close" />
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        @foreach (var group in _shortcuts.GroupBy(s => s.Category))
+        {
+            <MudText Typo="Typo.overline" Class="mt-4 mb-2 mud-text-secondary">@group.Key</MudText>
+            <MudSimpleTable Dense="true" Hover="true" Elevation="0">
+                <tbody>
+                @foreach (var shortcut in group)
+                {
+                    <tr>
+                        <td style="width: 60%">@shortcut.Description</td>
+                        <td style="width: 40%; text-align: right;">
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@shortcut.Keys</MudChip>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </MudSimpleTable>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private void Close() => MudDialog.Cancel();
+
+    private record ShortcutEntry(string Category, string Description, string Keys);
+
+    private static readonly ShortcutEntry[] _shortcuts =
+    [
+        new("General", "Settings", "Cmd/Ctrl + ,"),
+        new("General", "New Message", "Cmd/Ctrl + N"),
+        new("General", "Command Palette", "Cmd/Ctrl + K"),
+        new("General", "Keyboard Shortcuts", "Cmd/Ctrl + ?"),
+    ];
+}

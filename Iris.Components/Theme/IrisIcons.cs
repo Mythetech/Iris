@@ -105,4 +105,8 @@ public static partial class IrisIcons
     public static string Refresh => Round("directory_sync");
 
     public static string Copy => Round("content_copy");
+
+    public static string Help => Round("help");
+
+    public static string Keyboard => Round("keyboard");
 }
