@@ -4,6 +4,7 @@
 <IrisCard Title="Editor" HeaderIcon="@IrisIcons.Editor" Class="flex-grow-1 mx-4" Height="95.8%">
     <ToolbarContent>
         <IconButton Name="@IrisIcons.Copy" Title="Copy to Clipboard" ButtonClicked="CopyData"/>
+        <IconButton Name="@IrisIcons.ImportPackage" Title="Import from Package" ButtonClicked="OnImportFromPackage"/>
         <IconButton Name="@IrisIcons.CreateMessageData" Title="Create Sample Data" ButtonClicked="OnCreateSampleData"/>
         <IconButton Name="@IrisIcons.Format" Title="Format Json" ButtonClicked="FormatDocumentAsync"/>
         <IconButton Name="@IrisIcons.AddTemplate" Title="Save As Template" ButtonClicked="SaveTemplateAsync"/>
@@ -24,6 +25,8 @@
     [Parameter] public EventCallback<string> OnTemplateSaved { get; set; } = default!;
 
     [Parameter] public EventCallback OnCreateSampleData { get; set; } = default!;
+
+    [Parameter] public EventCallback OnImportFromPackage { get; set; } = default!;
     
     private StandaloneCodeEditor _editor = default!;
     

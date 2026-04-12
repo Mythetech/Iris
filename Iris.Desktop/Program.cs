@@ -3,6 +3,7 @@ using Hermes;
 using Hermes.Blazor;
 using Iris.Assemblies;
 using Iris.Assemblies.CodeGeneration;
+using Iris.Contracts.Assemblies;
 using Iris.Brokers;
 using Iris.Brokers.Extensions;
 using Iris.Brokers.Models;
@@ -71,6 +72,7 @@ public class Program
 
         builder.Services.AddTransient<IAssemblyLoadService, AssemblyLoader>();
         builder.Services.AddTransient<ICodeGenerator, CodeGenerator>();
+        builder.Services.AddTransient<ISampleJsonGenerator, SampleJsonGenerator>();
         builder.Services.AddTransient<IrisLiteDbContext>();
         builder.Services.AddTransient<HistoryRepository>();
         builder.Services.AddTransient<ConnectionRepository>();

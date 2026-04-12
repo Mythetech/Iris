@@ -1,42 +1,32 @@
-using System.Reflection;
 using Iris.Assemblies;
 using Iris.Components.PackageManagement;
 using Iris.Contracts.Assemblies.Models;
-using Iris.Contracts.Brokers.Models;
 using Iris.Contracts.Results;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace Iris.Desktop.PackageManagement;
 
-public class LocalPackageService : IPackageService
+public class LocalPackageService : IPackageService, IDisposable
 {
     private readonly IAssemblyLoadService _assemblyLoader;
-    private List<Assembly> _assemblies;
-    
-    public LocalPackageService(IAssemblyLoadService assemblyLoader)
+    private readonly AssemblySettings _settings;
+    private List<LoadedAssembly> _assemblies = [];
+
+    public LocalPackageService(IAssemblyLoadService assemblyLoader, AssemblySettings settings)
     {
         _assemblyLoader = assemblyLoader;
+        _settings = settings;
     }
 
     public List<Type> GetLoadedTypes()
     {
-        _assemblies ??= [];
-        
-        return _assemblies.SelectMany(assembly => assembly.GetTypes()).ToList();
+        return _assemblies.SelectMany(la => la.Assembly.GetTypes()).ToList();
     }
 
     public Task<List<AssemblyData>> GetLoadedAssembliesAsync()
     {
-        _assemblies ??= [];
-        
-        return Task.FromResult(_assemblies.Select(x => new AssemblyData()
-        {
-            Name = x.GetName().Name ?? "--",
-            FullyQualifiedName = x.FullName ?? "--",
-            ExportedTypeNames = x.ExportedTypes.Select(x => x.Name).ToList(),
-            Version = x.GetName().Version?.ToString() ?? "--",
-            ExportedTypes = x.ExportedTypes.Select(y => y.ToContract()).ToList()
-        }).ToList());
+        return Task.FromResult(_assemblies.Select(la =>
+            la.Assembly.ToContract(_settings.MaxTypeDepth)).ToList());
     }
 
     public async Task<Result<AssemblyData>> UploadAssemblyAsync(IBrowserFile file)
@@ -51,22 +41,48 @@ public class LocalPackageService : IPackageService
         return await LoadAssemblyFromStreamAsync(stream);
     }
 
+    public Task<Result<bool>> RemoveAssemblyAsync(string fullName)
+    {
+        var entry = _assemblies.FirstOrDefault(la => la.Assembly.FullName == fullName);
+        if (entry == null)
+            return Task.FromResult<Result<bool>>(new Failure<bool>($"Assembly '{fullName}' not found."));
+
+        _assemblies.Remove(entry);
+        entry.Context.Unload();
+
+        return Task.FromResult<Result<bool>>(new Success<bool>(true));
+    }
+
     private async Task<Result<AssemblyData>> LoadAssemblyFromStreamAsync(Stream stream)
     {
         using var memoryStream = new MemoryStream();
         await stream.CopyToAsync(memoryStream);
         memoryStream.Position = 0;
 
-        var asm = await _assemblyLoader.LoadAssemblyAsync(memoryStream);
+        var loaded = await _assemblyLoader.LoadAssemblyAsync(memoryStream);
 
-        if (asm == null)
-        {
+        if (loaded == null)
             return new Failure<AssemblyData>("Failed to load assembly. The file may be invalid or unsupported.");
+
+        // Unload existing assembly with same FullName (reload support)
+        var existing = _assemblies.FirstOrDefault(la => la.Assembly.FullName == loaded.Assembly.FullName);
+        if (existing != null)
+        {
+            _assemblies.Remove(existing);
+            existing.Context.Unload();
         }
 
-        if (!_assemblies.Any(x => x.FullName == asm.FullName))
-            _assemblies.Add(asm);
+        _assemblies.Add(loaded);
 
-        return new Success<AssemblyData>(asm.ToContract());
+        return new Success<AssemblyData>(loaded.Assembly.ToContract(_settings.MaxTypeDepth));
+    }
+
+    public void Dispose()
+    {
+        foreach (var entry in _assemblies)
+        {
+            entry.Context.Unload();
+        }
+        _assemblies.Clear();
     }
 }

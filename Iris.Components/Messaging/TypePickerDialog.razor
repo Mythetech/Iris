@@ -1,0 +1,57 @@
+@using Iris.Components.PackageManagement
+@using Iris.Contracts.Assemblies.Models
+
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@IrisIcons.ImportPackage" />
+            <MudText Typo="Typo.h6">Import Type from Package</MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        @if (_assemblies.Count == 0)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary pa-4">
+                No packages loaded. Upload a package first from the Packages page.
+            </MudText>
+        }
+        else
+        {
+            <MudSelect T="TypeData" Label="Message Type" @bind-Value="_selected"
+                       Variant="Variant.Outlined" Dense="true" Class="mt-2"
+                       ToStringFunc="@(t => t?.FullyQualifiedName ?? "")">
+                @foreach (var asm in _assemblies)
+                {
+                    <MudSelectGroup T="TypeData" Label="@($"{asm.Name} ({asm.Version})")">
+                        @foreach (var type in asm.ExportedTypes ?? [])
+                        {
+                            <MudSelectItem T="TypeData" Value="@type">@type.Name</MudSelectItem>
+                        }
+                    </MudSelectGroup>
+                }
+            </MudSelect>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@(_selected == null)">Generate</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Inject] public IPackageService PackageService { get; set; } = default!;
+
+    private List<AssemblyData> _assemblies = [];
+    private TypeData? _selected;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _assemblies = await PackageService.GetLoadedAssembliesAsync();
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(_selected));
+}
