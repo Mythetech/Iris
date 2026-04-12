@@ -35,6 +35,8 @@ namespace Iris.Integration.Tests
 
         public async Task InitializeAsync()
         {
+            Environment.SetEnvironmentVariable("MT_TELEMETRY", "false");
+
             var amqpPort = _rabbitMqContainer.GetMappedPublicPort(5672);
 
             _bus = Bus.Factory.CreateUsingRabbitMq(cfg =>
