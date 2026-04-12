@@ -16,8 +16,6 @@
   
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio"  />
-    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing"/>
     <PackageReference Include="Testcontainers.RabbitMq" />
     <PackageReference Include="MassTransit.RabbitMQ" />
     <PackageReference Include="Rebus" />
@@ -26,7 +24,6 @@
     <PackageReference Include="Xunit.SkippableFact" />
     <PackageReference Include="Testcontainers.PostgreSql"  />
     <PackageReference Include="Testcontainers.Azurite" />
-    <PackageReference Include="FastEndpoints.Testing"  />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,12 +33,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Iris.Brokers\Iris.Brokers.csproj" />
     <ProjectReference Include="..\Iris.Contracts\Iris.Contracts.csproj" />
-    <ProjectReference Include="..\Iris.Desktop\Iris.Desktop.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Brokers\" />
     <None Remove="Templates\" />
-    <None Remove="Infrastructure\" />
     <None Remove="Integrations\" />
     <None Remove="Assemblies\" />
     <None Remove="Assemblies\TestAssemblyModules\" />
@@ -52,7 +47,6 @@
     <None Remove="Users\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Infrastructure\" />
     <Folder Include="Assemblies\" />
     <Folder Include="Assemblies\TestAssemblyModules\" />
     <Folder Include="Brokers\EmulatedProvider\" />

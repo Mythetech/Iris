@@ -26,8 +26,7 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
-      # Run unit tests (skip integration tests that require external services/native libs)
-      - name: Test
+      - name: Unit Tests
         run: |
           dotnet test Services/Iris.Brokers.Test/Iris.Brokers.Test.csproj --no-build --configuration Release --verbosity normal
           dotnet test Services/Assemblies/Iris.Assemblies.Test/Iris.Assemblies.Test.csproj --no-build --configuration Release --verbosity normal
@@ -35,7 +34,6 @@ jobs:
 
   integration-tests:
     runs-on: ubuntu-latest
-    needs: build
     timeout-minutes: 15
 
     steps:
@@ -48,9 +46,15 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
       - name: Integration Tests
         run: >
           dotnet test Iris.Integration.Tests/Iris.Integration.Tests.csproj
+          --no-build
           --configuration Release
-          --filter "Category!=Integration"
           --verbosity normal
