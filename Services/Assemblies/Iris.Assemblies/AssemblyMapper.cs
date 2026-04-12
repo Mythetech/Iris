@@ -5,15 +5,15 @@ namespace Iris.Assemblies;
 
 public static class AssemblyMapper
 {
-    public static AssemblyData ToContract(this Assembly asm)
+    public static AssemblyData ToContract(this Assembly asm, int maxDepth = 3)
     {
-        return new AssemblyData()
+        return new AssemblyData
         {
-            Name = asm.GetName().Name,
+            Name = asm.GetName().Name ?? "",
             ExportedTypeNames = asm.GetExportedTypes().Select(t => t.Name).ToList(),
-            ExportedTypes = asm.GetExportedTypes().Select(t => t.ToContract()).ToList(),
-            FullyQualifiedName = asm.FullName,
-            Version = asm.GetName().Version.ToString(),
+            ExportedTypes = asm.GetExportedTypes().Select(t => t.ToContract(maxDepth)).ToList(),
+            FullyQualifiedName = asm.FullName ?? "",
+            Version = asm.GetName().Version?.ToString() ?? ""
         };
     }
 }
