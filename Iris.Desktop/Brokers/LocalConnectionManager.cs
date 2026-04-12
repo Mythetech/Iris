@@ -405,6 +405,30 @@ public class LocalConnectionManager : IBrokerService, IMessageService
         return GetReaderCapabilitiesInternalAsync(address);
     }
 
+    public async Task<Iris.Contracts.Brokers.Models.EndpointPropertiesDto?> GetEndpointPropertiesAsync(
+        string address,
+        string endpointName,
+        string? type,
+        CancellationToken cancellationToken = default)
+    {
+        var connection = await _connectionManager.GetConnectionAsync(address);
+        if (connection is not IEndpointInspector inspector)
+            return null;
+
+        try
+        {
+            return await inspector.InspectAsync(endpointName, type, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private async Task<Iris.Contracts.Brokers.Models.ReaderCapabilitiesDto?> GetReaderCapabilitiesInternalAsync(string address)
     {
         var connection = await _connectionManager.GetConnectionAsync(address);

@@ -1,35 +1,72 @@
-﻿@using Iris.Components.Theme
+@using Iris.Components.Theme
 @using Iris.Components.Brokers
+@using Iris.Contracts.Brokers.Models
 <MudStack Class="flex-grow-1 pa-8">
     <MudText Typo="Typo.h6">Endpoint Details</MudText>
     @if (Endpoint != null)
     {
-        <MudStack Row="true">
-            <ProviderIcon Provider="@Endpoint.Provider" />
-            <h6>@Endpoint.Name</h6>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <ProviderIcon Provider="@Endpoint.Provider" />
+                <MudText Typo="Typo.h5" Class="endpoint-name">@Endpoint.Name</MudText>
+            </MudStack>
+            <MudTooltip Text="Refresh properties">
+                <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                               Size="Size.Small"
+                               Disabled="@_propertiesLoading"
+                               OnClick="@(() => LoadPropertiesAsync(forceRefresh: true))" />
+            </MudTooltip>
         </MudStack>
+
         <MudStack Row="true">
             <FlexKeyValuePair Key="Address" Value="@Endpoint.Address"/>
         </MudStack>
-
         <MudStack Row="true">
-            <FlexKeyValuePair Key="Type" Value="@Endpoint.Type"/>
+            <FlexKeyValuePair Key="Type" Value="@(Endpoint.Type ?? "")"/>
         </MudStack>
+
+        <PrimaryDivider/>
+
+        @if (_propertiesLoading)
+        {
+            <MudStack Spacing="1" Class="endpoint-properties w-100">
+                @for (int i = 0; i < 6; i++)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="20px"/>
+                }
+            </MudStack>
+        }
+        else if (_currentProperties is null)
+        {
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                Properties are not available for this broker.
+            </MudText>
+        }
+        else
+        {
+            <MudStack Spacing="1" Class="endpoint-properties w-100">
+                @foreach (var entry in _currentProperties.Properties)
+                {
+                    <KeyValueRow Key="@entry.Key" Value="@entry.Value" />
+                }
+            </MudStack>
+        }
 
         <FlexSpacer/>
         <PrimaryDivider/>
-        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd" Spacing="2">
+            <MudTooltip Text="@(CanRead ? null : ReadDisabledReason)">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           Class="btn-sm"
+                           Disabled="@(!CanRead)"
+                           OnClick="@(() => OnReadClicked.InvokeAsync(Endpoint))">
+                    <MudIcon Size="Size.Small" Class="mr-2" Icon="@Icons.Material.Filled.Inbox"/> Read
+                </MudButton>
+            </MudTooltip>
             <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="btn-sm" OnClick="@(() => NavigationManager.NavigateTo($"/Messaging?Provider={Endpoint.Address}&Endpoint={Endpoint.Name}"))">
                  <MudIcon Size="Size.Small" Class="mr-2" Icon="@IrisIcons.Send"/> Send
             </MudButton>
-            @*
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="btn-sm">
-                Read <Icon Class="px-2" Name="@IconName.EnvelopeOpen" />
-            </MudButton>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="btn-sm">
-                View <Icon Class="px-2" Name="@IconName.Eye" />
-            </MudButton>
-        *@
         </MudStack>
     }
     else
@@ -42,7 +79,72 @@
     [Parameter]
     public EndpointDetails? Endpoint { get; set; } = default!;
 
+    [Parameter]
+    public bool CanRead { get; set; }
+
+    [Parameter]
+    public string? ReadDisabledReason { get; set; }
+
+    [Parameter]
+    public EventCallback<EndpointDetails> OnReadClicked { get; set; }
+
     [Inject]
     public NavigationManager NavigationManager { get; set; } = default!;
-}
 
+    [Inject]
+    public IBrokerService BrokerService { get; set; } = default!;
+
+    private readonly Dictionary<(string Address, string Name), EndpointPropertiesDto?> _propertiesCache = new();
+    private EndpointPropertiesDto? _currentProperties;
+    private bool _propertiesLoading;
+    private (string Address, string Name)? _loadedKey;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Endpoint is null)
+        {
+            _currentProperties = null;
+            _loadedKey = null;
+            return;
+        }
+
+        var key = (Endpoint.Address, Endpoint.Name);
+        if (_loadedKey == key)
+            return;
+
+        _loadedKey = key;
+
+        if (_propertiesCache.TryGetValue(key, out var cached))
+        {
+            _currentProperties = cached;
+            return;
+        }
+
+        await LoadPropertiesAsync(forceRefresh: false);
+    }
+
+    private async Task LoadPropertiesAsync(bool forceRefresh)
+    {
+        if (Endpoint is null)
+            return;
+
+        var key = (Endpoint.Address, Endpoint.Name);
+        if (!forceRefresh && _propertiesCache.TryGetValue(key, out var cached))
+        {
+            _currentProperties = cached;
+            return;
+        }
+
+        _propertiesLoading = true;
+        _currentProperties = null;
+        StateHasChanged();
+
+        var dto = await BrokerService.GetEndpointPropertiesAsync(
+            Endpoint.Address, Endpoint.Name, Endpoint.Type);
+
+        _propertiesCache[key] = dto;
+        _currentProperties = dto;
+        _propertiesLoading = false;
+        StateHasChanged();
+    }
+}
