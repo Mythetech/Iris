@@ -1,14 +1,13 @@
-# Azure Service Bus Emulator for local development/testing on macOS.
+# Azure Service Bus Emulator — standalone alternative for local development.
 #
 # Usage:
 #   docker compose -f docker-compose.asb-emulator.yml up -d
-#   IRIS_RUN_ASB_TESTS=true dotnet test --filter "FullyQualifiedName~AzureServiceBusContainerTests"
+#   dotnet test --filter "FullyQualifiedName~AzureServiceBusContainerTests"
 #   docker compose -f docker-compose.asb-emulator.yml down
 #
-# Note: The Testcontainers-based setup in AzureServiceBusContainerTests.cs
-# works reliably on Linux (CI) but can be flaky on macOS due to Docker
-# Desktop's VM translation layer. This compose file provides a stable
-# alternative for local macOS development.
+# The integration tests manage their own containers via Docker.DotNet,
+# so this compose file is only needed if you want to keep the emulator
+# running across multiple test runs during local development.
 
 services:
   sqledge:
