@@ -78,6 +78,6 @@
     <PackageVersion Include="Docker.DotNet" Version="3.125.15" />
     <PackageVersion Include="Xunit.SkippableFact" Version="1.5.61" />
     <PackageVersion Include="Mythetech.Framework" Version="0.13.2" />
-    <PackageVersion Include="Mythetech.Framework.Desktop" Version="0.13.0" />
+    <PackageVersion Include="Mythetech.Framework.Desktop" Version="0.13.2" />
   </ItemGroup>
 </Project>
