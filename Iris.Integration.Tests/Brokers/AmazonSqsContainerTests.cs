@@ -4,12 +4,12 @@ using Amazon;
 using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using FluentAssertions;
 using Iris.Brokers;
 using Iris.Brokers.Amazon;
 using Iris.Brokers.Models;
+using Iris.Integration.Tests.Fixtures;
 
 namespace Iris.Integration.Tests.Brokers
 {
@@ -18,23 +18,16 @@ namespace Iris.Integration.Tests.Brokers
     /// Uses ElasticMQ (Apache 2.0, single-container, SQS-compatible) so the
     /// suite can run committable tests without real AWS credentials.
     /// </summary>
+    [Collection("ElasticMQ")]
     [Trait("Category", "Container")]
-    public class AmazonSqsContainerTests : IAsyncLifetime
+    public class AmazonSqsContainerTests
     {
-        private const ushort SqsPort = 9324;
         private readonly IContainer _container;
 
-        public AmazonSqsContainerTests()
+        public AmazonSqsContainerTests(ElasticMqContainerFixture fixture)
         {
-            _container = new ContainerBuilder()
-                .WithImage("softwaremill/elasticmq-native:latest")
-                .WithPortBinding(SqsPort, true)
-                .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(SqsPort))
-                .Build();
+            _container = fixture.Container;
         }
-
-        public Task InitializeAsync() => _container.StartAsync();
-        public Task DisposeAsync() => _container.DisposeAsync().AsTask();
 
         private AmazonSQSClient CreateSqsClient()
         {
@@ -42,7 +35,7 @@ namespace Iris.Integration.Tests.Brokers
                 new BasicAWSCredentials("test", "test"),
                 new AmazonSQSConfig
                 {
-                    ServiceURL = $"http://localhost:{_container.GetMappedPublicPort(SqsPort)}",
+                    ServiceURL = $"http://localhost:{_container.GetMappedPublicPort(ElasticMqContainerFixture.SqsPort)}",
                     AuthenticationRegion = "elasticmq",
                 });
         }
@@ -53,7 +46,7 @@ namespace Iris.Integration.Tests.Brokers
             var metadata = new ConnectionMetadata
             {
                 Connector = connector,
-                Address = $"http://localhost:{_container.GetMappedPublicPort(SqsPort)}",
+                Address = $"http://localhost:{_container.GetMappedPublicPort(ElasticMqContainerFixture.SqsPort)}",
             };
             return new AmazonSimpleQueueServiceConnection(metadata, client);
         }

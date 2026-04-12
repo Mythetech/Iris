@@ -5,33 +5,20 @@ using FluentAssertions;
 using Iris.Brokers;
 using Iris.Brokers.Models;
 using Iris.Brokers.RabbitMQ;
+using Iris.Integration.Tests.Fixtures;
 using Testcontainers.RabbitMq;
 
 namespace Iris.Integration.Tests.Brokers
 {
+    [Collection("RabbitMQ")]
     [Trait("Category", "Container")]
-    public class RabbitMqTests : IAsyncLifetime
+    public class RabbitMqTests
     {
-        private readonly RabbitMqContainer _rabbitMqContainer = new RabbitMqBuilder()
-                .WithPortBinding(15672, true)
-                .WithExposedPort(15672)
-                .WithImage("rabbitmq:3-management")
-                .WithUsername("guest")
-                .WithPassword("guest")
-                .Build();
+        private readonly RabbitMqContainer _rabbitMqContainer;
 
-        public RabbitMqTests()
+        public RabbitMqTests(RabbitMqContainerFixture fixture)
         {
-        }
-
-        public Task InitializeAsync()
-        {
-            return _rabbitMqContainer.StartAsync();
-        }
-
-        public Task DisposeAsync()
-        {
-            return _rabbitMqContainer.DisposeAsync().AsTask();
+            _rabbitMqContainer = fixture.Container;
         }
 
         [Fact(DisplayName = "Can connect to docker RabbitMq")]

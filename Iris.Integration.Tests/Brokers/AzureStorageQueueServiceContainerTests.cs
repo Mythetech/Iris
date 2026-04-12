@@ -1,47 +1,30 @@
 ﻿using System;
 using Azure.Storage.Queues;
-using DotNet.Testcontainers.Builders;
-using DotNet.Testcontainers.Containers;
 using FluentAssertions;
 using Iris.Brokers;
 using Iris.Brokers.Azure;
 using Iris.Brokers.Models;
+using Iris.Integration.Tests.Fixtures;
 using Microsoft.Extensions.Logging;
-using Testcontainers.Azurite;
 
 namespace Iris.Integration.Tests.Brokers
 {
+    [Collection("Azurite")]
     [Trait("Category", "Container")]
-    public class AzureStorageQueueServiceContainerTests : IAsyncLifetime
+    public class AzureStorageQueueServiceContainerTests
     {
         private const string QueueName = "integration-test";
         private const string AzuriteAccountName = "devstoreaccount1";
         private const string AzuriteAccountKey =
             "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
 
-        private string ConnectionString = null!;
-        private readonly AzuriteContainer _azuriteContainer;
+        private readonly string ConnectionString;
         private readonly ILogger<AzureQueueStorageConnection> _logger;
 
-        public AzureStorageQueueServiceContainerTests()
+        public AzureStorageQueueServiceContainerTests(AzuriteContainerFixture fixture)
         {
             _logger = new LoggerFactory().CreateLogger<AzureQueueStorageConnection>();
-
-            _azuriteContainer = new AzuriteBuilder()
-                    .WithImage("mcr.microsoft.com/azure-storage/azurite")
-                    .WithCommand("--skipApiVersionCheck")
-                .Build();
-        }
-
-        public async Task InitializeAsync()
-        {
-            await _azuriteContainer.StartAsync();
-            ConnectionString = _azuriteContainer.GetConnectionString();
-        }
-
-        public async Task DisposeAsync()
-        {
-            await _azuriteContainer.DisposeAsync();
+            ConnectionString = fixture.ConnectionString;
         }
 
         [Fact(DisplayName = "Can connect to Azure Queue Storage")]
@@ -64,7 +47,7 @@ namespace Iris.Integration.Tests.Brokers
 
             // Assert
             connection.Should().NotBeNull();
-            connection!.EndpointCount.Should().Be(1);
+            connection!.EndpointCount.Should().BeGreaterThanOrEqualTo(1);
         }
 
         [Fact(DisplayName = "Can send message to Azure Storage Queue")]

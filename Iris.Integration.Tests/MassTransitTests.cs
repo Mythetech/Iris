@@ -5,6 +5,7 @@ using Iris.Brokers;
 using Iris.Brokers.Frameworks;
 using Iris.Brokers.Models;
 using Iris.Brokers.RabbitMQ;
+using Iris.Integration.Tests.Fixtures;
 using MassTransit;
 using Testcontainers.RabbitMq;
 
@@ -16,26 +17,24 @@ namespace Iris.Integration.Tests
     // (it replaces '/' with ':' in the supplied MessageType string).
     public record IrisMtTestMessage(int Red, int Green, int Blue);
 
+    [Collection("RabbitMQ")]
     [Trait("Category", "Container")]
     public class MassTransitTests : IAsyncLifetime
     {
         private const string QueueName = "iris-mt-test";
 
-        private readonly RabbitMqContainer _rabbitMqContainer = new RabbitMqBuilder()
-            .WithImage("rabbitmq:3-management")
-            .WithUsername("guest")
-            .WithPassword("guest")
-            .WithPortBinding(5672, true)    // AMQP  (MassTransit consumer bus)
-            .WithPortBinding(15672, true)   // HTTP  (Iris publish via EasyNetQ.Management)
-            .Build();
+        private readonly RabbitMqContainer _rabbitMqContainer;
 
         private IBusControl? _bus;
         private readonly TestIrisConsumer _consumer = new();
 
+        public MassTransitTests(RabbitMqContainerFixture fixture)
+        {
+            _rabbitMqContainer = fixture.Container;
+        }
+
         public async Task InitializeAsync()
         {
-            await _rabbitMqContainer.StartAsync();
-
             var amqpPort = _rabbitMqContainer.GetMappedPublicPort(5672);
 
             _bus = Bus.Factory.CreateUsingRabbitMq(cfg =>
@@ -61,8 +60,6 @@ namespace Iris.Integration.Tests
             {
                 await _bus.StopAsync();
             }
-
-            await _rabbitMqContainer.DisposeAsync();
         }
 
         [Fact(DisplayName = "Iris MassTransit-wrapped message round-trips to a real MassTransit consumer on RabbitMQ")]

@@ -5,6 +5,7 @@ using Iris.Brokers;
 using Iris.Brokers.Frameworks;
 using Iris.Brokers.Models;
 using Iris.Brokers.RabbitMQ;
+using Iris.Integration.Tests.Fixtures;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Routing.TypeBased;
@@ -19,28 +20,26 @@ namespace Iris.Integration.Tests
     // the type via Type.GetType(name), so the type must be loadable from the test assembly.
     public record IrisRebusTestMessage(int Red, int Green, int Blue);
 
+    [Collection("RabbitMQ")]
     [Trait("Category", "Container")]
     public class RebusTests : IAsyncLifetime
     {
         private const string QueueName = "iris-rebus-test";
 
-        private readonly RabbitMqContainer _rabbitMqContainer = new RabbitMqBuilder()
-            .WithImage("rabbitmq:3-management")
-            .WithUsername("guest")
-            .WithPassword("guest")
-            .WithPortBinding(5672, true)    // AMQP  (Rebus consumer bus)
-            .WithPortBinding(15672, true)   // HTTP  (Iris publish via EasyNetQ.Management)
-            .Build();
+        private readonly RabbitMqContainer _rabbitMqContainer;
 
         private BuiltinHandlerActivator? _activator;
         private IDisposable? _bus;
         private readonly TaskCompletionSource<IrisRebusTestMessage> _received =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
 
+        public RebusTests(RabbitMqContainerFixture fixture)
+        {
+            _rabbitMqContainer = fixture.Container;
+        }
+
         public async Task InitializeAsync()
         {
-            await _rabbitMqContainer.StartAsync();
-
             var amqpPort = _rabbitMqContainer.GetMappedPublicPort(5672);
             var amqpUri = $"amqp://guest:guest@localhost:{amqpPort}";
 
@@ -53,11 +52,11 @@ namespace Iris.Integration.Tests
                 .Start();
         }
 
-        public async Task DisposeAsync()
+        public Task DisposeAsync()
         {
             _bus?.Dispose();
             _activator?.Dispose();
-            await _rabbitMqContainer.DisposeAsync();
+            return Task.CompletedTask;
         }
 
         [Fact(DisplayName = "Iris Rebus-wrapped message round-trips to a real Rebus consumer on RabbitMQ")]
