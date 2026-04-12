@@ -32,5 +32,17 @@ namespace Iris.Components.Brokers
         /// Returns null if no connection exists at that address.
         /// </summary>
         Task<ReaderCapabilitiesDto?> GetReaderCapabilitiesAsync(string address);
+
+        /// <summary>
+        /// Returns broker-specific properties for a given endpoint, flattened to
+        /// an ordered list of key/value strings. Returns null if no connection
+        /// exists at <paramref name="address"/> or the broker does not implement
+        /// endpoint inspection.
+        /// </summary>
+        Task<EndpointPropertiesDto?> GetEndpointPropertiesAsync(
+            string address,
+            string endpointName,
+            string? type,
+            CancellationToken cancellationToken = default);
     }
 }

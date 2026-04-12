@@ -79,7 +79,10 @@
     </MudDataGrid>
 </IrisCard>
 <MudDrawer @bind-Open="_isOpen" Variant="DrawerVariant.Temporary" Anchor="Anchor.End">
-    <EndpointOffcanvas Endpoint="@_selectedEndpoint"/>
+    <EndpointOffcanvas Endpoint="@_selectedEndpoint"
+                       CanRead="@CanRead(_selectedEndpoint)"
+                       ReadDisabledReason="@GetReadDisabledReason(_selectedEndpoint)"
+                       OnReadClicked="HandleReadClicked"/>
 </MudDrawer>
 @code {
     [Inject]

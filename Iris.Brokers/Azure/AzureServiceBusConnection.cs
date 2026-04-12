@@ -6,7 +6,7 @@ using Iris.Brokers.Models;
 
 namespace Iris.Brokers.Azure
 {
-    public class AzureServiceBusConnection : IConnection, IMessagePeeker, IMessageReceiver, IDeadLetterPeeker, IDeadLetterReceiver
+    public class AzureServiceBusConnection : IConnection, IMessagePeeker, IMessageReceiver, IDeadLetterPeeker, IDeadLetterReceiver, IEndpointInspector
     {
         // ServiceBusReceiver's practical batch ceiling is around 250 messages.
         public int MaxPeekBatchSize => 250;
@@ -118,6 +118,63 @@ namespace Iris.Brokers.Azure
 
             var received = await receiver.ReceiveMessagesAsync(count, maxWaitTime: TimeSpan.FromSeconds(2), cancellationToken);
             return received.Select(m => Map(m, source)).ToList();
+        }
+
+        public async Task<Iris.Contracts.Brokers.Models.EndpointPropertiesDto> InspectAsync(
+            string endpointName,
+            string? type,
+            CancellationToken cancellationToken = default)
+        {
+            var entries = new List<Iris.Contracts.Brokers.Models.EndpointPropertyEntry>();
+
+            if (string.Equals(type, "Topic", StringComparison.OrdinalIgnoreCase))
+            {
+                var topic = (await _adminClient.GetTopicAsync(endpointName, cancellationToken)).Value;
+                var runtime = (await _adminClient.GetTopicRuntimePropertiesAsync(endpointName, cancellationToken)).Value;
+
+                entries.Add(new("Status", topic.Status.ToString()));
+                entries.Add(new("Subscription Count", runtime.SubscriptionCount.ToString()));
+                entries.Add(new("Scheduled Messages", runtime.ScheduledMessageCount.ToString()));
+                entries.Add(new("Size (bytes)", runtime.SizeInBytes.ToString()));
+                entries.Add(new("Max Size (MB)", topic.MaxSizeInMegabytes.ToString()));
+                entries.Add(new("Default TTL", topic.DefaultMessageTimeToLive.ToString()));
+                entries.Add(new("Auto Delete On Idle", topic.AutoDeleteOnIdle.ToString()));
+                entries.Add(new("Requires Duplicate Detection", topic.RequiresDuplicateDetection.ToString()));
+                entries.Add(new("Enable Partitioning", topic.EnablePartitioning.ToString()));
+                entries.Add(new("Support Ordering", topic.SupportOrdering.ToString()));
+                entries.Add(new("Created At", runtime.CreatedAt.ToString("u")));
+                entries.Add(new("Updated At", runtime.UpdatedAt.ToString("u")));
+            }
+            else
+            {
+                var queue = (await _adminClient.GetQueueAsync(endpointName, cancellationToken)).Value;
+                var runtime = (await _adminClient.GetQueueRuntimePropertiesAsync(endpointName, cancellationToken)).Value;
+
+                entries.Add(new("Status", queue.Status.ToString()));
+                entries.Add(new("Active Messages", runtime.ActiveMessageCount.ToString()));
+                entries.Add(new("Dead Letter Messages", runtime.DeadLetterMessageCount.ToString()));
+                entries.Add(new("Scheduled Messages", runtime.ScheduledMessageCount.ToString()));
+                entries.Add(new("Transfer Messages", runtime.TransferMessageCount.ToString()));
+                entries.Add(new("Total Messages", runtime.TotalMessageCount.ToString()));
+                entries.Add(new("Size (bytes)", runtime.SizeInBytes.ToString()));
+                entries.Add(new("Max Size (MB)", queue.MaxSizeInMegabytes.ToString()));
+                entries.Add(new("Max Delivery Count", queue.MaxDeliveryCount.ToString()));
+                entries.Add(new("Lock Duration", queue.LockDuration.ToString()));
+                entries.Add(new("Default TTL", queue.DefaultMessageTimeToLive.ToString()));
+                entries.Add(new("Auto Delete On Idle", queue.AutoDeleteOnIdle.ToString()));
+                entries.Add(new("Requires Session", queue.RequiresSession.ToString()));
+                entries.Add(new("Requires Duplicate Detection", queue.RequiresDuplicateDetection.ToString()));
+                entries.Add(new("Dead Letter On Expiration", queue.DeadLetteringOnMessageExpiration.ToString()));
+                entries.Add(new("Enable Partitioning", queue.EnablePartitioning.ToString()));
+                if (!string.IsNullOrEmpty(queue.ForwardTo))
+                    entries.Add(new("Forward To", queue.ForwardTo));
+                if (!string.IsNullOrEmpty(queue.ForwardDeadLetteredMessagesTo))
+                    entries.Add(new("Forward DLQ To", queue.ForwardDeadLetteredMessagesTo));
+                entries.Add(new("Created At", runtime.CreatedAt.ToString("u")));
+                entries.Add(new("Updated At", runtime.UpdatedAt.ToString("u")));
+            }
+
+            return new Iris.Contracts.Brokers.Models.EndpointPropertiesDto(entries);
         }
 
         private ReceivedMessage Map(ServiceBusReceivedMessage m, ReadSource source)
