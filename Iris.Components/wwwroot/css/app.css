@@ -20,6 +20,7 @@
 
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    overflow: hidden;
 }
 
 .app-header-font {
@@ -650,4 +651,15 @@ main {
 
 .w-100 {
     width: 100%;
+}
+
+.key-value-row {
+    padding: 2px 0;
+    line-height: 1.2;
+}
+
+.key-value-row .key-value-row-value {
+    text-align: right;
+    word-break: break-word;
+    max-width: 60%;
 }
