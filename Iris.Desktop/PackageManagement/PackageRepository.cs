@@ -3,12 +3,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Iris.Desktop.PackageManagement;
 
-public class PackageRepository
+public class PackageRepository : IRepository
 {
     private readonly IrisLiteDbContext _dbContext;
     private readonly ILogger<PackageRepository> _logger;
 
-    private const string DbKey = "packages";
+    public string DbKey { get; } = "packages";
 
     public PackageRepository(IrisLiteDbContext dbContext, ILogger<PackageRepository> logger)
     {
