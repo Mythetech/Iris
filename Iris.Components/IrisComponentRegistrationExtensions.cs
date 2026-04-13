@@ -37,6 +37,7 @@ namespace Iris.Components
             services.AddScoped<ITemplateService, TTemplateService>();
             services.AddScoped<TemplatesState>();
             services.AddScoped<ITemplatesState>(provider => provider.GetRequiredService<TemplatesState>());
+            services.AddScoped<ITemplateResolver, TemplateResolver>();
             services.AddScoped<IPackageService, TPackageService>();
             services.AddTransient<IHistoryService, THistoryService>();
             services.AddSingleton<HistoryState>();

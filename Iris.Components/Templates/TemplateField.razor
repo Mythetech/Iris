@@ -1,0 +1,147 @@
+@using Iris.Components.Theme
+@using Iris.Contracts.Assemblies.Models
+
+@switch (Field.Kind)
+{
+    case TypeKind.Complex:
+        <TemplateObjectSection Field="@Field" OnFieldChanged="OnFieldChanged" />
+        break;
+
+    case TypeKind.Collection:
+        <TemplateArraySection Field="@Field" OnFieldChanged="OnFieldChanged" />
+        break;
+
+    case TypeKind.Enum:
+        <MudStack Spacing="1" Class="mb-2">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudText Typo="Typo.caption" Color="Color.Info">@Field.Name</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@Field.TypeName</MudText>
+            </MudStack>
+            <MudSelect T="string"
+                       Value="@(Field.Value?.ToString() ?? "")"
+                       ValueChanged="OnEnumChanged"
+                       Dense="true"
+                       Margin="Margin.Dense">
+                @if (Field.EnumValues is not null)
+                {
+                    @foreach (var enumValue in Field.EnumValues)
+                    {
+                        <MudSelectItem Value="@enumValue">@enumValue</MudSelectItem>
+                    }
+                }
+            </MudSelect>
+        </MudStack>
+        break;
+
+    default:
+        <MudStack Spacing="1" Class="mb-2">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudText Typo="Typo.caption" Color="Color.Info">@Field.Name</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">@Field.TypeName</MudText>
+                <MudSpacer />
+                @if (Field.HasExpression)
+                {
+                    <MudChip T="string"
+                             Text="@($"⚡ {Field.Expression}")"
+                             Size="Size.Small"
+                             Color="Color.Warning"
+                             OnClose="ClearExpression" />
+                }
+                else
+                {
+                    <ExpressionPicker TypeName="@Field.TypeName" OnExpressionSelected="SetExpression" />
+                }
+            </MudStack>
+            @if (!Field.HasExpression)
+            {
+                @if (Field.TypeName == "bool")
+                {
+                    <MudCheckBox T="bool"
+                                 Value="@((bool)(Field.Value ?? false))"
+                                 ValueChanged="OnBoolChanged"
+                                 Dense="true" />
+                }
+                else if (IsNumeric(Field.TypeName))
+                {
+                    <MudNumericField T="double"
+                                     Value="@ToDouble(Field.Value)"
+                                     ValueChanged="OnNumericChanged"
+                                     Margin="Margin.Dense" />
+                }
+                else
+                {
+                    <MudTextField T="string"
+                                  Value="@(Field.Value?.ToString() ?? "")"
+                                  ValueChanged="OnTextChanged"
+                                  Margin="Margin.Dense" />
+                }
+            }
+        </MudStack>
+        break;
+}
+
+@code {
+    [Parameter, EditorRequired] public TemplateFieldModel Field { get; set; } = default!;
+    [Parameter] public EventCallback OnFieldChanged { get; set; }
+
+    private static readonly HashSet<string> NumericTypes = new(StringComparer.Ordinal)
+    {
+        "int", "long", "decimal", "double", "float",
+        "Int32", "Int64", "Decimal", "Double", "Single"
+    };
+
+    private static bool IsNumeric(string typeName) => NumericTypes.Contains(typeName);
+
+    private async Task SetExpression(string expression)
+    {
+        Field.Expression = expression;
+        Field.Value = null;
+        await NotifyChanged();
+    }
+
+    private async Task ClearExpression(MudChip<string> chip)
+    {
+        Field.Expression = null;
+        await NotifyChanged();
+    }
+
+    private async Task OnTextChanged(string value)
+    {
+        Field.Value = value;
+        await NotifyChanged();
+    }
+
+    private async Task OnNumericChanged(double value)
+    {
+        Field.Value = value;
+        await NotifyChanged();
+    }
+
+    private async Task OnBoolChanged(bool value)
+    {
+        Field.Value = value;
+        await NotifyChanged();
+    }
+
+    private async Task OnEnumChanged(string value)
+    {
+        Field.Value = value;
+        await NotifyChanged();
+    }
+
+    private async Task NotifyChanged()
+    {
+        await OnFieldChanged.InvokeAsync();
+    }
+
+    private static double ToDouble(object? value) => value switch
+    {
+        double d   => d,
+        float f    => (double)f,
+        decimal m  => (double)m,
+        int i      => (double)i,
+        long l     => (double)l,
+        string s when double.TryParse(s, out var parsed) => parsed,
+        _ => 0d
+    };
+}

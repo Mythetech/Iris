@@ -1,0 +1,169 @@
+@page "/Templates/{TemplateIdParam}"
+@page "/Templates/new"
+@using Iris.Components.Theme
+@using Iris.Components.Messaging
+@using Iris.Contracts.Assemblies.Models
+@using Iris.Components.PackageManagement
+@using Iris.Contracts.Assemblies
+@inherits IrisPageBase
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex gap-4" Style="flex-direction:column;height:90dvh;">
+    <MudToolBar Class="darkmorphic gap-2">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@IrisIcons.Back"
+                   OnClick="@(() => NavigationManager.NavigateTo("/Templates"))">
+            Back
+        </MudButton>
+
+        <MudTextField @bind-Value="_templateName"
+                      Variant="Variant.Text"
+                      Style="font-weight:bold;"
+                      Placeholder="Template name" />
+
+        <MudSpacer />
+
+        <MudButton Variant="Variant.Outlined"
+                   StartIcon="@IrisIcons.ImportPackage"
+                   OnClick="ImportType">
+            Import Type
+        </MudButton>
+
+        <MudButton Variant="Variant.Outlined"
+                   StartIcon="@IrisIcons.Add"
+                   OnClick="AddField">
+            Add Field
+        </MudButton>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="Save"
+                   Disabled="@(_fields.Count == 0)">
+            Save
+        </MudButton>
+    </MudToolBar>
+
+    @if (_importedType != null)
+    {
+        <MudAlert Severity="Severity.Info"
+                  CloseIcon="@IrisIcons.Delete"
+                  ShowCloseIcon="true"
+                  CloseIconClicked="DetachType">
+            Imported from type: <strong>@_importedType.FullyQualifiedName</strong>
+        </MudAlert>
+    }
+
+    <IrisSplitter SplitterOrientation="Microsoft.Fast.Components.FluentUI.Orientation.Horizontal">
+        <Panel1>
+            <MudPaper Class="pa-4 h-100" Elevation="0">
+                <TemplateFormBuilder Fields="@_fields" OnFieldChanged="UpdateJsonPreview" />
+            </MudPaper>
+        </Panel1>
+        <Panel2>
+            <MudPaper Class="pa-4 h-100" Style="background:var(--mud-palette-background-dark);" Elevation="0">
+                <MudStack Spacing="2">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary" Style="letter-spacing:0.1em;">JSON PREVIEW</MudText>
+                        <MudIconButton Icon="@IrisIcons.Copy"
+                                       Size="Size.Small"
+                                       OnClick="CopyJson" />
+                    </MudStack>
+                    <pre style="white-space:pre-wrap;word-break:break-all;margin:0;font-size:0.8rem;">@_jsonPreview</pre>
+                </MudStack>
+            </MudPaper>
+        </Panel2>
+    </IrisSplitter>
+</MudContainer>
+
+@code {
+    [Parameter] public string? TemplateIdParam { get; set; }
+
+    [Inject] public TemplatesState TemplatesState { get; set; } = default!;
+    [Inject] public IDialogService DialogService { get; set; } = default!;
+    [Inject] public ISampleJsonGenerator SampleGenerator { get; set; } = default!;
+    [Inject] public IPackageService PackageService { get; set; } = default!;
+    [Inject] public IJsApiService JsApi { get; set; } = default!;
+
+    public override string Identifier => "Template Editor";
+
+    private List<TemplateFieldModel> _fields = [];
+    private string _templateName = "Untitled";
+    private string _jsonPreview = "{\n\n}";
+    private TypeData? _importedType;
+    private Iris.Contracts.Templates.Models.Template? _existingTemplate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (TemplateIdParam is not null && TemplateIdParam != "new" && Guid.TryParse(TemplateIdParam, out var id))
+        {
+            var templates = await TemplatesState.GetTemplatesAsync();
+            _existingTemplate = templates.FirstOrDefault(t => t.TemplateId == id);
+
+            if (_existingTemplate != null)
+            {
+                _templateName = _existingTemplate.Name;
+                _fields = TemplateFieldModel.FromJson(_existingTemplate.Json);
+                UpdateJsonPreview();
+            }
+        }
+    }
+
+    private async Task ImportType()
+    {
+        var dialogRef = await DialogService.ShowAsync<TypePickerDialog>(
+            string.Empty, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialogRef.Result;
+        if (result is { Canceled: false, Data: TypeData typeData })
+        {
+            _importedType = typeData;
+            _fields = typeData.Properties?.Select(TemplateFieldModel.FromPropertyData).ToList() ?? [];
+            if (_templateName is null or "Untitled") _templateName = typeData.Name;
+            UpdateJsonPreview();
+        }
+    }
+
+    private async Task AddField()
+    {
+        var dialogRef = await DialogService.ShowAsync<AddFieldDialog>(
+            "Add Field", new DialogOptions { MaxWidth = MaxWidth.ExtraSmall, FullWidth = true });
+        var result = await dialogRef.Result;
+        if (result is { Canceled: false, Data: TemplateFieldModel field })
+        {
+            _fields.Add(field);
+            UpdateJsonPreview();
+        }
+    }
+
+    private void DetachType()
+    {
+        _importedType = null;
+    }
+
+    private void UpdateJsonPreview()
+    {
+        _jsonPreview = _fields.Count > 0 ? TemplateFieldModel.ToJson(_fields) : "{\n\n}";
+        StateHasChanged();
+    }
+
+    private async Task CopyJson()
+    {
+        await JsApi.CopyToClipboardAsync(_jsonPreview);
+    }
+
+    private async Task Save()
+    {
+        var json = TemplateFieldModel.ToJson(_fields);
+        if (_existingTemplate != null)
+        {
+            _existingTemplate.Name = _templateName;
+            _existingTemplate.Json = json;
+            await TemplatesState.UpdateTemplateAsync(_existingTemplate);
+        }
+        else
+        {
+            _existingTemplate = new Iris.Contracts.Templates.Models.Template { Name = _templateName, Json = json };
+            await TemplatesState.CreateTemplateAsync(_existingTemplate);
+        }
+        NavigationManager.NavigateTo("/Templates");
+    }
+
+}
