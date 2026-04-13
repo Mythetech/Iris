@@ -3,12 +3,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Iris.Desktop.Templates;
 
-public class TemplateRepository
+public class TemplateRepository : IRepository
 {
     private readonly IrisLiteDbContext _dbContext;
     private readonly ILogger<TemplateRepository> _logger;
 
-    private const string DbKey = "templates";
+    public string DbKey { get; } = "templates";
 
     public TemplateRepository(IrisLiteDbContext dbContext, ILogger<TemplateRepository> logger)
     {

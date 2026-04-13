@@ -12,10 +12,10 @@ public partial class TemplateResolver : ITemplateResolver
     [GeneratedRegex(@"\{\{(\w+)\((.*?)\)\}\}")]
     private static partial Regex ExpressionPattern();
 
-    public Task<string> ResolveAsync(string templateJson)
+    public Task<string?> ResolveAsync(string? templateJson)
     {
         if (templateJson is null)
-            return Task.FromResult<string>(null!);
+            return Task.FromResult<string?>(null);
 
         JsonNode? root;
         try

@@ -2,5 +2,5 @@ namespace Iris.Components.Templates;
 
 public interface ITemplateResolver
 {
-    Task<string> ResolveAsync(string templateJson);
+    Task<string?> ResolveAsync(string? templateJson);
 }

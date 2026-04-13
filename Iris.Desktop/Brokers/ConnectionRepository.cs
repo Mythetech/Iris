@@ -3,12 +3,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Iris.Desktop.Brokers;
 
-public class ConnectionRepository
+public class ConnectionRepository : IRepository
 {
     private readonly IrisLiteDbContext _dbContext;
     private readonly ILogger<ConnectionRepository> _logger;
 
-    private const string DbKey = "connections";
+    public string DbKey { get; } = "connections";
 
     public ConnectionRepository(IrisLiteDbContext dbContext, ILogger<ConnectionRepository> logger)
     {

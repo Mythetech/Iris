@@ -76,8 +76,8 @@ public class Program
         builder.Services.AddTransient<IrisLiteDbContext>();
         builder.Services.AddTransient<HistoryRepository>();
         builder.Services.AddTransient<ConnectionRepository>();
-        builder.Services.AddTransient<TemplateRepository>();
-        builder.Services.AddTransient<PackageRepository>();
+        builder.Services.AddSingleton<TemplateRepository>();
+        builder.Services.AddSingleton<PackageRepository>();
         builder.Services.AddTransient<AutoDiscovery>();
 
         // Native menu services
