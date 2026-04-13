@@ -29,16 +29,12 @@ public class CommandPaletteHostTests : IrisTestContext
         var cut = RenderComponent<CommandPaletteHost>();
 
         var hotkeys = cut.FindComponents<MudHotkey>();
-        hotkeys.Should().HaveCount(2);
+        hotkeys.Should().HaveCount(4);
 
-        var modifiers = hotkeys
-            .Select(h => h.Instance.KeyModifiers.Single())
-            .ToArray();
-
-        modifiers.Should().Contain(JsKeyModifier.ControlLeft);
-        modifiers.Should().Contain(JsKeyModifier.MetaLeft);
-
-        hotkeys.Should().OnlyContain(h => h.Instance.Key == JsKey.KeyK);
+        var paletteHotkeys = hotkeys.Where(h => h.Instance.Key == JsKey.KeyK).ToArray();
+        paletteHotkeys.Should().HaveCount(2);
+        paletteHotkeys.SelectMany(h => h.Instance.KeyModifiers).Should().Contain(JsKeyModifier.ControlLeft);
+        paletteHotkeys.SelectMany(h => h.Instance.KeyModifiers).Should().Contain(JsKeyModifier.MetaLeft);
     }
 
     [Fact(DisplayName = "Pressing the hotkey opens the CommandPaletteDialog via IDialogService")]
@@ -46,7 +42,7 @@ public class CommandPaletteHostTests : IrisTestContext
     {
         var cut = RenderComponent<CommandPaletteHost>();
         var ctrlHotkey = cut.FindComponents<MudHotkey>()
-            .Single(h => h.Instance.KeyModifiers.Contains(JsKeyModifier.ControlLeft));
+            .Single(h => h.Instance.Key == JsKey.KeyK && h.Instance.KeyModifiers.Contains(JsKeyModifier.ControlLeft));
 
         await cut.InvokeAsync(() => ctrlHotkey.Instance.MudHotkeyProviderJsCallback());
 
@@ -62,7 +58,7 @@ public class CommandPaletteHostTests : IrisTestContext
         _paletteService.MarkOpened();
         var cut = RenderComponent<CommandPaletteHost>();
         var ctrlHotkey = cut.FindComponents<MudHotkey>()
-            .Single(h => h.Instance.KeyModifiers.Contains(JsKeyModifier.ControlLeft));
+            .Single(h => h.Instance.Key == JsKey.KeyK && h.Instance.KeyModifiers.Contains(JsKeyModifier.ControlLeft));
 
         await cut.InvokeAsync(() => ctrlHotkey.Instance.MudHotkeyProviderJsCallback());
 
@@ -76,7 +72,8 @@ public class CommandPaletteHostTests : IrisTestContext
     public async Task Both_hotkeys_open_palette()
     {
         var cut = RenderComponent<CommandPaletteHost>();
-        var hotkeys = cut.FindComponents<MudHotkey>().ToArray();
+        var hotkeys = cut.FindComponents<MudHotkey>()
+            .Where(h => h.Instance.Key == JsKey.KeyK).ToArray();
 
         // First press: Ctrl+K. Then mark closed (simulating dialog close) and press Cmd+K.
         await cut.InvokeAsync(() => hotkeys[0].Instance.MudHotkeyProviderJsCallback());

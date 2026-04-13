@@ -35,7 +35,7 @@ public class TypeIconTests : IrisTestContext
             .Add(p => p.Type, type));
 
         cut.Markup.Should().Contain("material-symbols-rounded");
-        cut.Markup.Should().Contain("hashtag");
+        cut.Markup.Should().Contain("tag");
     }
 
     [Theory(DisplayName = "Displays correct type icon for dates")]
@@ -72,7 +72,7 @@ public class TypeIconTests : IrisTestContext
             .Add(p => p.Type, type));
 
         cut.Markup.Should().Contain("material-symbols-rounded");
-        cut.Markup.Should().Contain("brackets-curly");
+        cut.Markup.Should().Contain("data_object");
     }
 
     [Theory(DisplayName = "Displays array icon for types ending in '[]'")]
@@ -83,7 +83,7 @@ public class TypeIconTests : IrisTestContext
             .Add(p => p.Type, type));
 
         cut.Markup.Should().Contain("material-symbols-rounded");
-        cut.Markup.Should().Contain("brackets-square");
+        cut.Markup.Should().Contain("data_array");
     }
 
     [Theory(DisplayName = "Displays key icon for key/secret types")]
