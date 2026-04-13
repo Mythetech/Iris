@@ -8,6 +8,18 @@ public class LocalTemplateService : ITemplateService
 {
     private readonly ConcurrentDictionary<Guid, Template> _templates = new();
     private readonly ConcurrentDictionary<Guid, List<VersionedTemplate>> _versionedTemplates = new();
+    private readonly TemplateRepository _repository;
+
+    public LocalTemplateService(TemplateRepository repository)
+    {
+        _repository = repository;
+
+        foreach (var persisted in _repository.GetAll())
+        {
+            var template = persisted.ToTemplate();
+            _templates[template.TemplateId] = template;
+        }
+    }
 
     public Task<List<Template>> GetTemplatesAsync()
     {
@@ -49,6 +61,8 @@ public class LocalTemplateService : ITemplateService
             new VersionedTemplate { TemplateId = template.TemplateId, Version = 1, Json = template.Json, Name = template.Name }
         };
 
+        _repository.Save(PersistentTemplate.FromTemplate(template));
+
         return Task.CompletedTask;
     }
 
@@ -73,6 +87,8 @@ public class LocalTemplateService : ITemplateService
             versionList.Add(new VersionedTemplate { TemplateId = template.TemplateId, Version = latestVersion + 1, Json = template.Json, Name = template.Name });
         }
 
+        _repository.Save(PersistentTemplate.FromTemplate(template));
+
         return Task.CompletedTask;
     }
 
@@ -85,6 +101,8 @@ public class LocalTemplateService : ITemplateService
 
         _templates.TryRemove(template.TemplateId, out _);
         _versionedTemplates.TryRemove(template.TemplateId, out _);
+
+        _repository.Delete(template.TemplateId);
 
         return Task.CompletedTask;
     }
