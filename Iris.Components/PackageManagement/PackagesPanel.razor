@@ -36,7 +36,7 @@
                         <MudText Typo="Typo.body2" Class="text-truncate">@package.Name</MudText>
                         @if (!string.IsNullOrWhiteSpace(package.Version))
                         {
-                            <MudText Typo="Typo.caption" Class="mud-text-secondary">v@package.Version</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">v@(package.Version)</MudText>
                         }
                     </MudStack>
                 </MudListItem>

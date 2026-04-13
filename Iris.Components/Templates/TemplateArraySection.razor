@@ -1,0 +1,157 @@
+@using Iris.Components.Theme
+@using Iris.Contracts.Assemblies.Models
+
+<MudPaper Outlined="true" Class="mb-2" Style="border-left: 3px solid var(--mud-palette-warning)">
+    <MudStack Spacing="0">
+        <MudStack Row="true"
+                  AlignItems="AlignItems.Center"
+                  Spacing="1"
+                  Class="pa-2 cursor-pointer"
+                  @onclick="ToggleExpanded">
+            <MudIcon Icon="@(_expanded ? IrisIcons.ExpandMore : IrisIcons.ChevronRight)"
+                     Size="Size.Small" />
+            <MudText Typo="Typo.body2"><strong>@Field.Name</strong></MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Field.TypeName</MudText>
+            <MudChip T="string" Size="Size.Small" Color="Color.Warning">@ItemCount</MudChip>
+        </MudStack>
+
+        @if (_expanded)
+        {
+            <div class="pa-2">
+                @if (IsPrimitiveCollection)
+                {
+                    @* Primitive chip set *@
+                    <MudChipSet T="string" AllClosable="true" OnClose="RemovePrimitiveItem" Class="mb-2">
+                        @foreach (var item in PrimitiveItems)
+                        {
+                            <MudChip T="string" Value="@item" Size="Size.Small">@item</MudChip>
+                        }
+                    </MudChipSet>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudTextField T="string"
+                                      @bind-Value="_newPrimitiveItem"
+                                      Placeholder="Add item..."
+                                      Margin="Margin.Dense"
+                                      Class="grow"
+                                      OnKeyDown="OnPrimitiveKeyDown" />
+                        <MudIconButton Icon="@IrisIcons.Add"
+                                       Size="Size.Small"
+                                       Color="Color.Primary"
+                                       OnClick="AddPrimitiveItem" />
+                    </MudStack>
+                }
+                else
+                {
+                    @* Complex collection *@
+                    @if (Field.Items is not null)
+                    {
+                        @for (int i = 0; i < Field.Items.Count; i++)
+                        {
+                            var index = i;
+                            var item = Field.Items[index];
+                            <MudPaper Outlined="true" Class="mb-2 pa-2">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Item @(index + 1)</MudText>
+                                    <MudSpacer />
+                                    <MudIconButton Icon="@IrisIcons.Delete"
+                                                   Size="Size.Small"
+                                                   Color="Color.Error"
+                                                   OnClick="@(() => RemoveComplexItem(index))" />
+                                </MudStack>
+                                @foreach (var field in item)
+                                {
+                                    <TemplateField Field="@field" OnFieldChanged="OnFieldChanged" />
+                                }
+                            </MudPaper>
+                        }
+                    }
+                    <MudButton StartIcon="@IrisIcons.Add"
+                               Size="Size.Small"
+                               Color="Color.Primary"
+                               OnClick="AddComplexItem">Add Item</MudButton>
+                }
+            </div>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired] public TemplateFieldModel Field { get; set; } = default!;
+    [Parameter] public EventCallback OnFieldChanged { get; set; }
+
+    private bool _expanded = false;
+    private string _newPrimitiveItem = "";
+
+    private static readonly HashSet<string> PrimitiveTypeNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "string", "int", "bool", "guid"
+    };
+
+    private bool IsPrimitiveCollection =>
+        Field.PrimitiveItems is not null ||
+        (Field.GenericArguments is { Count: > 0 } && PrimitiveTypeNames.Contains(Field.GenericArguments[0]));
+
+    private List<string> PrimitiveItems => Field.PrimitiveItems ??= [];
+
+    private int ItemCount =>
+        IsPrimitiveCollection
+            ? PrimitiveItems.Count
+            : Field.Items?.Count ?? 0;
+
+    private void ToggleExpanded() => _expanded = !_expanded;
+
+    private async Task RemovePrimitiveItem(MudChip<string> chip)
+    {
+        if (chip.Value is not null)
+            PrimitiveItems.Remove(chip.Value);
+        await NotifyChanged();
+    }
+
+    private async Task AddPrimitiveItem()
+    {
+        if (string.IsNullOrWhiteSpace(_newPrimitiveItem))
+            return;
+        PrimitiveItems.Add(_newPrimitiveItem.Trim());
+        _newPrimitiveItem = "";
+        await NotifyChanged();
+    }
+
+    private async Task OnPrimitiveKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            await AddPrimitiveItem();
+    }
+
+    private async Task RemoveComplexItem(int index)
+    {
+        Field.Items?.RemoveAt(index);
+        await NotifyChanged();
+    }
+
+    private async Task AddComplexItem()
+    {
+        Field.Items ??= [];
+
+        var template = Field.Items.Count > 0
+            ? Field.Items[0].Select(CloneField).ToList()
+            : Field.Children?.Select(CloneField).ToList() ?? [];
+
+        Field.Items.Add(template);
+        await NotifyChanged();
+    }
+
+    private async Task NotifyChanged()
+    {
+        await OnFieldChanged.InvokeAsync();
+    }
+
+    private static TemplateFieldModel CloneField(TemplateFieldModel source) => new()
+    {
+        Name = source.Name,
+        TypeName = source.TypeName,
+        Kind = source.Kind,
+        EnumValues = source.EnumValues is not null ? [.. source.EnumValues] : null,
+        GenericArguments = source.GenericArguments is not null ? [.. source.GenericArguments] : null,
+        Children = source.Children?.Select(CloneField).ToList()
+    };
+}

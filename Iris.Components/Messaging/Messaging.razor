@@ -79,6 +79,9 @@
     [Inject]
     public IDialogService DialogService { get; set; } = default!;
 
+    [Inject]
+    public ITemplateResolver TemplateResolver { get; set; } = default!;
+
     [SupplyParameterFromQuery]
     public string? Provider { get; set; }
 
@@ -250,7 +253,8 @@
 
     private async void LoadTemplateToEditor(Contracts.Templates.Models.Template template)
     {
-        await _editor.SetTextAsync(template.FormattedJson);
+        var resolvedJson = await TemplateResolver.ResolveAsync(template.Json);
+        await _editor.SetTextAsync(resolvedJson);
     }
     
     private async Task CreateSampleMessageDataAsync()

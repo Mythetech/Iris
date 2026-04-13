@@ -76,6 +76,8 @@ public class Program
         builder.Services.AddTransient<IrisLiteDbContext>();
         builder.Services.AddTransient<HistoryRepository>();
         builder.Services.AddTransient<ConnectionRepository>();
+        builder.Services.AddTransient<TemplateRepository>();
+        builder.Services.AddTransient<PackageRepository>();
         builder.Services.AddTransient<AutoDiscovery>();
 
         // Native menu services
@@ -107,6 +109,7 @@ public class Program
         builder.Services.AddAsyncInitialization();
         builder.Services.AddInitializationHook<RestoreConnectionsInitializationHook>();
         builder.Services.AddInitializationHook<AutoDiscoveryInitializationHook>();
+        builder.Services.AddInitializationHook<RestorePackagesInitializationHook>();
 
         var app = builder.Build();
 
