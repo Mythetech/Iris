@@ -13,6 +13,7 @@ public class NativeMenuService : INativeMenuService
 
     private NativeMenuBar? _menuBar;
     private bool _isInitialized;
+    private readonly List<string> _menuOrder = new();
 
     public NativeMenuService(ILogger<NativeMenuService> logger)
     {
@@ -58,7 +59,8 @@ public class NativeMenuService : INativeMenuService
         if (_menuBar.ContainsMenu("Connections"))
             _menuBar.RemoveMenu("Connections");
 
-        _menuBar.AddMenu("Connections", menu =>
+        var insertIndex = GetMenuInsertIndex("Connections");
+        _menuBar.AddMenu("Connections", insertIndex, menu =>
         {
             menu.AddItem("New Connection...", MenuItemIds.ConnectionsNew);
             menu.AddSeparator();
@@ -105,6 +107,7 @@ public class NativeMenuService : INativeMenuService
             menu.AddSeparator();
             menu.AddItem("Settings", MenuItemIds.FileSettings);
         });
+        _menuOrder.Add("File");
 
         // Connections menu
         _menuBar.AddMenu("Connections", menu =>
@@ -112,6 +115,7 @@ public class NativeMenuService : INativeMenuService
             menu.AddItem("New Connection...", MenuItemIds.ConnectionsNew);
             menu.AddSeparator();
         });
+        _menuOrder.Add("Connections");
 
         // History menu
         _menuBar.AddMenu("History", menu =>
@@ -121,6 +125,7 @@ public class NativeMenuService : INativeMenuService
             menu.AddItem("Export History", MenuItemIds.HistoryExport);
             menu.AddItem("Clear History", MenuItemIds.HistoryClear);
         });
+        _menuOrder.Add("History");
 
         // Packages menu
         _menuBar.AddMenu("Packages", menu =>
@@ -129,6 +134,7 @@ public class NativeMenuService : INativeMenuService
             menu.AddSeparator();
             menu.AddItem("Upload Package...", MenuItemIds.PackagesUpload);
         });
+        _menuOrder.Add("Packages");
 
         // Help menu
         _menuBar.AddMenu("Help", menu =>
@@ -136,6 +142,21 @@ public class NativeMenuService : INativeMenuService
             menu.AddItem("Keyboard Shortcuts", MenuItemIds.HelpKeyboardShortcuts, item =>
                 item.WithAccelerator(OperatingSystem.IsMacOS() ? "Cmd+?" : "Ctrl+?"));
         });
+        _menuOrder.Add("Help");
+    }
+
+    private int GetMenuInsertIndex(string label)
+    {
+        var index = _menuOrder.IndexOf(label);
+        if (index < 0) return -1;
+
+        var position = 1; // app menu is at native index 0
+        for (var i = 0; i < index; i++)
+        {
+            if (_menuBar!.ContainsMenu(_menuOrder[i]))
+                position++;
+        }
+        return position;
     }
 
     private static string SanitizeId(string input)
