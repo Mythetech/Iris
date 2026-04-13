@@ -1,0 +1,38 @@
+@using Iris.Components.Theme
+
+<MudMenu Icon="@IrisIcons.CreateMessageData" Size="Size.Small" Color="Color.Warning" Dense="true">
+    @if (_compatibleFunctions.Count == 0)
+    {
+        <MudMenuItem Disabled="true">No expressions available for this type</MudMenuItem>
+    }
+    else
+    {
+        @foreach (var function in _compatibleFunctions.Values)
+        {
+            var funcName = function.Name;
+            <MudMenuItem OnClick="() => SelectExpression(funcName)">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudText Typo="Typo.body2">@($"{funcName}()")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@function.Description</MudText>
+                </MudStack>
+            </MudMenuItem>
+        }
+    }
+</MudMenu>
+
+@code {
+    [Parameter, EditorRequired] public string TypeName { get; set; } = default!;
+    [Parameter] public EventCallback<string> OnExpressionSelected { get; set; }
+
+    private IReadOnlyDictionary<string, TemplateFunction> _compatibleFunctions = new Dictionary<string, TemplateFunction>();
+
+    protected override void OnParametersSet()
+    {
+        _compatibleFunctions = TemplateFunctions.GetCompatibleFunctions(TypeName);
+    }
+
+    private async Task SelectExpression(string name)
+    {
+        await OnExpressionSelected.InvokeAsync($"{name}()");
+    }
+}

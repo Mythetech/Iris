@@ -1,0 +1,36 @@
+@using Iris.Components.Theme
+@using Iris.Contracts.Assemblies.Models
+
+<MudPaper Outlined="true" Class="mb-2" Style="border-left: 3px solid var(--mud-palette-info)">
+    <MudStack Spacing="0">
+        <MudStack Row="true"
+                  AlignItems="AlignItems.Center"
+                  Spacing="1"
+                  Class="pa-2 cursor-pointer"
+                  @onclick="ToggleExpanded">
+            <MudIcon Icon="@(_expanded ? IrisIcons.ExpandMore : IrisIcons.ChevronRight)"
+                     Size="Size.Small" />
+            <MudText Typo="Typo.body2"><strong>@Field.Name</strong></MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Field.TypeName</MudText>
+        </MudStack>
+
+        @if (_expanded && Field.Children is { Count: > 0 })
+        {
+            <div style="margin-left: 12px; border-left: 1px solid var(--mud-palette-divider); padding-left: 8px; padding-bottom: 4px;">
+                @foreach (var child in Field.Children)
+                {
+                    <TemplateField Field="@child" OnFieldChanged="OnFieldChanged" />
+                }
+            </div>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired] public TemplateFieldModel Field { get; set; } = default!;
+    [Parameter] public EventCallback OnFieldChanged { get; set; }
+
+    private bool _expanded = false;
+
+    private void ToggleExpanded() => _expanded = !_expanded;
+}

@@ -10,12 +10,14 @@ public class LocalPackageService : IPackageService, IDisposable
 {
     private readonly IAssemblyLoadService _assemblyLoader;
     private readonly AssemblySettings _settings;
+    private readonly PackageRepository _packageRepository;
     private List<LoadedAssembly> _assemblies = [];
 
-    public LocalPackageService(IAssemblyLoadService assemblyLoader, AssemblySettings settings)
+    public LocalPackageService(IAssemblyLoadService assemblyLoader, AssemblySettings settings, PackageRepository packageRepository)
     {
         _assemblyLoader = assemblyLoader;
         _settings = settings;
+        _packageRepository = packageRepository;
     }
 
     public List<Type> GetLoadedTypes()
@@ -38,7 +40,18 @@ public class LocalPackageService : IPackageService, IDisposable
     public async Task<Result<AssemblyData>> UploadAssemblyAsync(string filePath)
     {
         await using var stream = File.OpenRead(filePath);
-        return await LoadAssemblyFromStreamAsync(stream);
+        var result = await LoadAssemblyFromStreamAsync(stream);
+
+        if (result is Success<AssemblyData> success)
+        {
+            _packageRepository.Save(new SavedPackage
+            {
+                FilePath = filePath,
+                AssemblyName = success.Value.FullyQualifiedName
+            });
+        }
+
+        return result;
     }
 
     public Task<Result<bool>> RemoveAssemblyAsync(string fullName)
@@ -49,6 +62,10 @@ public class LocalPackageService : IPackageService, IDisposable
 
         _assemblies.Remove(entry);
         entry.Context.Unload();
+
+        var saved = _packageRepository.GetAll().FirstOrDefault(p => p.AssemblyName == fullName);
+        if (saved != null)
+            _packageRepository.Delete(saved.FilePath);
 
         return Task.FromResult<Result<bool>>(new Success<bool>(true));
     }

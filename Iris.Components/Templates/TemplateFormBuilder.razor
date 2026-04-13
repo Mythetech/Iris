@@ -1,0 +1,22 @@
+<MudStack Spacing="0">
+    @foreach (var field in Fields)
+    {
+        <TemplateField Field="@field" OnFieldChanged="OnFieldChanged" />
+    }
+
+    @if (Fields.Count == 0)
+    {
+        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="my-8">
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">No fields yet.</MudText>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">Import a type or add fields manually.</MudText>
+        </MudStack>
+    }
+</MudStack>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<TemplateFieldModel> Fields { get; set; } = [];
+
+    [Parameter]
+    public EventCallback OnFieldChanged { get; set; }
+}

@@ -34,10 +34,11 @@ namespace Iris.Components
             services.AddScoped<IMessageSendOrchestrator, MessageSendOrchestrator>();
             services.AddScoped<IMessagingLayoutService, TMessageLayoutService>();
             services.AddScoped<LayoutState>();
-            services.AddScoped<ITemplateService, TTemplateService>();
+            services.AddSingleton<ITemplateService, TTemplateService>();
             services.AddScoped<TemplatesState>();
             services.AddScoped<ITemplatesState>(provider => provider.GetRequiredService<TemplatesState>());
-            services.AddScoped<IPackageService, TPackageService>();
+            services.AddScoped<ITemplateResolver, TemplateResolver>();
+            services.AddSingleton<IPackageService, TPackageService>();
             services.AddTransient<IHistoryService, THistoryService>();
             services.AddSingleton<HistoryState>();
             services.AddSingleton<IrisAppState>();

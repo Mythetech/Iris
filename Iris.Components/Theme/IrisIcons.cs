@@ -80,6 +80,12 @@ public static partial class IrisIcons
     
     public static string Templates => Round("files");
 
+    public static string Duplicate => Round("content_copy_all");
+
+    public static string Export => Round("download");
+
+    public static string Preview => Round("visibility");
+
     public static string Support => Round("contact_support");
 
     public static string Bug => Round("bug_report");
@@ -98,7 +104,9 @@ public static partial class IrisIcons
 
     public static string Edit => Round("edit");
 
-    public static string Import => Round("file_import");
+    public static string Import => Round("upload");
+
+    public static string LoadToEditor => Round("arrow_insert");
 
     public static string ImportPackage => Round("deployed_code_update");
 
@@ -109,4 +117,14 @@ public static partial class IrisIcons
     public static string Help => Round("help");
 
     public static string Keyboard => Round("keyboard");
+
+    public static string OpenInNew => Round("open_in_new");
+
+    public static string Search => Round("search");
+
+    public static string Back => Round("arrow_back");
+
+    public static string ExpandMore => Round("expand_more");
+
+    public static string ChevronRight => Round("chevron_right");
 }
