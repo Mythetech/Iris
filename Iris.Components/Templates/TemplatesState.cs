@@ -65,10 +65,22 @@ public class TemplatesState : ITemplatesState
     public async Task DeleteTemplateAsync(Template template)
     {
         await _templatesService.DeleteTemplateAsync(template);
-        
+
         _cachedTemplates.RemoveAll(x => x.TemplateId.Equals(template.TemplateId));
-        
+
         TemplateStateChanged?.Invoke();
+    }
+
+    public async Task<Template> DuplicateTemplateAsync(Template template)
+    {
+        var duplicate = new Template
+        {
+            Name = $"{template.Name} (Copy)",
+            Json = template.Json,
+        };
+
+        await CreateTemplateAsync(duplicate);
+        return duplicate;
     }
 }
 
@@ -79,6 +91,8 @@ public interface ITemplatesState
     public Task CreateTemplateAsync(Template template);
 
     public Task UpdateTemplateAsync(Template template, bool newVersion = false);
-    
+
     public Task DeleteTemplateAsync(Template template);
+
+    public Task<Template> DuplicateTemplateAsync(Template template);
 }

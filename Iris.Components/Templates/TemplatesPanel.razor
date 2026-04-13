@@ -1,0 +1,91 @@
+@using Iris.Components.Theme
+@using Iris.Contracts.Templates.Models
+@implements IDisposable
+
+<MudStack Class="pa-2 w-100" Spacing="0">
+    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
+               EndIcon="@IrisIcons.OpenInNew" OnClick="OpenTemplatesPage">
+        Open Templates Page
+    </MudButton>
+
+    <MudDivider Class="my-2" />
+
+    @if (_loading)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="align-self-center my-4" />
+    }
+    else if (TemplatesState.Templates == null || TemplatesState.Templates.Count == 0)
+    {
+        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 flex-grow-1">
+            <MudIcon Icon="@IrisIcons.Templates" Size="Size.Large" Class="mud-text-secondary mb-2" />
+            <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary">
+                No templates yet
+            </MudText>
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@IrisIcons.Add"
+                       OnClick="NavigateToNewTemplate">
+                Create Template
+            </MudButton>
+        </MudStack>
+    }
+    else
+    {
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">@TemplatesState.Templates.Count template(s)</MudText>
+
+        <div style="overflow-y:auto;max-height:calc(100dvh - 200px);">
+            @foreach (var template in TemplatesState.Templates)
+            {
+                <TemplateCard Template="template"
+                              FullMode="false"
+                              OnPreview="ShowPreview"
+                              OnDuplicate="DuplicateTemplate"
+                              OnDelete="DeleteTemplate" />
+            }
+        </div>
+    }
+</MudStack>
+
+@code {
+    [Inject] TemplatesState TemplatesState { get; set; } = default!;
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IDialogService DialogService { get; set; } = default!;
+
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        TemplatesState.TemplateStateChanged += OnStateChanged;
+
+        _loading = true;
+        await TemplatesState.GetTemplatesAsync();
+        _loading = false;
+    }
+
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    private void OpenTemplatesPage() => NavigationManager.NavigateTo("/Templates");
+
+    private void NavigateToNewTemplate() => NavigationManager.NavigateTo("/Templates/new");
+
+    private async Task ShowPreview(Template template)
+    {
+        await DialogService.ShowAsync<TemplatePreviewDialog>(
+            string.Empty,
+            new DialogParameters { { nameof(TemplatePreviewDialog.Template), template } },
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseOnEscapeKey = true, BackgroundClass = "iris-dialog" });
+    }
+
+    private async Task DuplicateTemplate(Template template)
+    {
+        await TemplatesState.DuplicateTemplateAsync(template);
+    }
+
+    private async Task DeleteTemplate(Template template)
+    {
+        await TemplatesState.DeleteTemplateAsync(template);
+    }
+
+    public void Dispose()
+    {
+        TemplatesState.TemplateStateChanged -= OnStateChanged;
+    }
+}

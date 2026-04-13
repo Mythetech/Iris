@@ -1,0 +1,52 @@
+@using Iris.Contracts.Assemblies.Models
+@using Iris.Components.Theme
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="_fieldName"
+                      Label="Field Name"
+                      Required="true"
+                      RequiredError="Field name is required"
+                      Immediate="true" />
+        <MudSelect @bind-Value="_selectedType" Label="Type" Class="mt-4">
+            <MudSelectItem Value="@("string")">string</MudSelectItem>
+            <MudSelectItem Value="@("int")">int</MudSelectItem>
+            <MudSelectItem Value="@("decimal")">decimal</MudSelectItem>
+            <MudSelectItem Value="@("bool")">bool</MudSelectItem>
+            <MudSelectItem Value="@("Guid")">Guid</MudSelectItem>
+            <MudSelectItem Value="@("DateTime")">DateTime</MudSelectItem>
+            <MudSelectItem Value="@("DateTimeOffset")">DateTimeOffset</MudSelectItem>
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton StartIcon="@IrisIcons.Add"
+                   Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="AddField"
+                   Disabled="@(!IsValid)">Add Field</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private string _fieldName = "";
+    private string _selectedType = "string";
+
+    private bool IsValid => !string.IsNullOrWhiteSpace(_fieldName) && !string.IsNullOrWhiteSpace(_selectedType);
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void AddField()
+    {
+        var field = new TemplateFieldModel
+        {
+            Name = _fieldName,
+            TypeName = _selectedType,
+            Kind = TypeKind.Primitive
+        };
+
+        MudDialog.Close(DialogResult.Ok(field));
+    }
+}

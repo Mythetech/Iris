@@ -8,6 +8,7 @@
 @using Iris.Components.Home
 @using Iris.Components.Messaging
 @using Iris.Components.History
+@using Iris.Components.Templates
 @using Iris.Components.PackageManagement
 @using Iris.Components.Settings
 @using Mythetech.Framework.Components.AppContextDrawer
@@ -54,6 +55,9 @@
                 </ContextPanelItem>
                 <ContextPanelItem Id="history" Icon="@IrisIcons.History" Title="History">
                     <PanelContent><HistoryPanel /></PanelContent>
+                </ContextPanelItem>
+                <ContextPanelItem Id="templates" Icon="@IrisIcons.Templates" Title="Templates">
+                    <PanelContent><TemplatesPanel /></PanelContent>
                 </ContextPanelItem>
                 <ContextPanelItem Id="connections" Icon="@IrisIcons.Connections" Title="Connections">
                     <PanelContent><ConnectionsPanel /></PanelContent>

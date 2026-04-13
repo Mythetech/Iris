@@ -1,0 +1,113 @@
+@using Iris.Contracts.Templates.Models
+@using Color = MudBlazor.Color
+@using Size = MudBlazor.Size
+
+<MudPaper Outlined="true" Class="pa-3 mb-2">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudIcon Icon="@IrisIcons.Templates" Size="Size.Small" />
+
+        @if (_editing)
+        {
+            <MudTextField @ref="_nameField"
+                          T="string"
+                          Value="@Template.Name"
+                          ValueChanged="OnNameChanged"
+                          OnBlur="@(() => _editing = false)"
+                          Underline="false"
+                          Class="flex-grow-1" />
+        }
+        else
+        {
+            <MudText Typo="Typo.body2"
+                     Class="flex-grow-1 cursor-pointer"
+                     @onclick="@(() => OnPreview.InvokeAsync(Template))">
+                @Template.Name
+            </MudText>
+        }
+
+        <MudTooltip Text="Preview">
+            <MudIconButton Icon="@IrisIcons.Preview"
+                           Size="Size.Small"
+                           OnClick="@(() => OnPreview.InvokeAsync(Template))" />
+        </MudTooltip>
+
+        <MudTooltip Text="Duplicate">
+            <MudIconButton Icon="@IrisIcons.Duplicate"
+                           Size="Size.Small"
+                           OnClick="@(() => OnDuplicate.InvokeAsync(Template))" />
+        </MudTooltip>
+
+        @if (FullMode)
+        {
+            <MudTooltip Text="Rename">
+                <MudIconButton Icon="@IrisIcons.Edit"
+                               Size="Size.Small"
+                               OnClick="StartRename" />
+            </MudTooltip>
+
+            <MudTooltip Text="Copy JSON">
+                <MudIconButton Icon="@IrisIcons.Copy"
+                               Size="Size.Small"
+                               OnClick="@(() => OnCopy.InvokeAsync(Template))" />
+            </MudTooltip>
+
+            <MudTooltip Text="Export">
+                <MudIconButton Icon="@IrisIcons.Export"
+                               Size="Size.Small"
+                               OnClick="@(() => OnExport.InvokeAsync(Template))" />
+            </MudTooltip>
+        }
+
+        <MudTooltip Text="Delete">
+            <MudIconButton Icon="@IrisIcons.Delete"
+                           Size="Size.Small"
+                           Color="Color.Error"
+                           OnClick="@(() => OnDelete.InvokeAsync(Template))" />
+        </MudTooltip>
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public Template Template { get; set; } = default!;
+
+    [Parameter]
+    public bool FullMode { get; set; }
+
+    [Parameter]
+    public EventCallback<Template> OnPreview { get; set; }
+
+    [Parameter]
+    public EventCallback<Template> OnCopy { get; set; }
+
+    [Parameter]
+    public EventCallback<Template> OnExport { get; set; }
+
+    [Parameter]
+    public EventCallback<Template> OnDuplicate { get; set; }
+
+    [Parameter]
+    public EventCallback<Template> OnDelete { get; set; }
+
+    [Parameter]
+    public EventCallback<Template> OnRenamed { get; set; }
+
+    private bool _editing;
+    private MudTextField<string>? _nameField;
+
+    private async Task StartRename()
+    {
+        _editing = true;
+        StateHasChanged();
+
+        if (_nameField is not null)
+            await _nameField.FocusAsync();
+    }
+
+    private async Task OnNameChanged(string name)
+    {
+        Template.Name = name;
+        _editing = false;
+        await OnRenamed.InvokeAsync(Template);
+    }
+}

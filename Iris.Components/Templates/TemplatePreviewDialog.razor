@@ -1,0 +1,47 @@
+@using Iris.Components.Theme
+@using Iris.Contracts.Templates.Models
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Template.Name</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Outlined="true" Class="pa-4">
+            <pre style="white-space: pre-wrap; word-break: break-all; margin: 0;">@Template.FormattedJson</pre>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton StartIcon="@IrisIcons.Copy" OnClick="CopyAsync">Copy</MudButton>
+        <MudButton StartIcon="@IrisIcons.Export" OnClick="ExportAsync">Export</MudButton>
+        <MudButton StartIcon="@IrisIcons.Editor" OnClick="OpenInEditor">Open in Editor</MudButton>
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter, EditorRequired] public Template Template { get; set; } = default!;
+
+    [Inject] public IJsApiService JsApi { get; set; } = default!;
+    [Inject] public NavigationManager NavigationManager { get; set; } = default!;
+
+    private async Task CopyAsync()
+    {
+        await JsApi.CopyToClipboardAsync(Template.FormattedJson);
+    }
+
+    private async Task ExportAsync()
+    {
+        // TODO: implement file download when available
+        await JsApi.CopyToClipboardAsync(Template.FormattedJson);
+    }
+
+    private void OpenInEditor()
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+        NavigationManager.NavigateTo($"/Templates/{Template.TemplateId}");
+    }
+
+    private void Close() => MudDialog.Cancel();
+}
