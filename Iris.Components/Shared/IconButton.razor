@@ -1,8 +1,8 @@
 ﻿@inherits Iris.Components.IrisBaseComponent
 
-<MudTooltip Text="@Title">
-    <MudIconButton Color="@Color" Class="@($"icon-btn {Class}")" OnClick="@ButtonClicked" Style="@($"{Style} width:1.875rem;height:1.875rem;")" Disabled="@Disabled">
-        <MudIcon Size="Size.Small" Icon="@Name" Style="font-size:1rem;" />
+<MudTooltip Text="@Title" Placement="@Placement">
+    <MudIconButton Color="@Color" Class="@($"icon-btn {Class}")" OnClick="@ButtonClicked" Disabled="@Disabled">
+        <MudIcon Size="@Size" Icon="@Name" />
         @ChildContent
     </MudIconButton>
 </MudTooltip>
@@ -11,7 +11,12 @@
     [Parameter]
     public string Title { get; set; } = "";
 
+    [Parameter]
+    public Placement Placement { get; set; } = Placement.Bottom;
+
     [Parameter] public string Name { get; set; } = default!;
+
+    [Parameter] public Size Size { get; set; } = Size.Medium;
 
     [Parameter]
     public EventCallback ButtonClicked { get; set; } = default!;

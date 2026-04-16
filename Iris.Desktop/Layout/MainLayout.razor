@@ -17,21 +17,22 @@
 @inherits LayoutComponentBase
 
 <ThemeProvider />
-<MudPopoverProvider/>
-<MudDialogProvider/>
-<MudSnackbarProvider/>
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 <DialogCommandProvider />
 <NavigationCommandProvider />
 <HistoryExportProvider />
 <PackageUploadProvider />
 <CommandPaletteHost />
 
-<MudLayout Class="custom-title-bar-layout" Style="@((_drawerOpen ? "width: calc(100vw - var(--mud-drawer-width-left));" : "width: calc(100vw - var(--mud-drawer-width-mini-left));") + "  transition: width 225ms cubic-bezier(0, 0, 0.2, 1);")">
+<MudLayout Class="custom-title-bar-layout"
+           Style="@((_drawerOpen ? "width: calc(100vw - var(--mud-drawer-width-left));" : "width: calc(100vw - var(--mud-drawer-width-mini-left));") + "  transition: width 225ms cubic-bezier(0, 0, 0.2, 1);")">
     <Hermes.Blazor.Components.HermesTitleBar Height="38">
         <div class="iris-title-bar-content">
             <MudText Typo="Typo.subtitle1" Class="no-drag app-header-font" Style="white-space:nowrap;">Iris</MudText>
             <div class="no-drag" style="flex:1;min-width:0;">
-                <MudBreadcrumbs Style="background-color:transparent;" Items="BreadcrumbService.Breadcrumbs"/>
+                <MudBreadcrumbs Style="background-color:transparent;" Items="BreadcrumbService.Breadcrumbs" />
             </div>
         </div>
     </Hermes.Blazor.Components.HermesTitleBar>
@@ -39,35 +40,47 @@
         <AppContextDrawer @bind-IsOpen="_drawerOpen">
             <IconBarHeader>
                 <MudTooltip Text="About Iris">
-                    <MudIconButton Icon="icon-iris" Size="Size.Large" Class="my-2" Color="Color.Primary" OnClick="OpenAboutDialog" />
+                    <MudIconButton Icon="icon-iris" Size="Size.Large" Class="my-2" Color="Color.Primary"
+                                   OnClick="OpenAboutDialog" />
                 </MudTooltip>
             </IconBarHeader>
             <PanelNavContent>
                 <HomeNavButton />
                 <ContextPanelItem Id="messaging" Icon="@IrisIcons.Send" Title="Messaging">
-                    <PanelContent><MessagingPanel /></PanelContent>
+                    <PanelContent>
+                        <MessagingPanel />
+                    </PanelContent>
                 </ContextPanelItem>
                 <ContextPanelItem Id="endpoints" Icon="@IrisIcons.Endpoints" Title="Endpoints">
-                    <PanelContent><EndpointsPanel /></PanelContent>
+                    <PanelContent>
+                        <EndpointsPanel />
+                    </PanelContent>
                 </ContextPanelItem>
                 <ContextPanelItem Id="packages" Icon="@IrisIcons.Packages" Title="Packages">
-                    <PanelContent><PackagesPanel /></PanelContent>
+                    <PanelContent>
+                        <PackagesPanel />
+                    </PanelContent>
                 </ContextPanelItem>
                 <ContextPanelItem Id="history" Icon="@IrisIcons.History" Title="History">
-                    <PanelContent><HistoryPanel /></PanelContent>
+                    <PanelContent>
+                        <HistoryPanel />
+                    </PanelContent>
                 </ContextPanelItem>
                 <ContextPanelItem Id="templates" Icon="@IrisIcons.Templates" Title="Templates">
-                    <PanelContent><TemplatesPanel /></PanelContent>
+                    <PanelContent>
+                        <TemplatesPanel />
+                    </PanelContent>
                 </ContextPanelItem>
                 <ContextPanelItem Id="connections" Icon="@IrisIcons.Connections" Title="Connections">
-                    <PanelContent><ConnectionsPanel /></PanelContent>
+                    <PanelContent>
+                        <ConnectionsPanel />
+                    </PanelContent>
                 </ContextPanelItem>
             </PanelNavContent>
             <PanelFooterContent>
                 <ThemeToggle />
-                <MudTooltip Text="Settings">
-                    <MudIconButton Color="Color.Primary" Icon="@IrisIcons.Settings" OnClick="OpenSettingsDialog" />
-                </MudTooltip>
+                <IconButton Name="@IrisIcons.Settings" OnClick="OpenSettingsDialog" Title="Settings"
+                            Placement="Placement.Right" />
             </PanelFooterContent>
         </AppContextDrawer>
     </MudDrawer>
