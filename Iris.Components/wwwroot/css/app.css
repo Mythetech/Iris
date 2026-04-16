@@ -174,7 +174,8 @@ code {
     border: transparent;
     border-style: solid;
     border-width: 1px;
-    padding: 0.25em;
+    height: 30px;
+    width: 30px;
 }
 
     .icon-btn:hover {
@@ -183,6 +184,11 @@ code {
         border: solid 1px transparent !important;
         background-color: rgba(var(--mud-palette-primary-rgb), 0.12);
     }
+
+.icon-btn > * > .mud-icon-root {
+    margin-top: 4px;
+    margin-left: 1px;
+}
 
 .icon-btn-sm {
     height: 24px !important;
@@ -464,6 +470,12 @@ main {
     height: 42px;
     min-width: 120px;
     border-radius: 1.5rem;
+}
+
+.mud-button.mud-toggle-item {
+    height: 32px;
+    min-width: 0px;
+    padding-top:8px
 }
 
 .mud-tab {

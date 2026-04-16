@@ -3,10 +3,8 @@
 
 <MudMenu ActivationEvent="@MudBlazor.MouseEvent.MouseOver" AnchorOrigin="Origin.TopRight">
     <ActivatorContent>
-        <MudTooltip Text="Color Mode">
             <MudIconButton Icon="@(AppState.IsDarkMode ? IrisIcons.DarkMode : IrisIcons.LightMode)"
                            Color="Color.Primary" Variant="Variant.Text" />
-        </MudTooltip>
     </ActivatorContent>
     <ChildContent>
         <MudToggleGroup T="string" Size="Size.Small" Value="@SelectedMode"

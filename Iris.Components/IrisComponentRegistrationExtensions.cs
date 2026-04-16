@@ -67,6 +67,7 @@ namespace Iris.Components
                 config.SnackbarConfiguration.HideTransitionDuration = 250;
                 config.SnackbarConfiguration.VisibleStateDuration = 3500;
                 config.SnackbarConfiguration.BackgroundBlurred = true;
+                config.PopoverOptions.OverflowBehavior = MudBlazor.OverflowBehavior.FlipNever;
             });
             services.AddLoadingBarService();
             services.AddBreadcrumbService();
