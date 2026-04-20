@@ -14,12 +14,11 @@
       <PackageReference Include="LiteDB" />
       <PackageReference Include="Microsoft.Extensions.Http" />
       <PackageReference Include="Mythetech.Framework.Desktop" />
-      <!-- Referenced transitively via Iris.Components; declared here only so that
+      <!-- Referenced transitively via Iris.Components; declared here so that
            GeneratePathProperty exposes $(PkgPSC_Blazor_Components_Chartjs) for the
            FixPscChartJsPublishLayout target below. -->
       <PackageReference Include="PSC.Blazor.Components.Chartjs"
-                        GeneratePathProperty="true"
-                        PrivateAssets="all" />
+                        GeneratePathProperty="true" />
     </ItemGroup>
 
     <ItemGroup>
