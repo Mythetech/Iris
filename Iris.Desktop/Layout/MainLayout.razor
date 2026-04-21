@@ -43,35 +43,36 @@
                     <MudIconButton Icon="icon-iris" Size="Size.Large" Class="my-2" Color="Color.Primary"
                                    OnClick="OpenAboutDialog" />
                 </MudTooltip>
+                <HomeNavButton />
+                <MudDivider DividerType="DividerType.Middle" Class="my-1" Style="width:75%" />
             </IconBarHeader>
             <PanelNavContent>
-                <HomeNavButton />
-                <ContextPanelItem Id="messaging" Icon="@IrisIcons.Send" Title="Messaging">
+                <ContextPanelItem Id="messaging" Icon="@IrisIcons.Send" Title="Messaging" RoutePrefix="Messaging">
                     <PanelContent>
                         <MessagingPanel />
                     </PanelContent>
                 </ContextPanelItem>
-                <ContextPanelItem Id="endpoints" Icon="@IrisIcons.Endpoints" Title="Endpoints">
+                <ContextPanelItem Id="endpoints" Icon="@IrisIcons.Endpoints" Title="Endpoints" RoutePrefix="Endpoints">
                     <PanelContent>
                         <EndpointsPanel />
                     </PanelContent>
                 </ContextPanelItem>
-                <ContextPanelItem Id="packages" Icon="@IrisIcons.Packages" Title="Packages">
+                <ContextPanelItem Id="packages" Icon="@IrisIcons.Packages" Title="Packages" RoutePrefix="Packages">
                     <PanelContent>
                         <PackagesPanel />
                     </PanelContent>
                 </ContextPanelItem>
-                <ContextPanelItem Id="history" Icon="@IrisIcons.History" Title="History">
+                <ContextPanelItem Id="history" Icon="@IrisIcons.History" Title="History" RoutePrefix="History">
                     <PanelContent>
                         <HistoryPanel />
                     </PanelContent>
                 </ContextPanelItem>
-                <ContextPanelItem Id="templates" Icon="@IrisIcons.Templates" Title="Templates">
+                <ContextPanelItem Id="templates" Icon="@IrisIcons.Templates" Title="Templates" RoutePrefix="Templates">
                     <PanelContent>
                         <TemplatesPanel />
                     </PanelContent>
                 </ContextPanelItem>
-                <ContextPanelItem Id="connections" Icon="@IrisIcons.Connections" Title="Connections">
+                <ContextPanelItem Id="connections" Icon="@IrisIcons.Connections" Title="Connections" RoutePrefix="Connections">
                     <PanelContent>
                         <ConnectionsPanel />
                     </PanelContent>

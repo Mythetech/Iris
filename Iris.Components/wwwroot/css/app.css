@@ -41,6 +41,10 @@ h1:focus {
     background-color: color-mix(in srgb, var(--mud-palette-primary) 20%, transparent 80%);
 }
 
+.app-context-icon-bar {
+    background: none;
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid var(--mud-palette-primary);
 }
