@@ -45,6 +45,11 @@ h1:focus {
     background: none;
 }
 
+.context-panel-active {
+    border-radius: 0%;
+    background-color: color-mix(in srgb, var(--mud-palette-primary) 15%, transparent 85%);
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid var(--mud-palette-primary);
 }
