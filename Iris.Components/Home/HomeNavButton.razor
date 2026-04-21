@@ -3,23 +3,11 @@
 @implements IDisposable
 @inject NavigationManager Nav
 
-<div class="context-panel-item-wrapper">
-    @if (IsActive)
-    {
-        <MudIconButton Class="context-item-active"
-                       Color="Color.Primary"
-                       Icon="@IrisIcons.Home"
-                       OnClick="HandleClick" />
-    }
-    else
-    {
-        <MudTooltip Text="Home" Color="Color.Primary">
-            <MudIconButton Color="Color.Surface"
-                           Icon="@IrisIcons.Home"
-                           OnClick="HandleClick" />
-        </MudTooltip>
-    }
-</div>
+<MudTooltip Text="Home" Color="Color.Primary" Disabled="@IsActive">
+    <MudIconButton Color="@(IsActive ? Color.Primary : Color.Default)"
+                   Icon="@IrisIcons.Home"
+                   OnClick="HandleClick" />
+</MudTooltip>
 
 @code {
     private bool IsActive => Nav.ToBaseRelativePath(Nav.Uri).TrimStart('/').Length == 0;
