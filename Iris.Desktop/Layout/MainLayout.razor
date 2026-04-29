@@ -1,3 +1,4 @@
+@using Iris.Components.NativeMenu.Commands
 @using Iris.Components.Theme
 @using Iris.Components.NativeMenu
 @using Iris.Components.NativeMenu.Consumers
@@ -13,6 +14,7 @@
 @using Iris.Components.Settings
 @using Mythetech.Framework.Components.AppContextDrawer
 @using Mythetech.Framework.Desktop.Updates
+@using Mythetech.Framework.Infrastructure.MessageBus
 
 @inherits LayoutComponentBase
 
@@ -47,32 +49,38 @@
                 <MudDivider DividerType="DividerType.Middle" Class="my-1" Style="width:75%" />
             </IconBarHeader>
             <PanelNavContent>
-                <ContextPanelItem Id="messaging" Icon="@IrisIcons.Send" Title="Messaging" RoutePrefix="Messaging" ActivePanelClass="context-panel-active">
+                <ContextPanelItem Id="messaging" Icon="@IrisIcons.Send" Title="Messaging" RoutePrefix="Messaging"
+                                  ActivePanelClass="context-panel-active">
                     <PanelContent>
                         <MessagingPanel />
                     </PanelContent>
                 </ContextPanelItem>
-                <ContextPanelItem Id="endpoints" Icon="@IrisIcons.Endpoints" Title="Endpoints" RoutePrefix="Endpoints" ActivePanelClass="context-panel-active">
+                <ContextPanelItem Id="endpoints" Icon="@IrisIcons.Endpoints" Title="Endpoints" RoutePrefix="Endpoints"
+                                  ActivePanelClass="context-panel-active">
                     <PanelContent>
                         <EndpointsPanel />
                     </PanelContent>
                 </ContextPanelItem>
-                <ContextPanelItem Id="packages" Icon="@IrisIcons.Packages" Title="Packages" RoutePrefix="Packages" ActivePanelClass="context-panel-active">
+                <ContextPanelItem Id="packages" Icon="@IrisIcons.Packages" Title="Packages" RoutePrefix="Packages"
+                                  ActivePanelClass="context-panel-active">
                     <PanelContent>
                         <PackagesPanel />
                     </PanelContent>
                 </ContextPanelItem>
-                <ContextPanelItem Id="history" Icon="@IrisIcons.History" Title="History" RoutePrefix="History" ActivePanelClass="context-panel-active">
+                <ContextPanelItem Id="history" Icon="@IrisIcons.History" Title="History" RoutePrefix="History"
+                                  ActivePanelClass="context-panel-active">
                     <PanelContent>
                         <HistoryPanel />
                     </PanelContent>
                 </ContextPanelItem>
-                <ContextPanelItem Id="templates" Icon="@IrisIcons.Templates" Title="Templates" RoutePrefix="Templates" ActivePanelClass="context-panel-active">
+                <ContextPanelItem Id="templates" Icon="@IrisIcons.Templates" Title="Templates" RoutePrefix="Templates"
+                                  ActivePanelClass="context-panel-active">
                     <PanelContent>
                         <TemplatesPanel />
                     </PanelContent>
                 </ContextPanelItem>
-                <ContextPanelItem Id="connections" Icon="@IrisIcons.Connections" Title="Connections" RoutePrefix="Connections" ActivePanelClass="context-panel-active">
+                <ContextPanelItem Id="connections" Icon="@IrisIcons.Connections" Title="Connections"
+                                  RoutePrefix="Connections" ActivePanelClass="context-panel-active">
                     <PanelContent>
                         <ConnectionsPanel />
                     </PanelContent>
@@ -80,7 +88,7 @@
             </PanelNavContent>
             <PanelFooterContent>
                 <ThemeToggle />
-                <IconButton Name="@IrisIcons.Settings" OnClick="OpenSettingsDialog" Title="Settings"
+                <IconButton Name="@IrisIcons.Settings" ButtonClicked="OpenSettingsDialog" Title="Settings"
                             Placement="Placement.Right" />
             </PanelFooterContent>
         </AppContextDrawer>
@@ -103,6 +111,9 @@
     [Inject]
     IUpdateService UpdateService { get; set; } = default!;
 
+    [Inject]
+    IMessageBus Bus { get; set; } = default!;
+
     private bool _drawerOpen;
 
     protected override void OnInitialized()
@@ -120,12 +131,9 @@
 
     private async Task OpenSettingsDialog()
     {
-        await DialogService.ShowAsync<SettingsDialog>("Settings", new DialogOptions
-        {
-            CloseOnEscapeKey = true,
-            BackgroundClass = "iris-dialog",
-            MaxWidth = MaxWidth.Large
-        });
+        await Bus.PublishAsync(new ShowDialog(typeof(SettingsDialog), "Settings",
+           new DialogOptions { CloseOnEscapeKey = true, BackgroundClass = "iris-dialog", MaxWidth = MaxWidth.Large }));
+   
     }
 
     private async Task OpenAboutDialog()

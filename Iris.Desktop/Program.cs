@@ -20,6 +20,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Iris.Desktop.Configuration;
 using Mythetech.Framework.Desktop;
 using Mythetech.Framework.Desktop.Hermes;
+using Mythetech.Framework.Desktop.Storage.LiteDb;
 using Mythetech.Framework.Desktop.Updates;
 using Mythetech.Framework.Infrastructure.Guards;
 using Mythetech.Framework.Infrastructure.Plugins;
@@ -44,7 +45,8 @@ public class Program
             Console.Error.WriteLine($"Velopack initialization failed: {ex.Message}");
         }
 
-        var builder = HermesBlazorAppBuilder.CreateDefault(args);
+        var builder = HermesBlazorAppBuilder.CreateDefault(args)
+            .WithLicenseKey(HermesLicense.Key);
 
         builder.Services.AddLogging();
         builder.RootComponents.Add<App>("#app");
