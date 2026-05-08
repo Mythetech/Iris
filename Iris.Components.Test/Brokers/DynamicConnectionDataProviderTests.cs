@@ -1,9 +1,7 @@
 ﻿using System;
 using Bunit;
 using FluentAssertions;
-using FluentAssertions.Common;
 using Iris.Components.Brokers;
-using Mythetech.Framework.Components.Input;
 using Iris.Contracts.Brokers.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -89,25 +87,18 @@ namespace Iris.Components.Test.Brokers
         }
 
         [Fact(DisplayName = "Dynamic connection data component provider can edit default")]
-        public void DynamicProvider_CanEdit_Default()
+        public async Task DynamicProvider_CanEdit_Default()
         {
             // Arrange
             var provider = new SupportedProvider { Name = "FakeProvider" };
             var cut = RenderComponent<DynamicConnectionDataProvider>(parameters => parameters
                 .Add(p => p.Provider, provider));
-            var connectionData = new ConnectionData
-            {
-                Provider = provider.Name
-            };
 
             // Act
-            var protectedTextField = cut.FindComponent<ProtectedTextField>();
-            protectedTextField.SetParametersAndRender(parameters => parameters
-                .Add(p => p.Value, "Test Value")
-                .Add(p => p.ValueChanged, EventCallback.Factory.Create(this, (string val) => connectionData.ConnectionString = val)));
-            protectedTextField.Find("input").Change("New Value");
+            await cut.Find("input").InputAsync(new ChangeEventArgs { Value = "New Value" });
 
             // Assert
+            var connectionData = cut.Instance.GetData();
             connectionData.ConnectionString.Should().Be("New Value");
         }
     }
