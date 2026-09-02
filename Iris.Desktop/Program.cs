@@ -45,8 +45,7 @@ public class Program
             Console.Error.WriteLine($"Velopack initialization failed: {ex.Message}");
         }
 
-        var builder = HermesBlazorAppBuilder.CreateDefault(args)
-            .WithLicenseKey(HermesLicense.Key);
+        var builder = HermesBlazorAppBuilder.CreateDefault(args);
 
         builder.Services.AddLogging();
         builder.RootComponents.Add<App>("#app");
