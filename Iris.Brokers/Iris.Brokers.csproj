@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
+		<TargetFramework>net11.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
@@ -26,9 +26,11 @@
 		<PackageReference Include="EasyNetQ.Management.Client" />
 		<PackageReference Include="MassTransit" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
 		<PackageReference Include="Azure.Messaging.ServiceBus"  />
 		<PackageReference Include="NServiceBus" />
+		<!-- NServiceBus 10.1.1 pulls System.Security.Cryptography.Xml 10.0.2, which carries eight high
+		     severity advisories patched in 10.0.10. Pinned directly; NServiceBus itself is not upgraded. -->
+		<PackageReference Include="System.Security.Cryptography.Xml" />
 		<PackageReference Include="Rebus" />
 		<PackageReference Include="AWSSDK.SQS" />
 		<PackageReference Include="Azure.Storage.Queues" />
