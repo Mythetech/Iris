@@ -13,6 +13,7 @@ jobs:
     with:
       app_name: "Iris"
       project_path: "Iris.Desktop/Iris.Desktop.csproj"
+      global_json_file: "global.json"
       entitlements_path: "Iris.Desktop/Iris.entitlements"
       icon_windows: "Iris.Desktop/wwwroot/icon.ico"
       icon_linux: "Iris.Desktop/wwwroot/icon.png"
