@@ -1,10 +1,13 @@
+@using Iris.Components.Sagas.Messages
 @using Iris.Telemetry
+@using Iris.Telemetry.Messages
 @using Mythetech.Framework.Components.Badge
 @using Mythetech.Framework.Components.Buttons
 @using Mythetech.Framework.Components.Dialogs
 @using Mythetech.Framework.Components.Switch
 @using Mythetech.Framework.Enums
 @using Mythetech.Framework.Infrastructure.Settings
+@inherits Mythetech.Framework.Infrastructure.MessageBus.ComponentConsumer<SagaInstancesChanged, OtlpReceiverStatusChanged>
 
 <div class="receiver-chip">
     <MtSwitch T="bool" Value="Settings.ReceiverEnabled" ValueChanged="OnToggledAsync" Label="OTLP receiver" />
@@ -22,9 +25,9 @@
     else if (Receiver.Status == OtlpReceiverStatus.Listening && Receiver.Endpoint is { } endpoint)
     {
         <MudText Typo="Typo.caption" Class="receiver-endpoint">@endpoint</MudText>
-        <MudTooltip Text="Copy the env vars your app needs">
-            <MtCopyButton Text="@EnvSnippet(endpoint)" CopyTooltip="Copy env vars" Size="Size.Small" />
-        </MudTooltip>
+        @* MtCopyButton carries its own tooltip and swaps it for Copied on success, so it must not
+           be wrapped in a second one. *@
+        <MtCopyButton Text="@EnvSnippet(endpoint)" CopyTooltip="Copy the env vars your app needs" Size="Size.Small" />
         @* The copy button hands the snippet to the clipboard through JS, so nothing renders it.
            Keeping it in the DOM out of sight lets assistive tech read what will be copied. *@
         <pre class="receiver-env">@EnvSnippet(endpoint)</pre>
@@ -80,6 +83,21 @@
             typeof(UnmatchedTransitionsDialog),
             "Unmatched transitions",
             MythetechDialogs.CreateDefaultOptions(MaxWidth.Medium));
+
+    // The counts and the receiver's status are read straight off shared state that changes while
+    // the chip sits on screen, and nothing re-creates the chip when it does. Subscribing here
+    // rather than leaning on the page's render keeps the header honest on its own.
+    protected override Task Consume(SagaInstancesChanged message, CancellationToken cancellationToken)
+    {
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    protected override Task Consume(OtlpReceiverStatusChanged message, CancellationToken cancellationToken)
+    {
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
 
     private async Task OnToggledAsync(bool enabled)
     {

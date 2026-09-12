@@ -25,6 +25,7 @@ public class MassTransitSagaDefinitionProviderTests
 
         results.Select(r => r.TypeName).Should().BeEquivalentTo(
             typeof(OrderTestStateMachine).FullName,
+            typeof(CancellingOrderTestStateMachine).FullName,
             typeof(FinalizingTestStateMachine).FullName,
             typeof(DependentTestStateMachine).FullName,
             typeof(ThrowingTestStateMachine).FullName,

@@ -17,10 +17,7 @@
         @foreach (var edge in _layout.Edges)
         {
             var key = Key(edge.Transition.FromState, edge.Transition.ToState);
-            <g>
-                <path class="@EdgeClass(edge, key)" d="@edge.Path" data-event="@edge.Transition.EventName" marker-end="url(#saga-arrow)" />
-                <text class="edge-label" x="@Fmt(edge.LabelX)" y="@Fmt(edge.LabelY)">@edge.Transition.EventName</text>
-            </g>
+            <path class="@EdgeClass(edge, key)" d="@edge.Path" data-event="@edge.Transition.EventName" marker-end="url(#saga-arrow)" />
         }
 
         @foreach (var node in _layout.Nodes)
@@ -32,6 +29,18 @@
                     <rect class="node-final-ring" x="3" y="3" width="@Fmt(node.Width - 6)" height="@Fmt(node.Height - 6)" rx="7" ry="7" />
                 }
                 <text x="@Fmt(node.Width / 2)" y="@Fmt(node.Height / 2)">@node.State</text>
+            </g>
+        }
+
+        @* Last, so the layout's label placement only has to be close enough. SVG paints in
+           document order, so a label written before the nodes vanishes behind whichever node
+           it overlaps rather than degrading to text sitting over the node. *@
+        @foreach (var edge in _layout.Edges)
+        {
+            @* The <g> is load bearing: Razor reads a bare <text> opening a code block as its own
+               control element, so the label needs a plain element ahead of it. *@
+            <g>
+                <text class="edge-label" x="@Fmt(edge.LabelX)" y="@Fmt(edge.LabelY)">@edge.Transition.EventName</text>
             </g>
         }
     </svg>

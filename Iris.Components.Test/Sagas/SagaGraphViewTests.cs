@@ -31,6 +31,19 @@ public class SagaGraphViewTests : IrisTestContext
         ]);
     }
 
+    [Fact(DisplayName = "Edge labels paint after the nodes so a node's fill can never hide one")]
+    public void Labels_Paint_Above_Nodes()
+    {
+        var cut = RenderComponent<SagaGraphView>(p => p.Add(x => x.Graph, OrderGraph()));
+
+        var painted = cut.Find("svg.saga-graph").QuerySelectorAll("g.node, text.edge-label").ToList();
+        var lastNode = painted.FindLastIndex(e => e.ClassList.Contains("node"));
+        var firstLabel = painted.FindIndex(e => e.ClassList.Contains("edge-label"));
+
+        firstLabel.Should().BeGreaterThan(lastNode,
+            "SVG paints in document order, so a label written before the nodes disappears behind whichever node it lands on");
+    }
+
     [Fact(DisplayName = "Renders one node per state and one edge per transition")]
     public void Renders_Nodes_And_Edges()
     {

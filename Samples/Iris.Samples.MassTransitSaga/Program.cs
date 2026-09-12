@@ -49,7 +49,8 @@ var host = builder.Build();
 await host.StartAsync();
 
 Console.WriteLine($"OrderStateMachine listening on queue 'order-state'; exporting traces to {tracesEndpoint}");
-Console.WriteLine("Send SubmitOrder, AcceptOrder, ShipOrder or CancelOrder from Iris with MassTransit wrapping, or run with --demo.");
+Console.WriteLine("Send SubmitOrder, AcceptOrder, ShipOrder or CancelOrder from Iris with MassTransit wrapping.");
+Console.WriteLine("To drive one order automatically instead, restart with: dotnet run --project Samples/Iris.Samples.MassTransitSaga -- --demo");
 
 if (args.Contains("--demo"))
 {
