@@ -16,6 +16,8 @@ using Iris.Desktop.NativeMenu;
 using Iris.Desktop.PackageManagement;
 using Iris.Desktop.Templates;
 using Iris.Components.NativeMenu;
+using Iris.Desktop.Telemetry;
+using Iris.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Iris.Desktop.Configuration;
 using Mythetech.Framework.Desktop;
@@ -80,13 +82,15 @@ public class Program
         builder.Services.AddSingleton<TemplateRepository>();
         builder.Services.AddSingleton<PackageRepository>();
         builder.Services.AddTransient<AutoDiscovery>();
+        builder.Services.AddSingleton<ITelemetrySink, MessageBusTelemetrySink>();
+        builder.Services.AddSingleton<IOtlpReceiver, OtlpReceiverHost>();
 
         // Native menu services
         builder.Services.AddSingleton<INativeMenuService, NativeMenuService>();
         builder.Services.AddSingleton<INativeMenuCommandDispatcher, NativeMenuCommandDispatcher>();
 
         // Framework infrastructure
-        builder.Services.AddMessageBus(typeof(Program).Assembly);
+        builder.Services.AddMessageBus(typeof(Program).Assembly, typeof(IrisServiceRegistrationExtensions).Assembly);
         builder.Services.AddSettingsFramework();
         builder.Services.AddDesktopSettingsStorage("Iris");
         builder.Services.RegisterSettingsFromAssembly(typeof(Program).Assembly);
@@ -111,6 +115,7 @@ public class Program
         builder.Services.AddInitializationHook<RestoreConnectionsInitializationHook>();
         builder.Services.AddInitializationHook<AutoDiscoveryInitializationHook>();
         builder.Services.AddInitializationHook<RestorePackagesInitializationHook>();
+        builder.Services.AddInitializationHook<SagaTelemetryInitializationHook>();
 
         var app = builder.Build();
 
@@ -120,7 +125,7 @@ public class Program
         var menuService = app.Services.GetRequiredService<INativeMenuService>();
         menuService.Initialize(app.MainWindow.MenuBar);
 
-        app.Services.UseMessageBus(typeof(Program).Assembly);
+        app.Services.UseMessageBus(typeof(Program).Assembly, typeof(IrisServiceRegistrationExtensions).Assembly);
         app.Services.UseSettingsFramework();
         app.Services.UseUpdateService();
         AppDomain.CurrentDomain.UnhandledException += (sender, error) =>
