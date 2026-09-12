@@ -29,6 +29,17 @@ public class MassTransitSpanMapperTests
         ["messaging.masstransit.message_types"] = "urn:message:Iris.Samples.MassTransitSaga.Contracts:AcceptOrder",
     };
 
+    [Fact(DisplayName = "Keeps the span it mapped so the transition can show what it was read from")]
+    public void Keeps_The_Source_Span()
+    {
+        var span = Span(SagaTags());
+
+        new MassTransitSpanMapper().TryMap(span, out var transition).Should().BeTrue();
+
+        transition!.Span.Should().BeSameAs(span,
+            "the tags Iris read the transition out of are the evidence behind it, and nothing else retains them");
+    }
+
     [Fact(DisplayName = "Maps a span carrying the three saga tags into a transition")]
     public void Maps_Saga_Span()
     {

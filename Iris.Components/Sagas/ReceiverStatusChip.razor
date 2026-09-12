@@ -37,9 +37,12 @@
         <MudText Typo="Typo.caption" Color="Color.Error">@Receiver.LastError</MudText>
     }
 
-    <MudText Typo="Typo.caption" Class="receiver-counts">
-        @Instances.SpansReceived spans, @Instances.SpansMapped mapped
-    </MudText>
+    @* Reachable even at zero: an empty feed is the answer to "I am exporting and nothing appears". *@
+    <MtButton Variant="Variant.Text"
+              Size="Size.Small"
+              Class="receiver-counts"
+              OnClick="OpenReceivedSpansAsync"
+              Text="@($"{Instances.SpansReceived} spans, {Instances.SpansMapped} mapped")" />
 
     @if (Instances.UnmatchedCount > 0)
     {
@@ -77,6 +80,12 @@
 
     private static string EnvSnippet(string endpoint)
         => $"OTEL_EXPORTER_OTLP_ENDPOINT={endpoint}\nOTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf";
+
+    private async Task OpenReceivedSpansAsync()
+        => await DialogService.ShowAsync(
+            typeof(ReceivedSpansDialog),
+            "Received spans",
+            MythetechDialogs.CreateDefaultOptions(MaxWidth.Large));
 
     private async Task OpenUnmatchedAsync()
         => await DialogService.ShowAsync(

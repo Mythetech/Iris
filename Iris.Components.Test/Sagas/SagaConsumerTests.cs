@@ -27,6 +27,7 @@ public class SagaConsumerTests : TestContext
         Services.AddSingleton<ISagaSpanMapper, StubSpanMapper>();
         Services.AddSingleton<SagaDefinitionState>();
         Services.AddSingleton<SagaInstanceState>();
+        Services.AddSingleton<ReceivedSpanLog>();
         Services.AddSingleton(_settings);
         Services.UseMessageBus(typeof(SpanBatchConsumer).Assembly);
     }
@@ -56,6 +57,21 @@ public class SagaConsumerTests : TestContext
         await Bus.PublishAsync(new SpanBatchReceived([StubSpanMapper.Span(Guid.NewGuid(), "Initial", "Nowhere")]));
 
         instances.SpansReceived.Should().Be(1);
+    }
+
+    [Fact(DisplayName = "SpanBatchReceived also reaches the raw log, including a span that maps to nothing")]
+    public async Task Span_Batch_Reaches_The_Log()
+    {
+        var log = Services.GetRequiredService<ReceivedSpanLog>();
+        var at = DateTimeOffset.UtcNow;
+        var plain = new ReceivedSpan("trace", "span", null, "GET /orders", "svc", at, at, new Dictionary<string, string>());
+
+        await Bus.PublishAsync(new SpanBatchReceived([plain, StubSpanMapper.Span(Guid.NewGuid(), "Initial", "Nowhere")]));
+
+        log.Received.Should().Be(2, "the log is the only thing that can show a span Iris made nothing of");
+        log.Recent.Should().HaveCount(2);
+        log.Recent.Should().Contain(o => o.Span == plain && o.Result == SpanIngest.NotASagaSpan);
+        log.Recent.Should().Contain(o => o.Result == SpanIngest.Unmatched);
     }
 
     [Fact(DisplayName = "Enabling the setting publishes StartOtlpReceiver with the configured port")]

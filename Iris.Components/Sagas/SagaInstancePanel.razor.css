@@ -22,9 +22,24 @@
 }
 
 .saga-timeline-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+/* min-width lets the grid shrink below its content, so a long event name or trace id
+   wraps instead of pushing the row wider than the panel. */
+.saga-timeline-content {
     display: grid;
     grid-template-columns: 1fr;
     gap: 2px;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--mud-palette-lines-default);
+    flex: 1;
+    min-width: 0;
+}
+
+.saga-span-dropped {
+    display: block;
+    padding: 6px 8px;
 }
