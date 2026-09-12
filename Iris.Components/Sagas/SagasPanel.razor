@@ -1,0 +1,44 @@
+<MudStack Class="pa-2 w-100" Spacing="0">
+    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
+               EndIcon="@IrisIcons.OpenInNew" OnClick="OpenSagasPage">
+        Open Sagas Page
+    </MudButton>
+
+    <MudDivider Class="my-2" />
+
+    @if (Definitions.Graphs.Count == 0)
+    {
+        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 flex-grow-1">
+            <MudIcon Icon="@IrisIcons.NoSagas" Size="Size.Large" Class="mud-text-secondary mb-2" />
+            <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary">
+                No state machines loaded
+            </MudText>
+        </MudStack>
+    }
+    else
+    {
+        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">
+            @Definitions.Graphs.Count state machine@(Definitions.Graphs.Count != 1 ? "s" : "")
+        </MudText>
+        <div class="sagas-panel-list">
+            <MudList T="string" Dense="true" ReadOnly="true">
+                @foreach (var graph in Definitions.Graphs)
+                {
+                    <MudListItem T="string" Icon="@IrisIcons.Sagas" Dense="true">
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.body2" Class="text-truncate">@graph.DisplayName</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@graph.Framework</MudText>
+                        </MudStack>
+                    </MudListItem>
+                }
+            </MudList>
+        </div>
+    }
+</MudStack>
+
+@code {
+    [Inject] SagaDefinitionState Definitions { get; set; } = default!;
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+
+    private void OpenSagasPage() => NavigationManager.NavigateTo("/Sagas");
+}

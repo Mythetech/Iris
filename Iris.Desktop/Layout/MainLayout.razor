@@ -11,6 +11,7 @@
 @using Iris.Components.History
 @using Iris.Components.Templates
 @using Iris.Components.PackageManagement
+@using Iris.Components.Sagas
 @using Iris.Components.Settings
 @using Mythetech.Framework.Components.AppContextDrawer
 @using Mythetech.Framework.Desktop.Updates
@@ -77,6 +78,12 @@
                                   ActivePanelClass="context-panel-active">
                     <PanelContent>
                         <TemplatesPanel />
+                    </PanelContent>
+                </ContextPanelItem>
+                <ContextPanelItem Id="sagas" Icon="@IrisIcons.Sagas" Title="Sagas" RoutePrefix="Sagas"
+                                  ActivePanelClass="context-panel-active">
+                    <PanelContent>
+                        <SagasPanel />
                     </PanelContent>
                 </ContextPanelItem>
                 <ContextPanelItem Id="connections" Icon="@IrisIcons.Connections" Title="Connections"
