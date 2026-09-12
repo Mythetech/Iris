@@ -72,14 +72,23 @@ public static class SagaGraphLayout
             }
         }
 
+        // Transitions sharing a state pair stack their labels downward via labelOffset,
+        // so the layer-based canvas height above is only a floor; grow it to whatever
+        // the lowest stacked label actually needs, or its own bottom padding is lost.
+        if (edges.Count > 0)
+            canvasHeight = Math.Max(canvasHeight, edges.Max(e => e.LabelY) + Padding);
+
         return new SagaGraphLayoutResult(nodes, edges, canvasWidth, canvasHeight);
     }
 
     // Standard cycle-aware DFS: an edge to a node still on the current recursion
     // stack closes a cycle back toward an ancestor, so it is a back edge. Sweeping
     // the leftover nodes afterward catches states the initial state cannot reach at
-    // all, without ever revisiting a node DFS already finished (so a forward edge
-    // into an already-explored subtree can never be relabelled as a back edge).
+    // all. The snapshot of leftover nodes goes stale as the sweep runs (visiting one
+    // can finish a later one in the same snapshot), so each iteration re-checks
+    // `done` immediately before visiting; that keeps every node's DFS starting exactly
+    // once, so a forward edge into an already-explored subtree can never be
+    // relabelled as a back edge.
     private static HashSet<(string, string)> FindBackEdges(string initial, Dictionary<string, List<string>> forward)
     {
         var back = new HashSet<(string, string)>();
@@ -100,7 +109,7 @@ public static class SagaGraphLayout
 
         Visit(initial);
         foreach (var node in forward.Keys.Where(n => !done.Contains(n)).ToList())
-            Visit(node);
+            if (!done.Contains(node)) Visit(node);
         return back;
     }
 

@@ -104,4 +104,21 @@ public class SagaGraphLayoutTests
         result.Nodes.Should().BeEmpty();
         result.Edges.Should().BeEmpty();
     }
+
+    [Fact(DisplayName = "Duplicate transitions between the same states get distinct labels inside the canvas")]
+    public void Duplicate_Transitions_Get_Distinct_Labels()
+    {
+        var graph = Graph(["Initial", "Submitted", "Cancelled"],
+            new("Initial", "Submitted", "Submit"),
+            new("Submitted", "Cancelled", "CancelByUser"),
+            new("Submitted", "Cancelled", "CancelBySystem"));
+
+        var result = SagaGraphLayout.Compute(graph);
+
+        var byUser = result.Edges.Single(e => e.Transition.EventName == "CancelByUser");
+        var bySystem = result.Edges.Single(e => e.Transition.EventName == "CancelBySystem");
+
+        byUser.LabelY.Should().NotBe(bySystem.LabelY);
+        result.Edges.Should().OnlyContain(e => e.LabelX >= 0 && e.LabelX <= result.Width && e.LabelY >= 0 && e.LabelY <= result.Height);
+    }
 }
