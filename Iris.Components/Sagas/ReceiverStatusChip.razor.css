@@ -24,7 +24,3 @@
 .receiver-chip ::deep .receiver-counts {
     color: var(--mud-palette-text-secondary);
 }
-
-.receiver-chip ::deep .receiver-unmatched {
-    color: var(--mud-palette-warning);
-}
