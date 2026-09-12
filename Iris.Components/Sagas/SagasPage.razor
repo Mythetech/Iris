@@ -36,7 +36,10 @@
                                 if (definition.Graph is { } graph)
                                 {
                                     <div class="@DefinitionClass(definition.TypeName == _selectedTypeName)"
-                                         @onclick="@(() => SelectDefinition(definition.TypeName))">
+                                         role="button" tabindex="0"
+                                         aria-current="@(definition.TypeName == _selectedTypeName ? "true" : null)"
+                                         @onclick="@(() => SelectDefinition(definition.TypeName))"
+                                         @onkeydown="@(args => SelectOnActivationKey(args, definition.TypeName))">
                                         <MudIcon Icon="@IrisIcons.Sagas" Size="Size.Small" />
                                         <MudStack Spacing="0">
                                             <MudText Typo="Typo.body2">@graph.DisplayName</MudText>
@@ -47,7 +50,7 @@
                                 else
                                 {
                                     <MudTooltip Text="@definition.Error">
-                                        <div class="saga-definition-item saga-definition-error">
+                                        <div class="saga-definition-item saga-definition-error" role="note">
                                             <MudIcon Icon="@IrisIcons.Warning" Size="Size.Small" Color="Color.Warning" />
                                             <MudStack Spacing="0">
                                                 <MudText Typo="Typo.body2">@SimpleName(definition.TypeName)</MudText>
@@ -111,6 +114,14 @@
     {
         _selectedTypeName = typeName;
         _selectedSagaId = null;
+    }
+
+    private void SelectOnActivationKey(KeyboardEventArgs args, string typeName)
+    {
+        if (args.Key is "Enter" or " ")
+        {
+            SelectDefinition(typeName);
+        }
     }
 
     private void OnInstanceSelected(SagaInstance? instance) => _selectedSagaId = instance?.SagaId;

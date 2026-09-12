@@ -9,7 +9,7 @@
         <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 flex-grow-1 py-6">
             <MudIcon Icon="@IrisIcons.NoSagas" Size="Size.Large" Class="mud-text-secondary mb-2" />
             <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary">
-                No instances yet. Spans with saga tags will show up here as they arrive.
+                No instances yet. Instances appear once the OTLP receiver is running and your app exports saga spans to it.
             </MudText>
         </MudStack>
     }
@@ -26,7 +26,7 @@
                         <MudStack Spacing="0">
                             <MudText Typo="Typo.body2" Class="saga-id">@ShortId(instance.SagaId)</MudText>
                             <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                @instance.CurrentState, @instance.Transitions.Count transition@(instance.Transitions.Count == 1 ? "" : "s")
+                                @instance.CurrentState, @TransitionCountLabel(instance)
                             </MudText>
                         </MudStack>
                         <MtCopyButton Text="@instance.SagaId.ToString("D")" CopyTooltip="Copy saga id" Size="Size.Small" />
@@ -39,7 +39,13 @@
     @if (Selected is { } selected)
     {
         <MudDivider Class="my-1" />
-        <MudText Typo="Typo.subtitle2" Class="px-2">Timeline, newest first</MudText>
+        <MudText Typo="Typo.subtitle2" Class="px-2">@TimelineHeading(selected)</MudText>
+        @if (IsCapped(selected))
+        {
+            <MudText Typo="Typo.caption" Class="px-2 mud-text-secondary">
+                Older transitions were dropped. First seen <LocalTime DateTimeOffset="selected.FirstSeen" />.
+            </MudText>
+        }
         <div class="saga-timeline">
             @foreach (var transition in selected.Transitions.Reverse())
             {
@@ -64,6 +70,21 @@
 
     private Task OnSelectedValueChangedAsync(Guid? sagaId)
         => SelectedChanged.InvokeAsync(sagaId is null ? null : Instances.FirstOrDefault(i => i.SagaId == sagaId));
+
+    // Instances hold at most MaxTransitionsPerInstance transitions, so a full list means the
+    // oldest were dropped and neither the count nor the last row can be taken at face value.
+    private static bool IsCapped(SagaInstance instance)
+        => instance.Transitions.Count >= SagaInstanceState.MaxTransitionsPerInstance;
+
+    private static string TransitionCountLabel(SagaInstance instance)
+        => IsCapped(instance)
+            ? $"{SagaInstanceState.MaxTransitionsPerInstance}+ transitions"
+            : $"{instance.Transitions.Count} transition{(instance.Transitions.Count == 1 ? "" : "s")}";
+
+    private static string TimelineHeading(SagaInstance instance)
+        => IsCapped(instance)
+            ? $"Timeline, newest first, last {SagaInstanceState.MaxTransitionsPerInstance}"
+            : "Timeline, newest first";
 
     private static string ShortId(Guid id) => id.ToString("N")[..8];
 

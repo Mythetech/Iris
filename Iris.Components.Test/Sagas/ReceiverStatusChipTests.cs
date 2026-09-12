@@ -55,6 +55,34 @@ public class ReceiverStatusChipTests : IrisTestContext
         cut.Markup.Should().Contain("OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf");
     }
 
+    [Fact(DisplayName = "Shows Starting while the receiver is coming up")]
+    public void Shows_Starting()
+    {
+        _receiver.Status.Returns(OtlpReceiverStatus.Starting);
+
+        var cut = RenderComponent<ReceiverStatusChip>();
+
+        cut.Markup.Should().Contain("Starting");
+    }
+
+    [Fact(DisplayName = "Counts every unmatched span, not just the bounded recent sample")]
+    public async Task Shows_Cumulative_Unmatched_Count()
+    {
+        _receiver.Status.Returns(OtlpReceiverStatus.Stopped);
+        var instances = Services.GetRequiredService<SagaInstanceState>();
+        var overflow = SagaInstanceState.MaxUnmatched + 5;
+        await instances.IngestAsync(Enumerable
+            .Range(0, overflow)
+            .Select(_ => StubSpanMapper.Span(Guid.NewGuid(), "Nowhere", "Elsewhere"))
+            .ToList());
+        instances.Unmatched.Count.Should().Be(SagaInstanceState.MaxUnmatched, "the sample is bounded, so the two numbers differ here");
+
+        var cut = RenderComponent<ReceiverStatusChip>();
+
+        cut.Markup.Should().Contain($"{overflow} unmatched");
+        cut.Markup.Should().NotContain($"{SagaInstanceState.MaxUnmatched} unmatched");
+    }
+
     [Fact(DisplayName = "Shows the error when the receiver failed")]
     public void Shows_Failure()
     {
