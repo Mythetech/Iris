@@ -35,7 +35,8 @@ public sealed class MassTransitSpanMapper : ISagaSpanMapper
             EventName: ResolveEventName(span),
             TraceId: span.TraceId,
             SpanId: span.SpanId,
-            Timestamp: span.EndTime);
+            Timestamp: span.EndTime,
+            Span: span);
         return true;
     }
 

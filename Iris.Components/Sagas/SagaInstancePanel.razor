@@ -49,15 +49,39 @@
         <div class="saga-timeline">
             @foreach (var transition in selected.Transitions.Reverse())
             {
+                var isExpanded = _expandedSpanId == transition.SpanId;
                 <div class="saga-timeline-row">
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary"><LocalTime DateTimeOffset="transition.Timestamp" /></MudText>
-                    <MudText Typo="Typo.body2">@transition.BeginState to @transition.EndState</MudText>
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@transition.EventName</MudText>
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0">
-                        <MudText Typo="Typo.caption" Class="saga-trace-id">@ShortTraceId(transition.TraceId)</MudText>
-                        <MtCopyButton Text="@transition.TraceId" CopyTooltip="Copy trace id" Size="Size.Small" />
-                    </MudStack>
+                    <MudIconButton Icon="@(isExpanded ? IrisIcons.ExpandMore : IrisIcons.ChevronRight)"
+                                   Size="Size.Small"
+                                   Class="span-toggle"
+                                   aria-expanded="@(isExpanded ? "true" : "false")"
+                                   aria-label="@(isExpanded ? "Hide span" : "Show span")"
+                                   OnClick="@(() => ToggleRow(transition.SpanId))" />
+                    <div class="saga-timeline-content">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary"><LocalTime DateTimeOffset="transition.Timestamp" /></MudText>
+                        <MudText Typo="Typo.body2">@transition.BeginState to @transition.EndState</MudText>
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@transition.EventName</MudText>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0">
+                            <MudText Typo="Typo.caption" Class="saga-trace-id">@ShortTraceId(transition.TraceId)</MudText>
+                            <MtCopyButton Text="@transition.TraceId" CopyTooltip="Copy trace id" Size="Size.Small" />
+                        </MudStack>
+                    </div>
                 </div>
+
+                @if (isExpanded)
+                {
+                    @if (transition.Span is { } span)
+                    {
+                        <SpanDetail Span="span" />
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary saga-span-dropped">
+                            The span behind this transition is no longer retained. Iris keeps the last
+                            @SagaInstanceState.MaxRetainedSpansPerInstance per instance.
+                        </MudText>
+                    }
+                }
             }
         </div>
     }
@@ -67,6 +91,13 @@
     [Parameter] public IReadOnlyList<SagaInstance> Instances { get; set; } = [];
     [Parameter] public SagaInstance? Selected { get; set; }
     [Parameter] public EventCallback<SagaInstance?> SelectedChanged { get; set; }
+
+    // Identified by span id rather than by position: the timeline is live and newest first, so an
+    // index would quietly slide onto a different transition as spans arrive. A span id is unique,
+    // survives the list growing, and matches nothing on another instance's timeline.
+    private string? _expandedSpanId;
+
+    private void ToggleRow(string spanId) => _expandedSpanId = _expandedSpanId == spanId ? null : spanId;
 
     private Task OnSelectedValueChangedAsync(Guid? sagaId)
         => SelectedChanged.InvokeAsync(sagaId is null ? null : Instances.FirstOrDefault(i => i.SagaId == sagaId));
