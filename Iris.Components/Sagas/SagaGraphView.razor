@@ -1,0 +1,117 @@
+@using System.Globalization
+@using Iris.Sagas
+@using Iris.Sagas.Layout
+@inherits IrisBaseComponent
+
+<div class="saga-graph-scroll @Class">
+    <svg class="saga-graph"
+         viewBox="@Fmt(0) 0 @Fmt(_layout.Width) @Fmt(_layout.Height)"
+         width="@Fmt(_layout.Width)" height="@Fmt(_layout.Height)"
+         role="img" aria-label="@($"{Graph.DisplayName} state machine")">
+        <defs>
+            <marker id="saga-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" class="arrow-head" />
+            </marker>
+        </defs>
+
+        @foreach (var edge in _layout.Edges)
+        {
+            var key = Key(edge.Transition.FromState, edge.Transition.ToState);
+            <path class="@EdgeClass(edge, key)" d="@edge.Path" data-event="@edge.Transition.EventName" marker-end="url(#saga-arrow)" />
+        }
+
+        @foreach (var node in _layout.Nodes)
+        {
+            <g class="@NodeClass(node.State)" data-state="@node.State" transform="@($"translate({Fmt(node.X)},{Fmt(node.Y)})")">
+                <rect width="@Fmt(node.Width)" height="@Fmt(node.Height)" rx="10" ry="10" />
+                @if (_finalStates.Contains(node.State))
+                {
+                    <rect class="node-final-ring" x="3" y="3" width="@Fmt(node.Width - 6)" height="@Fmt(node.Height - 6)" rx="7" ry="7" />
+                }
+                <text x="@Fmt(node.Width / 2)" y="@Fmt(node.Height / 2)">@node.State</text>
+            </g>
+        }
+
+        @* Last, so the layout's label placement only has to be close enough. SVG paints in
+           document order, so a label written before the nodes vanishes behind whichever node
+           it overlaps rather than degrading to text sitting over the node. *@
+        @foreach (var edge in _layout.Edges)
+        {
+            @* The <g> is load bearing: Razor reads a bare <text> opening a code block as its own
+               control element, so the label needs a plain element ahead of it. *@
+            <g>
+                <text class="edge-label" x="@Fmt(edge.LabelX)" y="@Fmt(edge.LabelY)">@edge.Transition.EventName</text>
+            </g>
+        }
+    </svg>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public SagaGraph Graph { get; set; } = default!;
+    [Parameter] public SagaInstance? SelectedInstance { get; set; }
+
+    private SagaGraphLayoutResult _layout = new([], [], 0, 0);
+    private HashSet<string> _finalStates = [];
+    private HashSet<string> _visitedStates = [];
+    private HashSet<string> _visitedEdges = [];
+    private string? _currentState;
+    private string? _latestEdge;
+
+    protected override void OnParametersSet()
+    {
+        _layout = SagaGraphLayout.Compute(Graph);
+        _finalStates = Graph.States.Where(s => s.IsFinal).Select(s => s.Name).ToHashSet();
+        ApplySelection();
+    }
+
+    private void ApplySelection()
+    {
+        _visitedStates = [];
+        _visitedEdges = [];
+        _currentState = null;
+        _latestEdge = null;
+
+        if (SelectedInstance is null)
+            return;
+
+        foreach (var transition in SelectedInstance.Transitions)
+        {
+            _visitedStates.Add(transition.BeginState);
+            _visitedStates.Add(transition.EndState);
+            _visitedEdges.Add(Key(transition.BeginState, transition.EndState));
+        }
+        _currentState = SelectedInstance.CurrentState;
+        var latest = SelectedInstance.Transitions.LastOrDefault();
+        _latestEdge = latest is null ? null : Key(latest.BeginState, latest.EndState);
+    }
+
+    // Keyed on the state pair only, never the event name: a graph edge's EventName comes
+    // from the state machine's event property while a live transition's EventName is parsed
+    // from the message URN, and the two almost never agree. Two distinct events between the
+    // same states will both highlight, which is a rare and acceptable imprecision next to
+    // nothing ever highlighting.
+    private static string Key(string from, string to) => $"{from}|{to}";
+
+    private string EdgeClass(EdgeLayout edge, string key)
+    {
+        var classes = new List<string> { "edge" };
+        if (edge.IsBackEdge) classes.Add("edge-back");
+        if (edge.IsSelfLoop) classes.Add("edge-loop");
+        if (_visitedEdges.Contains(key)) classes.Add("edge-visited");
+        if (_latestEdge == key) classes.Add("edge-latest");
+        return string.Join(' ', classes);
+    }
+
+    private string NodeClass(string state)
+    {
+        var classes = new List<string> { "node" };
+        var definition = Graph.States.First(s => s.Name == state);
+        if (definition.IsInitial) classes.Add("node-initial");
+        if (definition.IsFinal) classes.Add("node-final");
+        if (_visitedStates.Contains(state)) classes.Add("node-visited");
+        if (_currentState == state) classes.Add("node-current");
+        return string.Join(' ', classes);
+    }
+
+    private static string Fmt(double value) => value.ToString("0.#", CultureInfo.InvariantCulture);
+}

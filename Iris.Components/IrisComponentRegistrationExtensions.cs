@@ -7,8 +7,10 @@ using Iris.Components.Theme;
 using Mythetech.Framework.Infrastructure.MessageBus;
 using Iris.Components.Messaging;
 using Iris.Components.PackageManagement;
+using Iris.Components.Sagas;
 using Iris.Components.Shared.Time;
 using Iris.Components.Templates;
+using Iris.Sagas;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
 using Toolbelt.Blazor.Extensions.DependencyInjection;
@@ -42,6 +44,9 @@ namespace Iris.Components
             services.AddTransient<IHistoryService, THistoryService>();
             services.AddSingleton<HistoryState>();
             services.AddSingleton<IrisAppState>();
+            services.AddSagaServices();
+            services.AddSingleton<SagaDefinitionState>();
+            services.AddSingleton<SagaInstanceState>();
             services.AddScoped<IAdminService, TAdminService>();
 
             // Dynamic connection data provider lookup (maps normalized provider names to custom connection UI components)

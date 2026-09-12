@@ -1,0 +1,92 @@
+.saga-graph-scroll {
+    overflow: auto;
+    width: 100%;
+    height: 100%;
+}
+
+.saga-graph {
+    display: block;
+    margin: 0 auto;
+    font-family: var(--mud-typography-body2-family);
+}
+
+.node rect {
+    fill: var(--mud-palette-surface);
+    stroke: var(--mud-palette-lines-default);
+    stroke-width: 1.5;
+    transition: stroke 150ms ease, fill 150ms ease;
+}
+
+.node text {
+    fill: var(--mud-palette-text-primary);
+    font-size: 13px;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    pointer-events: none;
+}
+
+.node-initial rect {
+    stroke-dasharray: 4 3;
+}
+
+.node-final-ring {
+    fill: none;
+    stroke: var(--mud-palette-lines-default);
+    stroke-width: 1;
+}
+
+.node-visited rect {
+    stroke: var(--iris-primary);
+}
+
+.node-current rect {
+    fill: var(--iris-primary);
+    stroke: var(--iris-primary);
+}
+
+.node-current text {
+    fill: var(--mud-palette-primary-text);
+}
+
+.edge {
+    fill: none;
+    stroke: var(--mud-palette-lines-default);
+    stroke-width: 1.5;
+    transition: stroke 150ms ease, stroke-width 150ms ease;
+}
+
+.edge-back {
+    stroke-dasharray: 6 4;
+}
+
+.edge-loop {
+    stroke: var(--mud-palette-text-secondary);
+    opacity: 0.7;
+}
+
+.edge-visited {
+    stroke: var(--iris-primary);
+    stroke-width: 2.5;
+}
+
+.edge-latest {
+    animation: saga-edge-pulse 1.2s ease-out 1;
+}
+
+.arrow-head {
+    fill: var(--mud-palette-lines-default);
+}
+
+/* SagaGraphLayout sizes a label from this font-size and the default start anchor to keep labels
+   off the nodes. Changing either means changing LabelFontSize and LabelCharWidth to match. */
+.edge-label {
+    fill: var(--mud-palette-text-secondary);
+    font-size: 11px;
+    pointer-events: none;
+}
+
+@keyframes saga-edge-pulse {
+    0%   { stroke-width: 2.5; stroke: var(--iris-green); }
+    60%  { stroke-width: 5; stroke: var(--iris-green); }
+    100% { stroke-width: 2.5; stroke: var(--iris-primary); }
+}

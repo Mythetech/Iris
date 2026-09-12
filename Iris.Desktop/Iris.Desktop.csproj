@@ -27,6 +27,8 @@
       <ProjectReference Include="..\Iris.Contracts\Iris.Contracts.csproj" />
       <ProjectReference Include="..\Services\Assemblies\Iris.Assemblies\Iris.Assemblies.csproj" />
       <ProjectReference Include="..\Services\History\Iris.History\Iris.History.csproj" />
+      <ProjectReference Include="..\Services\Sagas\Iris.Sagas\Iris.Sagas.csproj" />
+      <ProjectReference Include="..\Services\Telemetry\Iris.Telemetry\Iris.Telemetry.csproj" />
     </ItemGroup>
 
     <ItemGroup>

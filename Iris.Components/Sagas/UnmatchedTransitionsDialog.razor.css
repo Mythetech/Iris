@@ -1,0 +1,11 @@
+.unmatched-dialog ::deep .unmatched-table {
+    display: block;
+    max-height: 50vh;
+    overflow: auto;
+}
+
+.unmatched-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    word-break: break-all;
+}

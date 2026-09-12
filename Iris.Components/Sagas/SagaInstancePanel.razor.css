@@ -1,0 +1,30 @@
+.saga-instance-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.saga-instance-panel ::deep .saga-instance-list {
+    overflow-y: auto;
+    max-height: 45%;
+}
+
+.saga-instance-panel ::deep .saga-id,
+.saga-instance-panel ::deep .saga-trace-id {
+    font-family: monospace;
+}
+
+.saga-timeline {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0 8px;
+}
+
+.saga-timeline-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
