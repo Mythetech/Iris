@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Iris.Sagas;
-using Iris.Sagas.MassTransit;
+using Iris.Sagas.Frameworks;
 using Iris.Telemetry;
 
 namespace Iris.Sagas.Test;
