@@ -1,0 +1,108 @@
+@using Iris.Components.Sagas.Messages
+@using Iris.Telemetry
+@using Iris.Telemetry.Messages
+@using Mythetech.Framework.Components.Badge
+@using Mythetech.Framework.Components.Buttons
+@using Mythetech.Framework.Components.Dialogs
+@using Mythetech.Framework.Components.Switch
+@using Mythetech.Framework.Enums
+@using Mythetech.Framework.Infrastructure.Settings
+@inherits Mythetech.Framework.Infrastructure.MessageBus.ComponentConsumer<SagaInstancesChanged, OtlpReceiverStatusChanged>
+
+<div class="receiver-chip">
+    <MtSwitch T="bool" Value="Settings.ReceiverEnabled" ValueChanged="OnToggledAsync" Label="OTLP receiver" />
+
+    <MtBadge Text="@StatusText" Icon="@IrisIcons.Telemetry" Color="@StatusColor" Roundedness="Roundedness.Pill" />
+
+    @if (Settings.ReceiverEnabled && !Settings.HasValidPort)
+    {
+        @* The guard turns an out of range port into a stop, which on its own reads as a receiver that
+           simply is not running. Say why the switch is on and nothing is listening. *@
+        <MudText Typo="Typo.caption" Color="Color.Warning" Class="receiver-reason">
+            Receiver port must be between 1024 and 65535.
+        </MudText>
+    }
+    else if (Receiver.Status == OtlpReceiverStatus.Listening && Receiver.Endpoint is { } endpoint)
+    {
+        <MudText Typo="Typo.caption" Class="receiver-endpoint">@endpoint</MudText>
+        @* MtCopyButton carries its own tooltip and swaps it for Copied on success, so it must not
+           be wrapped in a second one. *@
+        <MtCopyButton Text="@EnvSnippet(endpoint)" CopyTooltip="Copy the env vars your app needs" Size="Size.Small" />
+        @* The copy button hands the snippet to the clipboard through JS, so nothing renders it.
+           Keeping it in the DOM out of sight lets assistive tech read what will be copied. *@
+        <pre class="receiver-env">@EnvSnippet(endpoint)</pre>
+    }
+    else if (Receiver.Status == OtlpReceiverStatus.Failed)
+    {
+        <MudText Typo="Typo.caption" Color="Color.Error">@Receiver.LastError</MudText>
+    }
+
+    <MudText Typo="Typo.caption" Class="receiver-counts">
+        @Instances.SpansReceived spans, @Instances.SpansMapped mapped
+    </MudText>
+
+    @if (Instances.UnmatchedCount > 0)
+    {
+        <MtButton Variant="Variant.Text"
+                  Size="Size.Small"
+                  Color="Color.Warning"
+                  StartIcon="@IrisIcons.Warning"
+                  Class="receiver-unmatched"
+                  OnClick="OpenUnmatchedAsync"
+                  Text="@($"{Instances.UnmatchedCount} unmatched")" />
+    }
+</div>
+
+@code {
+    [Inject] IOtlpReceiver Receiver { get; set; } = default!;
+    [Inject] SagaTelemetrySettings Settings { get; set; } = default!;
+    [Inject] ISettingsProvider SettingsProvider { get; set; } = default!;
+    [Inject] SagaInstanceState Instances { get; set; } = default!;
+    [Inject] IDialogService DialogService { get; set; } = default!;
+
+    private string StatusText => Receiver.Status switch
+    {
+        OtlpReceiverStatus.Listening => "Listening",
+        OtlpReceiverStatus.Starting => "Starting",
+        OtlpReceiverStatus.Failed => "Failed",
+        _ => "Stopped",
+    };
+
+    private Color StatusColor => Receiver.Status switch
+    {
+        OtlpReceiverStatus.Listening => Color.Success,
+        OtlpReceiverStatus.Failed => Color.Error,
+        _ => Color.Default,
+    };
+
+    private static string EnvSnippet(string endpoint)
+        => $"OTEL_EXPORTER_OTLP_ENDPOINT={endpoint}\nOTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf";
+
+    private async Task OpenUnmatchedAsync()
+        => await DialogService.ShowAsync(
+            typeof(UnmatchedTransitionsDialog),
+            "Unmatched transitions",
+            MythetechDialogs.CreateDefaultOptions(MaxWidth.Medium));
+
+    // The counts and the receiver's status are read straight off shared state that changes while
+    // the chip sits on screen, and nothing re-creates the chip when it does. Subscribing here
+    // rather than leaning on the page's render keeps the header honest on its own.
+    protected override Task Consume(SagaInstancesChanged message, CancellationToken cancellationToken)
+    {
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    protected override Task Consume(OtlpReceiverStatusChanged message, CancellationToken cancellationToken)
+    {
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task OnToggledAsync(bool enabled)
+    {
+        Settings.ReceiverEnabled = enabled;
+        Settings.MarkDirty();
+        await SettingsProvider.NotifySettingsChangedAsync(Settings);
+    }
+}

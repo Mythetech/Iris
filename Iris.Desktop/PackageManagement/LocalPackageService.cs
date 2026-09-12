@@ -1,8 +1,10 @@
 using Iris.Assemblies;
+using Iris.Assemblies.Messages;
 using Iris.Components.PackageManagement;
 using Iris.Contracts.Assemblies.Models;
 using Iris.Contracts.Results;
 using Microsoft.AspNetCore.Components.Forms;
+using Mythetech.Framework.Infrastructure.MessageBus;
 
 namespace Iris.Desktop.PackageManagement;
 
@@ -11,13 +13,15 @@ public class LocalPackageService : IPackageService, IDisposable
     private readonly IAssemblyLoadService _assemblyLoader;
     private readonly AssemblySettings _settings;
     private readonly PackageRepository _packageRepository;
+    private readonly IMessageBus _bus;
     private List<LoadedAssembly> _assemblies = [];
 
-    public LocalPackageService(IAssemblyLoadService assemblyLoader, AssemblySettings settings, PackageRepository packageRepository)
+    public LocalPackageService(IAssemblyLoadService assemblyLoader, AssemblySettings settings, PackageRepository packageRepository, IMessageBus bus)
     {
         _assemblyLoader = assemblyLoader;
         _settings = settings;
         _packageRepository = packageRepository;
+        _bus = bus;
     }
 
     public List<Type> GetLoadedTypes()
@@ -54,20 +58,22 @@ public class LocalPackageService : IPackageService, IDisposable
         return result;
     }
 
-    public Task<Result<bool>> RemoveAssemblyAsync(string fullName)
+    public async Task<Result<bool>> RemoveAssemblyAsync(string fullName)
     {
         var entry = _assemblies.FirstOrDefault(la => la.Assembly.FullName == fullName);
         if (entry == null)
-            return Task.FromResult<Result<bool>>(new Failure<bool>($"Assembly '{fullName}' not found."));
+            return new Failure<bool>($"Assembly '{fullName}' not found.");
 
         _assemblies.Remove(entry);
+        // Publish before Unload so consumers drop references while the context is still alive.
+        await _bus.PublishAsync(new AssemblyUnloaded(fullName));
         entry.Context.Unload();
 
         var saved = _packageRepository.GetAll().FirstOrDefault(p => p.AssemblyName == fullName);
         if (saved != null)
             _packageRepository.Delete(saved.FilePath);
 
-        return Task.FromResult<Result<bool>>(new Success<bool>(true));
+        return new Success<bool>(true);
     }
 
     private async Task<Result<AssemblyData>> LoadAssemblyFromStreamAsync(Stream stream)
@@ -86,10 +92,13 @@ public class LocalPackageService : IPackageService, IDisposable
         if (existing != null)
         {
             _assemblies.Remove(existing);
+            // Publish before Unload so consumers drop references while the context is still alive.
+            await _bus.PublishAsync(new AssemblyUnloaded(existing.Assembly.FullName ?? string.Empty));
             existing.Context.Unload();
         }
 
         _assemblies.Add(loaded);
+        await _bus.PublishAsync(new AssemblyLoaded(loaded));
 
         return new Success<AssemblyData>(loaded.Assembly.ToContract(_settings.MaxTypeDepth));
     }

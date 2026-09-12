@@ -1,0 +1,47 @@
+.sagas-body {
+    height: calc(90vh - 96px);
+}
+
+.saga-definition-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    overflow-y: auto;
+    height: 100%;
+}
+
+.saga-definition-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 120ms ease;
+}
+
+.saga-definition-item:not(.saga-definition-error):hover {
+    background-color: rgba(var(--iris-primary-rgb), 0.10);
+}
+
+.saga-definition-item:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 2px;
+}
+
+.saga-definition-selected {
+    background-color: rgba(var(--iris-primary-rgb), 0.22);
+}
+
+.saga-definition-error {
+    cursor: default;
+    opacity: 0.75;
+}
+
+.saga-definition-item ::deep .saga-definition-reason {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+}

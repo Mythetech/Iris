@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net11.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="MassTransit" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Assemblies\Iris.Assemblies\Iris.Assemblies.csproj" />
+      <ProjectReference Include="..\..\Telemetry\Iris.Telemetry\Iris.Telemetry.csproj" />
+    </ItemGroup>
+
+</Project>
