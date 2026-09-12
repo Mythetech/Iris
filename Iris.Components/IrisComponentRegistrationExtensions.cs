@@ -47,6 +47,7 @@ namespace Iris.Components
             services.AddSagaServices();
             services.AddSingleton<SagaDefinitionState>();
             services.AddSingleton<SagaInstanceState>();
+            services.AddSingleton<ReceivedSpanLog>();
             services.AddScoped<IAdminService, TAdminService>();
 
             // Dynamic connection data provider lookup (maps normalized provider names to custom connection UI components)

@@ -1,0 +1,32 @@
+.span-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 8px;
+    border-left: 2px solid var(--mud-palette-primary);
+    background-color: var(--mud-palette-background-grey);
+}
+
+.span-detail-header {
+    flex-wrap: wrap;
+}
+
+.span-name {
+    font-weight: 500;
+}
+
+.span-detail-ids,
+.span-tags {
+    display: grid;
+    grid-template-columns: minmax(90px, max-content) minmax(0, 1fr);
+    gap: 2px 12px;
+    align-items: center;
+}
+
+/* Tag values are URNs and ids that run long; wrapping keeps them readable without
+   making the timeline row scroll sideways. */
+.span-tag-value,
+.span-mono {
+    font-family: var(--mud-typography-monospace-family, monospace);
+    overflow-wrap: anywhere;
+}

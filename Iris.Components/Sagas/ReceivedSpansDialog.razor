@@ -1,0 +1,135 @@
+@using Iris.Components.Sagas.Messages
+@using Iris.Components.Shared.Time
+@using Iris.Components.Theme
+@using Mythetech.Framework.Components.Buttons
+@inherits Mythetech.Framework.Infrastructure.MessageBus.ComponentConsumer<ReceivedSpansChanged>
+
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudIcon Class="mr-4" Icon="@IrisIcons.Telemetry" />
+            <MudText Typo="Typo.h6">Received spans</MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <div class="spans-dialog">
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-2">
+                Everything the OTLP receiver decoded, newest first, including spans that describe no saga.
+                If your app is exporting and nothing appears here, the traces are not reaching Iris at all.
+            </MudText>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">@Summary</MudText>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                Clear all discards these spans and the live instances built from them.
+            </MudText>
+
+            @if (_outcomes.Count == 0)
+            {
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 py-6">
+                    <MudIcon Icon="@IrisIcons.Telemetry" Size="Size.Large" Class="mud-text-secondary mb-2" />
+                    <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary">
+                        No spans received yet.
+                    </MudText>
+                </MudStack>
+            }
+            else
+            {
+                <MudSimpleTable Dense="true" Hover="true" Elevation="0" Class="spans-table mt-2">
+                    <thead>
+                        <tr>
+                            <th class="spans-toggle-column"></th>
+                            <th>Time</th>
+                            <th>Span</th>
+                            <th>Service</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var outcome in _outcomes)
+                        {
+                            var isExpanded = _expandedSpanId == outcome.Span.SpanId;
+                            <tr class="span-row">
+                                <td>
+                                    <MudIconButton Icon="@(isExpanded ? IrisIcons.ExpandMore : IrisIcons.ChevronRight)"
+                                                   Size="Size.Small"
+                                                   Class="span-toggle"
+                                                   aria-expanded="@(isExpanded ? "true" : "false")"
+                                                   aria-label="@(isExpanded ? "Hide span" : "Show span")"
+                                                   OnClick="@(() => Toggle(outcome.Span.SpanId))" />
+                                </td>
+                                <td><LocalTime DateTimeOffset="outcome.Span.StartTime" /></td>
+                                <td>@outcome.Span.Name</td>
+                                <td>@outcome.Span.ServiceName</td>
+                                <td class="span-result">@ResultLabel(outcome.Result)</td>
+                            </tr>
+                            @if (isExpanded)
+                            {
+                                <tr class="span-detail-row">
+                                    <td colspan="5"><SpanDetail Span="outcome.Span" /></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MtButton Variant="Variant.Text" Class="span-clear" OnClick="ClearAsync" Text="Clear all" />
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Inject] ReceivedSpanLog Log { get; set; } = default!;
+    [Inject] SagaInstanceState Instances { get; set; } = default!;
+
+    private IReadOnlyList<SpanIngestOutcome> _outcomes = [];
+    private int _total;
+    private string? _expandedSpanId;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Refresh();
+    }
+
+    // Unlike the unmatched view, this one is opened precisely when nothing is arriving, so a snapshot
+    // taken on open would show the empty state right through the batch that finally explains it.
+    protected override Task Consume(ReceivedSpansChanged message, CancellationToken cancellationToken)
+    {
+        Refresh();
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private void Refresh()
+    {
+        _outcomes = Log.Recent;
+        _total = Log.Received;
+    }
+
+    private string Summary => _total > _outcomes.Count
+        ? $"The {_outcomes.Count} most recent of {_total} spans, newest first."
+        : $"{_total} span{(_total == 1 ? "" : "s")}, newest first.";
+
+    private static string ResultLabel(SpanIngest result) => result switch
+    {
+        SpanIngest.Mapped => "Mapped",
+        SpanIngest.Unmatched => "Unmatched",
+        _ => "No saga tags",
+    };
+
+    private void Toggle(string spanId) => _expandedSpanId = _expandedSpanId == spanId ? null : spanId;
+
+    // Both, or the two disagree: the chip's counts come off the instance state, so clearing only the
+    // feed would leave the header reporting spans this view says never arrived.
+    private async Task ClearAsync()
+    {
+        await Log.ClearAsync();
+        await Instances.ClearAsync();
+    }
+
+    private void Close() => MudDialog.Cancel();
+}
