@@ -6,7 +6,7 @@ using MudBlazor;
 namespace Iris.Components.CommandPalette;
 
 /// <summary>
-/// Step-1 command provider. Surfaces the six full pages plus the Settings dialog
+/// Step-1 command provider. Surfaces the seven full pages plus the Settings dialog
 /// so users can jump to any of them via Cmd/Ctrl-K.
 ///
 /// Named with the <c>Palette</c> infix to avoid colliding with
@@ -44,6 +44,8 @@ public sealed class NavigationPaletteCommandProvider : ICommandProvider
                 keywords: new[] { "brokers" }),
             Nav("nav.history", "History", "Recent activity and sent messages", IrisIcons.History, "/History",
                 keywords: new[] { "log", "past", "recent" }),
+            Nav("nav.sagas", "Sagas", "State machines and live saga instances", IrisIcons.Sagas, "/Sagas",
+                keywords: new[] { "saga", "state machine", "workflow", "otel", "traces" }),
             new PaletteCommand(
                 Id: "settings.open",
                 Title: "Open Settings…",

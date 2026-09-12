@@ -1,0 +1,13 @@
+@using Iris.Components.Sagas.Messages
+@using Iris.Telemetry.Messages
+@inherits Mythetech.Framework.Infrastructure.MessageBus.ComponentConsumer<SagaInstancesChanged, SagaDefinitionsChanged, OtlpReceiverStatusChanged>
+
+@code {
+    [Parameter] public EventCallback Changed { get; set; }
+
+    protected override Task Consume(SagaInstancesChanged message, CancellationToken cancellationToken) => Changed.InvokeAsync();
+
+    protected override Task Consume(SagaDefinitionsChanged message, CancellationToken cancellationToken) => Changed.InvokeAsync();
+
+    protected override Task Consume(OtlpReceiverStatusChanged message, CancellationToken cancellationToken) => Changed.InvokeAsync();
+}

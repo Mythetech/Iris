@@ -46,6 +46,8 @@ public static partial class IrisIcons
 
     public static string Sagas => Round("account_tree");
 
+    public static string NoSagas => Round("account_tree");
+
     public static string Telemetry => Round("sensors");
 
     public static string CreateMessageData => Round("wand_stars");
@@ -73,6 +75,8 @@ public static partial class IrisIcons
     public static string Success => Round("check_circle");
 
     public static string Error => Round("circle_x");
+
+    public static string Warning => Round("warning");
 
     public static string Info => Round("circle_info");
 

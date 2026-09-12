@@ -9,8 +9,8 @@ namespace Iris.Components.Test.CommandPalette;
 
 public class NavigationPaletteCommandProviderTests
 {
-    [Fact(DisplayName = "Returns the seven expected step-1 commands in stable order")]
-    public async Task Returns_seven_expected_commands()
+    [Fact(DisplayName = "Returns the eight expected step-1 commands in stable order")]
+    public async Task Returns_eight_expected_commands()
     {
         var sut = NewProvider();
 
@@ -23,6 +23,7 @@ public class NavigationPaletteCommandProviderTests
             "nav.packages",
             "nav.connections",
             "nav.history",
+            "nav.sagas",
             "settings.open");
     }
 
@@ -54,6 +55,7 @@ public class NavigationPaletteCommandProviderTests
     [InlineData("nav.packages", "/Packages")]
     [InlineData("nav.connections", "/Connections")]
     [InlineData("nav.history", "/History")]
+    [InlineData("nav.sagas", "/Sagas")]
     public async Task Navigation_commands_navigate_to_expected_routes(string id, string expectedPath)
     {
         var nav = new RecordingNavigationManager();

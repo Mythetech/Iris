@@ -1,0 +1,71 @@
+@using Iris.Components.Shared.Time
+@using Mythetech.Framework.Components.Buttons
+
+<div class="saga-instance-panel">
+    <MudText Typo="Typo.subtitle2" Class="px-2 pt-2">Instances</MudText>
+
+    @if (Instances.Count == 0)
+    {
+        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 flex-grow-1 py-6">
+            <MudIcon Icon="@IrisIcons.NoSagas" Size="Size.Large" Class="mud-text-secondary mb-2" />
+            <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary">
+                No instances yet. Spans with saga tags will show up here as they arrive.
+            </MudText>
+        </MudStack>
+    }
+    else
+    {
+        <MudList T="Guid?" Dense="true" Class="saga-instance-list"
+                 SelectionMode="SelectionMode.ToggleSelection"
+                 SelectedValue="@Selected?.SagaId"
+                 SelectedValueChanged="OnSelectedValueChangedAsync">
+            @foreach (var instance in Instances)
+            {
+                <MudListItem T="Guid?" Dense="true" Value="@instance.SagaId" Class="saga-instance-item">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.body2" Class="saga-id">@ShortId(instance.SagaId)</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                @instance.CurrentState, @instance.Transitions.Count transition@(instance.Transitions.Count == 1 ? "" : "s")
+                            </MudText>
+                        </MudStack>
+                        <MtCopyButton Text="@instance.SagaId.ToString("D")" CopyTooltip="Copy saga id" Size="Size.Small" />
+                    </MudStack>
+                </MudListItem>
+            }
+        </MudList>
+    }
+
+    @if (Selected is { } selected)
+    {
+        <MudDivider Class="my-1" />
+        <MudText Typo="Typo.subtitle2" Class="px-2">Timeline, newest first</MudText>
+        <div class="saga-timeline">
+            @foreach (var transition in selected.Transitions.Reverse())
+            {
+                <div class="saga-timeline-row">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary"><LocalTime DateTimeOffset="transition.Timestamp" /></MudText>
+                    <MudText Typo="Typo.body2">@transition.BeginState to @transition.EndState</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@transition.EventName</MudText>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0">
+                        <MudText Typo="Typo.caption" Class="saga-trace-id">@ShortTraceId(transition.TraceId)</MudText>
+                        <MtCopyButton Text="@transition.TraceId" CopyTooltip="Copy trace id" Size="Size.Small" />
+                    </MudStack>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<SagaInstance> Instances { get; set; } = [];
+    [Parameter] public SagaInstance? Selected { get; set; }
+    [Parameter] public EventCallback<SagaInstance?> SelectedChanged { get; set; }
+
+    private Task OnSelectedValueChangedAsync(Guid? sagaId)
+        => SelectedChanged.InvokeAsync(sagaId is null ? null : Instances.FirstOrDefault(i => i.SagaId == sagaId));
+
+    private static string ShortId(Guid id) => id.ToString("N")[..8];
+
+    private static string ShortTraceId(string traceId) => traceId[..Math.Min(12, traceId.Length)];
+}
