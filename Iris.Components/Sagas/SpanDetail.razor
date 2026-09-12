@@ -1,0 +1,70 @@
+@using Iris.Components.Shared.Time
+@using Iris.Telemetry
+@using Mythetech.Framework.Components.Buttons
+
+<div class="span-detail">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="span-detail-header">
+        <MudText Typo="Typo.body2" Class="span-name">@Span.Name</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">@Span.ServiceName</MudText>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary span-duration">@DurationLabel</MudText>
+    </MudStack>
+
+    <div class="span-detail-ids">
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">Started</MudText>
+        <MudText Typo="Typo.caption"><LocalTime DateTimeOffset="Span.StartTime" /></MudText>
+
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">Trace</MudText>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0">
+            <MudText Typo="Typo.caption" Class="span-mono">@Span.TraceId</MudText>
+            <MtCopyButton Text="@Span.TraceId" CopyTooltip="Copy trace id" Size="Size.Small" />
+        </MudStack>
+
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">Span</MudText>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0">
+            <MudText Typo="Typo.caption" Class="span-mono">@Span.SpanId</MudText>
+            <MtCopyButton Text="@Span.SpanId" CopyTooltip="Copy span id" Size="Size.Small" />
+        </MudStack>
+
+        @if (Span.ParentSpanId is { Length: > 0 } parent)
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">Parent</MudText>
+            <MudText Typo="Typo.caption" Class="span-mono">@parent</MudText>
+        }
+    </div>
+
+    @if (OrderedTags.Count == 0)
+    {
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">No tags on this span.</MudText>
+    }
+    else
+    {
+        <div class="span-tags">
+            @foreach (var tag in OrderedTags)
+            {
+                <MudText Typo="Typo.caption" Class="mud-text-secondary span-tag-key">@tag.Key</MudText>
+                <MudText Typo="Typo.caption" Class="span-tag-value">@tag.Value</MudText>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public ReceivedSpan Span { get; set; } = default!;
+
+    // Tag order comes off the wire and is not guaranteed, so sort it: the same span should read the
+    // same way every time it is opened, and a known tag should be findable where you last saw it.
+    private IReadOnlyList<KeyValuePair<string, string>> OrderedTags
+        => Span.Tags.OrderBy(t => t.Key, StringComparer.Ordinal).ToList();
+
+    // Sub-millisecond spans are common, and rounding them all to "0 ms" hides real differences.
+    private string DurationLabel
+    {
+        get
+        {
+            var elapsed = Span.EndTime - Span.StartTime;
+            return elapsed.TotalMilliseconds < 1
+                ? $"{elapsed.TotalMilliseconds:0.###} ms"
+                : $"{elapsed.TotalMilliseconds:0.#} ms";
+        }
+    }
+}

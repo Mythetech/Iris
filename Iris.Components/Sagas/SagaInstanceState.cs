@@ -16,6 +16,14 @@ public sealed class SagaInstanceState
     public const int MaxTransitionsPerInstance = 200;
     public const int MaxUnmatched = 200;
 
+    /// <summary>
+    /// How many of an instance's transitions keep the span they were read from. A span carries the
+    /// whole tag dictionary and is an order of magnitude heavier than the transition itself, so
+    /// letting every retained transition hold one would let a busy exporter grow Iris without bound.
+    /// Only the recent end of a timeline is ever inspected, so that is all that keeps its evidence.
+    /// </summary>
+    public const int MaxRetainedSpansPerInstance = 20;
+
     private readonly IReadOnlyList<ISagaSpanMapper> _mappers;
     private readonly SagaDefinitionState _definitions;
     private readonly IMessageBus _bus;
@@ -55,10 +63,17 @@ public sealed class SagaInstanceState
             return _instances.TryGetValue(graphTypeName, out var byId) && byId.TryGetValue(sagaId, out var instance) ? instance : null;
     }
 
-    public async Task IngestAsync(IReadOnlyList<ReceivedSpan> spans)
+    /// <summary>
+    /// Folds a batch of spans into the live instances, returning what became of each one in arrival
+    /// order. A span Iris makes nothing of is still worth showing, so the caller can log the whole
+    /// batch rather than only the part that mapped.
+    /// </summary>
+    public async Task<IReadOnlyList<SpanIngestOutcome>> IngestAsync(IReadOnlyList<ReceivedSpan> spans)
     {
         if (spans.Count == 0)
-            return;
+            return [];
+
+        var outcomes = new List<SpanIngestOutcome>(spans.Count);
 
         // Read before taking our own lock: SagaDefinitionState locks its own gate to serve this.
         var graphs = _definitions.Graphs;
@@ -68,7 +83,10 @@ public sealed class SagaInstanceState
             {
                 SpansReceived++;
                 if (!TryMap(span, out var transition))
+                {
+                    outcomes.Add(new SpanIngestOutcome(span, SpanIngest.NotASagaSpan));
                     continue;
+                }
                 SpansMapped++;
 
                 var graph = Resolve(transition, graphs);
@@ -78,14 +96,17 @@ public sealed class SagaInstanceState
                     _unmatched.Add(transition);
                     if (_unmatched.Count > MaxUnmatched)
                         _unmatched.RemoveAt(0);
+                    outcomes.Add(new SpanIngestOutcome(span, SpanIngest.Unmatched));
                     continue;
                 }
 
                 Append(graph.TypeName, transition);
+                outcomes.Add(new SpanIngestOutcome(span, SpanIngest.Mapped));
             }
         }
 
         await _bus.PublishAsync(new SagaInstancesChanged());
+        return outcomes;
     }
 
     public async Task RemoveGraphsAsync(IEnumerable<string> typeNames)
@@ -158,6 +179,21 @@ public sealed class SagaInstanceState
         return 0;
     }
 
+    /// <summary>
+    /// Clears the span off every transition but the most recent <see cref="MaxRetainedSpansPerInstance"/>.
+    /// Only walks far enough back to find one already cleared: everything below that was cleared on an
+    /// earlier append, so a long timeline does not get rewritten on every span that arrives.
+    /// </summary>
+    private static void DropAgedSpans(List<SagaTransition> transitions)
+    {
+        for (var i = transitions.Count - MaxRetainedSpansPerInstance - 1; i >= 0; i--)
+        {
+            if (transitions[i].Span is null)
+                return;
+            transitions[i] = transitions[i] with { Span = null };
+        }
+    }
+
     private void Append(string graphTypeName, SagaTransition transition)
     {
         if (!_instances.TryGetValue(graphTypeName, out var byId))
@@ -169,6 +205,7 @@ public sealed class SagaInstanceState
             transitions.Insert(OrderedInsertIndex(transitions, transition.Timestamp), transition);
             if (transitions.Count > MaxTransitionsPerInstance)
                 transitions.RemoveRange(0, transitions.Count - MaxTransitionsPerInstance);
+            DropAgedSpans(transitions);
 
             // Spans have no delivery order, so a late arrival must not rewind the instance.
             var isLatest = transition.Timestamp >= existing.LastSeen;

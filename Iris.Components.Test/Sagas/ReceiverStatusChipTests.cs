@@ -185,6 +185,32 @@ public class ReceiverStatusChipTests : IrisTestContext
             "MtCopyButton brings its own tooltip, which also swaps to Copied on success, so wrapping it in another one renders both at once");
     }
 
+    [Fact(DisplayName = "The span counts open the raw received spans view")]
+    public async Task Counts_Open_The_Received_Spans_View()
+    {
+        _receiver.Status.Returns(OtlpReceiverStatus.Stopped);
+        var cut = RenderComponent<ReceiverStatusChip>();
+
+        await cut.Find("button.receiver-counts").ClickAsync(new MouseEventArgs());
+
+        await _dialogService.Received(1).ShowAsync(
+            typeof(ReceivedSpansDialog),
+            Arg.Any<string>(),
+            Arg.Any<DialogOptions>());
+    }
+
+    [Fact(DisplayName = "The counts stay reachable before any span arrives, when the view is most needed")]
+    public void Counts_Are_Reachable_While_Empty()
+    {
+        _receiver.Status.Returns(OtlpReceiverStatus.Listening);
+        _receiver.Endpoint.Returns("http://127.0.0.1:4318");
+
+        var cut = RenderComponent<ReceiverStatusChip>();
+
+        cut.FindAll("button.receiver-counts").Should().ContainSingle(
+            "an empty feed is exactly what tells you the traces are not arriving");
+    }
+
     [Fact(DisplayName = "Shows the error when the receiver failed")]
     public void Shows_Failure()
     {

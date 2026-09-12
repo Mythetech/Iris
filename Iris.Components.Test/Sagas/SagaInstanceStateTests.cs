@@ -30,6 +30,43 @@ public class SagaInstanceStateTests
         return (new SagaInstanceState([new StubSpanMapper()], definitions, bus), definitions, bus);
     }
 
+    [Fact(DisplayName = "Only the most recent transitions keep their span, so instances cannot hoard them")]
+    public async Task Drops_Spans_Beyond_The_Retained_Window()
+    {
+        var (state, _, _) = await CreateAsync(Graph(OrderType, "Initial", "Submitted"));
+        var sagaId = Guid.NewGuid();
+        var start = DateTimeOffset.UtcNow;
+        var total = SagaInstanceState.MaxRetainedSpansPerInstance + 3;
+
+        for (var i = 0; i < total; i++)
+            await state.IngestAsync([StubSpanMapper.Span(sagaId, "Initial", "Submitted", hint: "OrderStateMachine", at: start.AddSeconds(i))]);
+
+        var transitions = state.GetInstance(OrderType, sagaId)!.Transitions;
+        transitions.Should().HaveCount(total);
+        transitions.TakeLast(SagaInstanceState.MaxRetainedSpansPerInstance).Should().OnlyContain(t => t.Span != null,
+            "the recent end of the timeline is what anyone actually inspects");
+        transitions.Take(3).Should().OnlyContain(t => t.Span == null,
+            "a span is far heavier than the transition read out of it, so old ones must not pile up");
+        transitions.Should().OnlyContain(t => t.TraceId == "trace",
+            "identity is not evidence; the ids stay whatever happens to the span");
+    }
+
+    [Fact(DisplayName = "Reports what became of every span in the batch, in the order they arrived")]
+    public async Task Reports_An_Outcome_Per_Span()
+    {
+        var (state, _, _) = await CreateAsync(Graph(OrderType, "Initial", "Submitted"), Graph(PaymentType, "Initial", "Submitted"));
+        var plain = new ReceivedSpan("trace", "span", null, "GET /orders", "svc", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, new Dictionary<string, string>());
+        var mapped = StubSpanMapper.Span(Guid.NewGuid(), "Initial", "Submitted", hint: "OrderStateMachine");
+        var ambiguous = StubSpanMapper.Span(Guid.NewGuid(), "Initial", "Submitted");
+
+        var outcomes = await state.IngestAsync([plain, mapped, ambiguous]);
+
+        outcomes.Should().HaveCount(3, "a span the receiver decoded is worth showing even when Iris made nothing of it");
+        outcomes[0].Should().Be(new SpanIngestOutcome(plain, SpanIngest.NotASagaSpan));
+        outcomes[1].Should().Be(new SpanIngestOutcome(mapped, SpanIngest.Mapped));
+        outcomes[2].Should().Be(new SpanIngestOutcome(ambiguous, SpanIngest.Unmatched));
+    }
+
     [Fact(DisplayName = "Resolves the graph by the span's type hint")]
     public async Task Resolves_By_Hint()
     {

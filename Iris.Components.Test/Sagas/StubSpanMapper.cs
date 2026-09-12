@@ -14,7 +14,7 @@ public sealed class StubSpanMapper : ISagaSpanMapper
         if (!span.Tags.TryGetValue("saga", out var saga) || !Guid.TryParse(saga, out var sagaId))
             return false;
         span.Tags.TryGetValue("hint", out var hint);
-        transition = new SagaTransition(hint, sagaId, span.Tags["from"], span.Tags["to"], span.Tags.GetValueOrDefault("event"), span.TraceId, span.SpanId, span.EndTime);
+        transition = new SagaTransition(hint, sagaId, span.Tags["from"], span.Tags["to"], span.Tags.GetValueOrDefault("event"), span.TraceId, span.SpanId, span.EndTime, span);
         return true;
     }
 

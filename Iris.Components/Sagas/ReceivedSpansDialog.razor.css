@@ -1,0 +1,17 @@
+.spans-dialog {
+    display: flex;
+    flex-direction: column;
+    max-height: 60vh;
+}
+
+.spans-table {
+    overflow-y: auto;
+}
+
+.spans-toggle-column {
+    width: 32px;
+}
+
+.span-detail-row td {
+    padding: 0 0 6px 0;
+}
