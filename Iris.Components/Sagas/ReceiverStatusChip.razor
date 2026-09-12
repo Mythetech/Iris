@@ -1,6 +1,7 @@
 @using Iris.Telemetry
 @using Mythetech.Framework.Components.Badge
 @using Mythetech.Framework.Components.Buttons
+@using Mythetech.Framework.Components.Dialogs
 @using Mythetech.Framework.Components.Switch
 @using Mythetech.Framework.Enums
 @using Mythetech.Framework.Infrastructure.Settings
@@ -10,7 +11,15 @@
 
     <MtBadge Text="@StatusText" Icon="@IrisIcons.Telemetry" Color="@StatusColor" Roundedness="Roundedness.Pill" />
 
-    @if (Receiver.Status == OtlpReceiverStatus.Listening && Receiver.Endpoint is { } endpoint)
+    @if (Settings.ReceiverEnabled && !Settings.HasValidPort)
+    {
+        @* The guard turns an out of range port into a stop, which on its own reads as a receiver that
+           simply is not running. Say why the switch is on and nothing is listening. *@
+        <MudText Typo="Typo.caption" Color="Color.Warning" Class="receiver-reason">
+            Receiver port must be between 1024 and 65535.
+        </MudText>
+    }
+    else if (Receiver.Status == OtlpReceiverStatus.Listening && Receiver.Endpoint is { } endpoint)
     {
         <MudText Typo="Typo.caption" Class="receiver-endpoint">@endpoint</MudText>
         <MudTooltip Text="Copy the env vars your app needs">
@@ -27,11 +36,18 @@
 
     <MudText Typo="Typo.caption" Class="receiver-counts">
         @Instances.SpansReceived spans, @Instances.SpansMapped mapped
-        @if (Instances.UnmatchedCount > 0)
-        {
-            <span class="receiver-unmatched">, @Instances.UnmatchedCount unmatched</span>
-        }
     </MudText>
+
+    @if (Instances.UnmatchedCount > 0)
+    {
+        <MtButton Variant="Variant.Text"
+                  Size="Size.Small"
+                  Color="Color.Warning"
+                  StartIcon="@IrisIcons.Warning"
+                  Class="receiver-unmatched"
+                  OnClick="OpenUnmatchedAsync"
+                  Text="@($"{Instances.UnmatchedCount} unmatched")" />
+    }
 </div>
 
 @code {
@@ -39,6 +55,7 @@
     [Inject] SagaTelemetrySettings Settings { get; set; } = default!;
     [Inject] ISettingsProvider SettingsProvider { get; set; } = default!;
     [Inject] SagaInstanceState Instances { get; set; } = default!;
+    [Inject] IDialogService DialogService { get; set; } = default!;
 
     private string StatusText => Receiver.Status switch
     {
@@ -57,6 +74,12 @@
 
     private static string EnvSnippet(string endpoint)
         => $"OTEL_EXPORTER_OTLP_ENDPOINT={endpoint}\nOTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf";
+
+    private async Task OpenUnmatchedAsync()
+        => await DialogService.ShowAsync(
+            typeof(UnmatchedTransitionsDialog),
+            "Unmatched transitions",
+            MythetechDialogs.CreateDefaultOptions(MaxWidth.Medium));
 
     private async Task OnToggledAsync(bool enabled)
     {

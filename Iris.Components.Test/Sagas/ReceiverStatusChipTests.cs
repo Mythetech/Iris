@@ -4,6 +4,7 @@ using Iris.Components.Sagas;
 using Iris.Sagas;
 using Iris.Telemetry;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using Mythetech.Framework.Infrastructure.MessageBus;
@@ -16,6 +17,7 @@ public class ReceiverStatusChipTests : IrisTestContext
 {
     private readonly IOtlpReceiver _receiver = Substitute.For<IOtlpReceiver>();
     private readonly ISettingsProvider _settingsProvider = Substitute.For<ISettingsProvider>();
+    private readonly IDialogService _dialogService = Substitute.For<IDialogService>();
     private readonly SagaTelemetrySettings _settings = new();
 
     public ReceiverStatusChipTests()
@@ -23,6 +25,7 @@ public class ReceiverStatusChipTests : IrisTestContext
         Services.AddMessageBus();
         Services.AddSingleton(_receiver);
         Services.AddSingleton(_settingsProvider);
+        Services.AddSingleton(_dialogService);
         Services.AddSingleton(_settings);
         Services.AddSingleton(Substitute.For<ISagaDefinitionProvider>());
         Services.AddSingleton<ISagaSpanMapper, StubSpanMapper>();
@@ -81,6 +84,61 @@ public class ReceiverStatusChipTests : IrisTestContext
 
         cut.Markup.Should().Contain($"{overflow} unmatched");
         cut.Markup.Should().NotContain($"{SagaInstanceState.MaxUnmatched} unmatched");
+    }
+
+    [Fact(DisplayName = "Explains an out of range port when the receiver is on but nothing can listen")]
+    public void Shows_Invalid_Port_Reason()
+    {
+        _receiver.Status.Returns(OtlpReceiverStatus.Stopped);
+        _settings.ReceiverEnabled = true;
+        _settings.ReceiverPort = 80;
+
+        var cut = RenderComponent<ReceiverStatusChip>();
+
+        cut.Markup.Should().Contain("Receiver port must be between 1024 and 65535");
+    }
+
+    [Fact(DisplayName = "Says nothing about the port range when the port is usable")]
+    public void Hides_Invalid_Port_Reason_When_Port_Is_Valid()
+    {
+        _receiver.Status.Returns(OtlpReceiverStatus.Stopped);
+        _settings.ReceiverEnabled = true;
+        _settings.ReceiverPort = SagaTelemetrySettings.DefaultPort;
+
+        var cut = RenderComponent<ReceiverStatusChip>();
+
+        cut.Markup.Should().NotContain("must be between");
+    }
+
+    [Fact(DisplayName = "The unmatched count is a control only while something is unmatched")]
+    public async Task Unmatched_Control_Appears_Only_When_Counted()
+    {
+        _receiver.Status.Returns(OtlpReceiverStatus.Stopped);
+        var instances = Services.GetRequiredService<SagaInstanceState>();
+
+        var before = RenderComponent<ReceiverStatusChip>();
+        before.FindAll("button.receiver-unmatched").Should().BeEmpty();
+
+        await instances.IngestAsync([StubSpanMapper.Span(Guid.NewGuid(), "Nowhere", "Elsewhere")]);
+        var after = RenderComponent<ReceiverStatusChip>();
+
+        after.FindAll("button.receiver-unmatched").Should().ContainSingle();
+    }
+
+    [Fact(DisplayName = "Clicking the unmatched count opens the unmatched transitions view")]
+    public async Task Unmatched_Control_Opens_The_View()
+    {
+        _receiver.Status.Returns(OtlpReceiverStatus.Stopped);
+        var instances = Services.GetRequiredService<SagaInstanceState>();
+        await instances.IngestAsync([StubSpanMapper.Span(Guid.NewGuid(), "Nowhere", "Elsewhere")]);
+        var cut = RenderComponent<ReceiverStatusChip>();
+
+        await cut.Find("button.receiver-unmatched").ClickAsync(new MouseEventArgs());
+
+        await _dialogService.Received(1).ShowAsync(
+            typeof(UnmatchedTransitionsDialog),
+            Arg.Any<string>(),
+            Arg.Any<DialogOptions>());
     }
 
     [Fact(DisplayName = "Shows the error when the receiver failed")]
