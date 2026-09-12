@@ -45,7 +45,7 @@
 }
 
 .node-current text {
-    fill: #fff;
+    fill: var(--mud-palette-primary-text);
 }
 
 .edge {
@@ -53,6 +53,15 @@
     stroke: var(--mud-palette-lines-default);
     stroke-width: 1.5;
     transition: stroke 150ms ease, stroke-width 150ms ease;
+}
+
+.edge-back {
+    stroke-dasharray: 6 4;
+}
+
+.edge-loop {
+    stroke: var(--mud-palette-text-secondary);
+    opacity: 0.7;
 }
 
 .edge-visited {
