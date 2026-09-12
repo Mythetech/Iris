@@ -89,6 +89,37 @@ public class SagaInstanceStateTests
         instance.LastSeen.Should().Be(t0.AddSeconds(1));
     }
 
+    [Fact(DisplayName = "A span arriving late does not rewind the current state, the timestamps, or the timeline order")]
+    public async Task Late_Span_Does_Not_Rewind_Instance()
+    {
+        var (state, _, _) = await CreateAsync(Graph(OrderType, "Initial", "Submitted", "Accepted"));
+        var sagaId = Guid.NewGuid();
+        var t0 = DateTimeOffset.UtcNow;
+
+        await state.IngestAsync([StubSpanMapper.Span(sagaId, "Submitted", "Accepted", at: t0.AddSeconds(1))]);
+        await state.IngestAsync([StubSpanMapper.Span(sagaId, "Initial", "Submitted", at: t0)]);
+
+        var instance = state.GetInstance(OrderType, sagaId)!;
+        instance.CurrentState.Should().Be("Accepted");
+        instance.FirstSeen.Should().Be(t0);
+        instance.LastSeen.Should().Be(t0.AddSeconds(1));
+        instance.Transitions.Select(t => t.EndState).Should().Equal("Submitted", "Accepted");
+    }
+
+    [Fact(DisplayName = "A hint shared by two graphs is ambiguous and lands in the unmatched bucket")]
+    public async Task Ambiguous_Hint_Goes_To_Unmatched()
+    {
+        var (state, _, _) = await CreateAsync(
+            Graph("Ordering.OrderStateMachine", "Initial", "Submitted"),
+            Graph("Shipping.OrderStateMachine", "Initial", "Submitted"));
+
+        await state.IngestAsync([StubSpanMapper.Span(Guid.NewGuid(), "Initial", "Submitted", hint: "OrderStateMachine")]);
+
+        state.GetInstances("Ordering.OrderStateMachine").Should().BeEmpty();
+        state.GetInstances("Shipping.OrderStateMachine").Should().BeEmpty();
+        state.UnmatchedCount.Should().Be(1);
+    }
+
     [Fact(DisplayName = "Instances are listed newest first")]
     public async Task Lists_Newest_First()
     {

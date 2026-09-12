@@ -126,15 +126,36 @@ public sealed class SagaInstanceState
     {
         if (transition.SagaTypeHint is { } hint)
         {
-            var byHint = graphs.FirstOrDefault(g => g.DisplayName == hint || g.TypeName == hint);
-            if (byHint is not null)
-                return byHint;
+            var byTypeName = graphs.FirstOrDefault(g => g.TypeName == hint);
+            if (byTypeName is not null)
+                return byTypeName;
+
+            // The hint carries only the simple class name, and Iris loads arbitrary user assemblies,
+            // so two state machines can share one display name. Refuse to guess between them and
+            // fall through, the same way the state set rule below refuses to guess.
+            var byDisplayName = graphs.Where(g => g.DisplayName == hint).ToList();
+            if (byDisplayName.Count == 1)
+                return byDisplayName[0];
         }
 
         var byStates = graphs
             .Where(g => g.States.Any(s => s.Name == transition.BeginState) && g.States.Any(s => s.Name == transition.EndState))
             .ToList();
         return byStates.Count == 1 ? byStates[0] : null;
+    }
+
+    /// <summary>
+    /// Position that keeps the list ordered by timestamp, placing ties after the transitions already
+    /// stored so arrival order still breaks them. Scans from the end because spans usually arrive in order.
+    /// </summary>
+    private static int OrderedInsertIndex(List<SagaTransition> transitions, DateTimeOffset timestamp)
+    {
+        for (var i = transitions.Count - 1; i >= 0; i--)
+        {
+            if (transitions[i].Timestamp <= timestamp)
+                return i + 1;
+        }
+        return 0;
     }
 
     private void Append(string graphTypeName, SagaTransition transition)
@@ -144,13 +165,18 @@ public sealed class SagaInstanceState
 
         if (byId.TryGetValue(transition.SagaId, out var existing))
         {
-            var transitions = existing.Transitions.Append(transition).ToList();
+            var transitions = existing.Transitions.ToList();
+            transitions.Insert(OrderedInsertIndex(transitions, transition.Timestamp), transition);
             if (transitions.Count > MaxTransitionsPerInstance)
                 transitions.RemoveRange(0, transitions.Count - MaxTransitionsPerInstance);
+
+            // Spans have no delivery order, so a late arrival must not rewind the instance.
+            var isLatest = transition.Timestamp >= existing.LastSeen;
             byId[transition.SagaId] = existing with
             {
-                CurrentState = transition.EndState,
-                LastSeen = transition.Timestamp,
+                CurrentState = isLatest ? transition.EndState : existing.CurrentState,
+                FirstSeen = transition.Timestamp < existing.FirstSeen ? transition.Timestamp : existing.FirstSeen,
+                LastSeen = isLatest ? transition.Timestamp : existing.LastSeen,
                 Transitions = transitions,
             };
             return;
