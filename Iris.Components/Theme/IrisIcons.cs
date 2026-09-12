@@ -44,6 +44,10 @@ public static partial class IrisIcons
     public static string NoHistory =>
         "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 640 512\"><path d=\"M5.1 9.2C13.3-1.2 28.4-3.1 38.8 5.1L76.7 34.8C80.1 33 83.9 32 88 32c13.3 0 24 10.7 24 24l0 6.5 22.2 17.4C180.8 30.7 246.8 0 320 0C461.4 0 576 114.6 576 256c0 51-14.9 98.5-40.6 138.4l95.4 74.7c10.4 8.2 12.3 23.3 4.1 33.7s-23.3 12.3-33.7 4.1L9.2 42.9C-1.2 34.7-3.1 19.6 5.1 9.2zM64 146.4L121.8 192 88 192c-13.3 0-24-10.7-24-24l0-21.6zM172 436.2c7.4-11 22.3-14 33.3-6.7C238.1 451.3 277.5 464 320 464c39.7 0 76.9-11.1 108.4-30.4l39.7 31.3C426.3 494.5 375.2 512 320 512c-52.2 0-100.8-15.6-141.3-42.5c-11-7.4-14.1-22.3-6.7-33.3zm.2-326.5l123.8 97 0-54.7c0-13.3 10.7-24 24-24l-.1 0c13.3 0 24 10.7 24 24l0 92.2L497.5 364.6C516.8 333 528 295.8 528 256c0-114.9-93.1-208-208-208c-57.8 0-110.1 23.6-147.8 61.7z\"/></svg>";
 
+    public static string Sagas => Round("account_tree");
+
+    public static string Telemetry => Round("sensors");
+
     public static string CreateMessageData => Round("wand_stars");
 
     public static string Send => Round("send");
