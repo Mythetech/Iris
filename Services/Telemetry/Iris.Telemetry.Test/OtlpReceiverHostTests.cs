@@ -78,6 +78,7 @@ public class OtlpReceiverHostTests
         var response = await client.PostAsync($"{host.Endpoint}/v1/traces", content);
 
         response.StatusCode.Should().Be(HttpStatusCode.UnsupportedMediaType);
+        sink.Spans.Should().BeEmpty();
     }
 
     [Fact(DisplayName = "Undecodable protobuf bodies are rejected with 400")]
@@ -110,6 +111,7 @@ public class OtlpReceiverHostTests
 
         host.Status.Should().Be(OtlpReceiverStatus.Failed);
         host.Endpoint.Should().BeNull();
+        host.LastError.Should().NotBeNullOrWhiteSpace();
         sink.Statuses.Last().Status.Should().Be(OtlpReceiverStatus.Failed);
         sink.Statuses.Last().Error.Should().NotBeNullOrWhiteSpace();
     }
@@ -144,6 +146,32 @@ public class OtlpReceiverHostTests
 
         sink.Statuses.Count.Should().Be(statusCount);
         host.Port.Should().Be(port);
+    }
+
+    [Fact(DisplayName = "Disposing twice does not throw")]
+    public async Task Dispose_Is_Idempotent()
+    {
+        var sink = new RecordingTelemetrySink();
+        var host = CreateHost(sink);
+        await host.StartAsync(0);
+        await host.DisposeAsync();
+
+        var act = async () => await host.DisposeAsync();
+
+        await act.Should().NotThrowAsync();
+    }
+
+    [Fact(DisplayName = "A sink that throws on status changes does not break starting or disposing the host")]
+    public async Task Start_And_Dispose_Survive_A_Throwing_Sink()
+    {
+        var host = new OtlpReceiverHost(new ThrowingStatusChangedSink(), NullLogger<OtlpReceiverHost>.Instance);
+
+        var startAct = () => host.StartAsync(0);
+        await startAct.Should().NotThrowAsync();
+        host.Status.Should().Be(OtlpReceiverStatus.Listening);
+
+        var disposeAct = async () => await host.DisposeAsync();
+        await disposeAct.Should().NotThrowAsync();
     }
 
     [Fact(DisplayName = "The real OpenTelemetry OTLP HTTP exporter round-trips a span with MassTransit saga tags")]

@@ -24,6 +24,7 @@ public sealed class OtlpReceiverHost : IOtlpReceiver, IAsyncDisposable
     private readonly ILogger<OtlpReceiverHost> _logger;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private WebApplication? _app;
+    private bool _disposed;
 
     public OtlpReceiverHost(ITelemetrySink sink, ILogger<OtlpReceiverHost> logger)
     {
@@ -59,12 +60,17 @@ public sealed class OtlpReceiverHost : IOtlpReceiver, IAsyncDisposable
             {
                 await app.StartAsync(cancellationToken);
             }
-            catch (Exception ex) when (ex is IOException or SocketException or InvalidOperationException)
+            catch (Exception ex) when (ex is IOException or SocketException)
             {
                 _logger.LogWarning(ex, "OTLP receiver failed to bind port {Port}", port);
                 await app.DisposeAsync();
                 await SetStatusAsync(OtlpReceiverStatus.Failed, null, ex.Message, cancellationToken);
                 return;
+            }
+            catch
+            {
+                await app.DisposeAsync();
+                throw;
             }
 
             var address = app.Services.GetRequiredService<IServer>().Features
@@ -94,20 +100,34 @@ public sealed class OtlpReceiverHost : IOtlpReceiver, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (_disposed) return;
+        _disposed = true;
         await StopAsync();
-        _gate.Dispose();
     }
 
     private async Task StopCoreAsync(CancellationToken cancellationToken)
     {
-        if (_app is not null)
+        try
         {
-            await _app.StopAsync(cancellationToken);
-            await _app.DisposeAsync();
-            _app = null;
+            if (_app is not null)
+            {
+                var app = _app;
+                _app = null;
+                try
+                {
+                    await app.StopAsync(cancellationToken);
+                }
+                finally
+                {
+                    await app.DisposeAsync();
+                }
+            }
         }
-        Port = null;
-        await SetStatusAsync(OtlpReceiverStatus.Stopped, null, null, cancellationToken);
+        finally
+        {
+            Port = null;
+            await SetStatusAsync(OtlpReceiverStatus.Stopped, null, null, cancellationToken);
+        }
     }
 
     private async Task SetStatusAsync(OtlpReceiverStatus status, string? endpoint, string? error, CancellationToken cancellationToken)
@@ -115,7 +135,14 @@ public sealed class OtlpReceiverHost : IOtlpReceiver, IAsyncDisposable
         Status = status;
         Endpoint = endpoint;
         LastError = error;
-        await _sink.StatusChangedAsync(status, endpoint, error, cancellationToken);
+        try
+        {
+            await _sink.StatusChangedAsync(status, endpoint, error, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Telemetry sink failed to process status change to {Status}", status);
+        }
     }
 
     private async Task<IResult> HandleTracesAsync(HttpRequest request, CancellationToken cancellationToken)
