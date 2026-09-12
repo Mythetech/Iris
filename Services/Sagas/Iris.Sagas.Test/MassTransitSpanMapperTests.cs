@@ -34,7 +34,8 @@ public class MassTransitSpanMapperTests
     {
         var mapper = new MassTransitSpanMapper();
 
-        var mapped = mapper.TryMap(Span(SagaTags()), out var transition);
+        var mapped = mapper.TryMap(Span(SagaTags()), out var mappedTransition);
+        var transition = mappedTransition!;
 
         mapped.Should().BeTrue();
         transition.SagaId.Should().Be(SagaId);
@@ -74,7 +75,8 @@ public class MassTransitSpanMapperTests
         var tags = SagaTags();
         tags["messaging.masstransit.message_types"] = "urn:message:Contracts:AcceptOrder,urn:message:Contracts:IOrderCommand";
 
-        new MassTransitSpanMapper().TryMap(Span(tags), out var transition);
+        new MassTransitSpanMapper().TryMap(Span(tags), out var mappedTransition);
+        var transition = mappedTransition!;
 
         transition.EventName.Should().Be("AcceptOrder");
     }
@@ -86,9 +88,34 @@ public class MassTransitSpanMapperTests
         tags.Remove("messaging.masstransit.message_types");
         tags.Remove("messaging.masstransit.consumer_type");
 
-        new MassTransitSpanMapper().TryMap(Span(tags), out var transition);
+        new MassTransitSpanMapper().TryMap(Span(tags), out var mappedTransition);
+        var transition = mappedTransition!;
 
         transition.EventName.Should().Be("order-state process");
         transition.SagaTypeHint.Should().BeNull();
+    }
+
+    [Fact(DisplayName = "Resolves the type name from a two-argument generic message urn")]
+    public void Resolves_Generic_Message_Type()
+    {
+        var tags = SagaTags();
+        tags["messaging.masstransit.message_types"] = "urn:message:Ns:Wrapper[[A:X],[B:Y]]";
+
+        new MassTransitSpanMapper().TryMap(Span(tags), out var mappedTransition);
+        var transition = mappedTransition!;
+
+        transition.EventName.Should().Be("Wrapper[[A:X],[B:Y]]");
+    }
+
+    [Fact(DisplayName = "Keeps a two-argument generic urn intact when comma-joined with a second urn")]
+    public void Splits_Generic_Urn_At_Bracket_Depth_Zero()
+    {
+        var tags = SagaTags();
+        tags["messaging.masstransit.message_types"] = "urn:message:Ns:Wrapper[[A:X],[B:Y]],urn:message:Contracts:IOrderCommand";
+
+        new MassTransitSpanMapper().TryMap(Span(tags), out var mappedTransition);
+        var transition = mappedTransition!;
+
+        transition.EventName.Should().Be("Wrapper[[A:X],[B:Y]]");
     }
 }

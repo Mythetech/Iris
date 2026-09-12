@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Iris.Telemetry;
 
 namespace Iris.Sagas;
@@ -5,5 +6,5 @@ namespace Iris.Sagas;
 public interface ISagaSpanMapper
 {
     string Framework { get; }
-    bool TryMap(ReceivedSpan span, out SagaTransition transition);
+    bool TryMap(ReceivedSpan span, [MaybeNullWhen(false)] out SagaTransition transition);
 }
