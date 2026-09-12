@@ -5,7 +5,7 @@ namespace Iris.Samples.MassTransitSaga;
 
 /// <summary>
 /// Submitted, Accepted, Shipped, Cancelled. CancelOrder is valid from Submitted and Accepted so the
-/// graph has a shared event and a branch.
+/// graph has a shared event and a branch, and it finalizes so the graph has a final state too.
 /// </summary>
 public class OrderStateMachine : MassTransitStateMachine<OrderState>
 {
@@ -29,7 +29,8 @@ public class OrderStateMachine : MassTransitStateMachine<OrderState>
                 .TransitionTo(Accepted),
             When(OrderCancelled)
                 .Then(ctx => Console.WriteLine($"[saga {ctx.Saga.CorrelationId}] cancelled"))
-                .TransitionTo(Cancelled));
+                .TransitionTo(Cancelled)
+                .Finalize());
 
         During(Accepted,
             When(OrderShipped)
@@ -37,7 +38,10 @@ public class OrderStateMachine : MassTransitStateMachine<OrderState>
                 .TransitionTo(Shipped),
             When(OrderCancelled)
                 .Then(ctx => Console.WriteLine($"[saga {ctx.Saga.CorrelationId}] cancelled"))
-                .TransitionTo(Cancelled));
+                .TransitionTo(Cancelled)
+                .Finalize());
+
+        SetCompletedWhenFinalized();
     }
 
     public State Submitted { get; private set; } = null!;

@@ -2,14 +2,14 @@
 
 A tiny MassTransit 9.1.0 app with one state machine, `OrderStateMachine`, used to exercise the Sagas page in Iris end to end.
 
-States: Submitted, Accepted, Shipped, Cancelled. Messages (namespace `Iris.Samples.MassTransitSaga.Contracts`, all carrying `Guid OrderId`):
+States: Submitted, Accepted, Shipped, Cancelled, and MassTransit's own Final. Cancelling finalizes the saga, so the graph draws Final with the double border a final state gets. Messages (namespace `Iris.Samples.MassTransitSaga.Contracts`, all carrying `Guid OrderId`):
 
 | Message | Valid in | Goes to |
 | --- | --- | --- |
 | SubmitOrder | Initial | Submitted |
 | AcceptOrder | Submitted | Accepted |
 | ShipOrder | Accepted | Shipped |
-| CancelOrder | Submitted, Accepted | Cancelled |
+| CancelOrder | Submitted, Accepted | Cancelled, then Final |
 
 ## License
 
@@ -24,7 +24,7 @@ Iris itself needs no license: it uses MassTransit only to wrap message envelopes
 1. Start RabbitMQ locally, for example `docker run -d --name rabbit -p 5672:5672 -p 15672:15672 rabbitmq:3-management`.
 2. `dotnet run --project Samples/Iris.Samples.MassTransitSaga` (add `--demo` to have it drive one order through Submitted, Accepted, Shipped on its own).
 
-Environment variables: `OTEL_EXPORTER_OTLP_ENDPOINT` (default `http://127.0.0.1:4318`, which is the Iris receiver's default) and `RABBITMQ_HOST` (default `localhost`).
+Environment variables: `OTEL_EXPORTER_OTLP_ENDPOINT` (default `http://127.0.0.1:4318`, which is the Iris receiver's default; the sample appends `/v1/traces` and exports traces only) and `RABBITMQ_HOST` (default `localhost`).
 
 ## Walk it through Iris
 
