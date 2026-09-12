@@ -11,13 +11,11 @@ States: Submitted, Accepted, Shipped, Cancelled, and MassTransit's own Final. Ca
 | ShipOrder | Accepted | Shipped |
 | CancelOrder | Submitted, Accepted | Cancelled, then Final |
 
-## License
+## MassTransit version
 
-MassTransit 9.1.0 requires a license before it will build a bus, so the sample will not start without one. This is a MassTransit requirement, not an Iris one.
+The sample uses the MassTransit version pinned in the repository's central package versions, currently 8.5.10, and it must stay in step with the version Iris itself references. Iris reflects this assembly to find the state machine, and a type loaded from a different MassTransit assembly would not match, so the Sagas page would list nothing at all.
 
-Supply it through the `MT_LICENSE` or `MT_LICENSE_PATH` environment variables, or in code with `SetLicense` or `SetLicenseLocation`. Get a license at https://masstransit.massient.com/configuration/license.
-
-Iris itself needs no license: it uses MassTransit only to wrap message envelopes and never builds a bus.
+Do not move to MassTransit 9.x. That line is commercially licensed and refuses to build a bus without a license key, which would stop this sample from starting.
 
 ## Run
 
