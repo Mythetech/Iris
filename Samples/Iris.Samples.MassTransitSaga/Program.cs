@@ -12,14 +12,23 @@ using OpenTelemetry.Trace;
 Environment.SetEnvironmentVariable("MASSTRANSIT_USAGE_TELEMETRY", "false");
 
 var otlpEndpoint = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT") ?? "http://127.0.0.1:4318";
+// AddOtlpExporter takes the full signal URL, unlike UseOtlpExporter which appends the signal path itself.
+var tracesEndpoint = new Uri($"{otlpEndpoint.TrimEnd('/')}/v1/traces");
 var rabbitHost = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "localhost";
 
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(r => r.AddService("Iris.Samples.MassTransitSaga"))
-    .WithTracing(t => t.AddSource(DiagnosticHeaders.DefaultListenerName))
-    .UseOtlpExporter(OtlpExportProtocol.HttpProtobuf, new Uri(otlpEndpoint));
+    // Traces only: the Iris receiver serves /v1/traces and nothing else, and UseOtlpExporter would
+    // also export logs and metrics to endpoints that are not there.
+    .WithTracing(t => t
+        .AddSource(DiagnosticHeaders.DefaultListenerName)
+        .AddOtlpExporter(o =>
+        {
+            o.Protocol = OtlpExportProtocol.HttpProtobuf;
+            o.Endpoint = tracesEndpoint;
+        }));
 
 builder.Services.AddMassTransit(x =>
 {
@@ -39,7 +48,7 @@ builder.Services.AddMassTransit(x =>
 var host = builder.Build();
 await host.StartAsync();
 
-Console.WriteLine($"OrderStateMachine listening on queue 'order-state'; exporting traces to {otlpEndpoint}");
+Console.WriteLine($"OrderStateMachine listening on queue 'order-state'; exporting traces to {tracesEndpoint}");
 Console.WriteLine("Send SubmitOrder, AcceptOrder, ShipOrder or CancelOrder from Iris with MassTransit wrapping, or run with --demo.");
 
 if (args.Contains("--demo"))
