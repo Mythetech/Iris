@@ -11,6 +11,14 @@ States: Submitted, Accepted, Shipped, Cancelled. Messages (namespace `Iris.Sampl
 | ShipOrder | Accepted | Shipped |
 | CancelOrder | Submitted, Accepted | Cancelled |
 
+## License
+
+MassTransit 9.1.0 requires a license before it will build a bus, so the sample will not start without one. This is a MassTransit requirement, not an Iris one.
+
+Supply it through the `MT_LICENSE` or `MT_LICENSE_PATH` environment variables, or in code with `SetLicense` or `SetLicenseLocation`. Get a license at https://masstransit.massient.com/configuration/license.
+
+Iris itself needs no license: it uses MassTransit only to wrap message envelopes and never builds a bus.
+
 ## Run
 
 1. Start RabbitMQ locally, for example `docker run -d --name rabbit -p 5672:5672 -p 15672:15672 rabbitmq:3-management`.
