@@ -1,7 +1,7 @@
 using Iris.Telemetry;
 using MassTransit.Logging;
 
-namespace Iris.Sagas.MassTransit;
+namespace Iris.Sagas.Frameworks;
 
 /// <summary>
 /// MassTransit's StateMachineSagaMessageFilter stamps the saga id, begin state and end state on the
