@@ -36,4 +36,4 @@ Environment variables: `OTEL_EXPORTER_OTLP_ENDPOINT` (default `http://127.0.0.1:
    - Choose the `SubmitOrder` type from the loaded assembly, choose MassTransit as the framework, fill in an `OrderId`, send.
    - Back on Sagas, the instance appears with Submitted highlighted. Send `AcceptOrder` and `ShipOrder` with the same `OrderId` and watch it move.
 
-The sample stays on MassTransit 9.1.0 through the repository's central package versions. Do not bump it; later versions carry licensing restrictions.
+The sample stays on MassTransit 9.1.0 through the repository's central package versions. Do not bump it.
