@@ -21,8 +21,13 @@
     transition: background-color 120ms ease;
 }
 
-.saga-definition-item:hover {
+.saga-definition-item:not(.saga-definition-error):hover {
     background-color: rgba(var(--iris-primary-rgb), 0.10);
+}
+
+.saga-definition-item:focus-visible {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: 2px;
 }
 
 .saga-definition-selected {
