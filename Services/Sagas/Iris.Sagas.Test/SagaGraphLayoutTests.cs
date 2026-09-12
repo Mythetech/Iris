@@ -108,17 +108,17 @@ public class SagaGraphLayoutTests
     [Fact(DisplayName = "Duplicate transitions between the same states get distinct labels inside the canvas")]
     public void Duplicate_Transitions_Get_Distinct_Labels()
     {
-        var graph = Graph(["Initial", "Submitted", "Cancelled"],
-            new("Initial", "Submitted", "Submit"),
-            new("Submitted", "Cancelled", "CancelByUser"),
-            new("Submitted", "Cancelled", "CancelBySystem"));
+        var transitions = Enumerable.Range(0, 10)
+            .Select(i => new SagaTransitionDefinition("Initial", "A", $"Event{i}"))
+            .ToArray();
+        var graph = Graph(["Initial", "A"], transitions);
 
         var result = SagaGraphLayout.Compute(graph);
 
-        var byUser = result.Edges.Single(e => e.Transition.EventName == "CancelByUser");
-        var bySystem = result.Edges.Single(e => e.Transition.EventName == "CancelBySystem");
+        var plainGridHeight = SagaGraphLayout.Padding * 2 + 2 * SagaGraphLayout.NodeHeight + SagaGraphLayout.LayerGap;
 
-        byUser.LabelY.Should().NotBe(bySystem.LabelY);
+        result.Edges.Select(e => e.LabelY).Distinct().Should().HaveCount(10, "each duplicate transition needs its own label position");
         result.Edges.Should().OnlyContain(e => e.LabelX >= 0 && e.LabelX <= result.Width && e.LabelY >= 0 && e.LabelY <= result.Height);
+        result.Height.Should().BeGreaterThan(plainGridHeight, "ten stacked labels push past the plain two-layer grid height");
     }
 }
