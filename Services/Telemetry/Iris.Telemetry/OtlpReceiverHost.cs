@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Proto.Collector.Trace.V1;
 
@@ -15,7 +16,7 @@ namespace Iris.Telemetry;
 /// Loopback-only OTLP/HTTP receiver. One endpoint, POST /v1/traces, protobuf bodies only.
 /// Everything it learns goes to the <see cref="ITelemetrySink"/>; it knows nothing about the UI.
 /// </summary>
-public sealed class OtlpReceiverHost : IOtlpReceiver, IAsyncDisposable
+public sealed class OtlpReceiverHost : IOtlpReceiver, IAsyncDisposable, IDisposable
 {
     private const string ProtobufContentType = "application/x-protobuf";
     private const string TracesPath = "/v1/traces";
@@ -52,6 +53,11 @@ public sealed class OtlpReceiverHost : IOtlpReceiver, IAsyncDisposable
 
             var builder = WebApplication.CreateSlimBuilder();
             builder.Logging.ClearProviders();
+            // The default ConsoleLifetime installs POSIX signal handlers that cancel SIGINT, SIGQUIT and
+            // SIGTERM so the signal stops this inner host instead of the process. Iris is the process, so
+            // leaving it in place makes the whole app ignore Ctrl+C and logout for as long as the receiver
+            // has ever run. Do not remove this registration.
+            builder.Services.AddSingleton<IHostLifetime, NoopHostLifetime>();
             builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
             var app = builder.Build();
             app.MapPost(TracesPath, HandleTracesAsync);
@@ -67,9 +73,10 @@ public sealed class OtlpReceiverHost : IOtlpReceiver, IAsyncDisposable
                 await SetStatusAsync(OtlpReceiverStatus.Failed, null, ex.Message, cancellationToken);
                 return;
             }
-            catch
+            catch (Exception ex)
             {
                 await app.DisposeAsync();
+                await SetStatusAsync(OtlpReceiverStatus.Failed, null, ex.Message, cancellationToken);
                 throw;
             }
 
@@ -103,6 +110,23 @@ public sealed class OtlpReceiverHost : IOtlpReceiver, IAsyncDisposable
         if (_disposed) return;
         _disposed = true;
         await StopAsync();
+    }
+
+    /// <summary>
+    /// Synchronous teardown for containers that dispose their singletons on the sync path. It skips the
+    /// graceful stop instead of blocking on it; disposing the inner host is enough to release the port.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        var app = _app;
+        _app = null;
+        // WebApplication implements IDisposable explicitly, through IHost.
+        ((IDisposable?)app)?.Dispose();
+        Status = OtlpReceiverStatus.Stopped;
+        Endpoint = null;
+        Port = null;
     }
 
     private async Task StopCoreAsync(CancellationToken cancellationToken)
@@ -169,5 +193,12 @@ public sealed class OtlpReceiverHost : IOtlpReceiver, IAsyncDisposable
 
         await _sink.AcceptAsync(spans, cancellationToken);
         return Results.Bytes(new ExportTraceServiceResponse().ToByteArray(), ProtobufContentType);
+    }
+
+    private sealed class NoopHostLifetime : IHostLifetime
+    {
+        public Task WaitForStartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

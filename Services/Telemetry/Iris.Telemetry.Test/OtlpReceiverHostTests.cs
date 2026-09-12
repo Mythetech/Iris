@@ -116,6 +116,36 @@ public class OtlpReceiverHostTests
         sink.Statuses.Last().Error.Should().NotBeNullOrWhiteSpace();
     }
 
+    [Fact(DisplayName = "A start that fails for something other than the socket still reports Failed with the error")]
+    public async Task Start_Failing_Outside_The_Socket_Reports_Failed()
+    {
+        var sink = new RecordingTelemetrySink();
+        await using var host = CreateHost(sink);
+
+        // Out of range for a TCP port, so Kestrel refuses before it ever reaches a socket.
+        var act = () => host.StartAsync(70000);
+
+        await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
+        host.Status.Should().Be(OtlpReceiverStatus.Failed);
+        host.LastError.Should().NotBeNullOrWhiteSpace();
+        sink.Statuses.Last().Status.Should().Be(OtlpReceiverStatus.Failed);
+        sink.Statuses.Last().Error.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact(DisplayName = "Disposing synchronously stops the receiver without throwing")]
+    public async Task Sync_Dispose_Does_Not_Throw()
+    {
+        var sink = new RecordingTelemetrySink();
+        var host = CreateHost(sink);
+        await host.StartAsync(0);
+
+        var act = () => host.Dispose();
+
+        act.Should().NotThrow();
+        host.Status.Should().Be(OtlpReceiverStatus.Stopped);
+        host.Port.Should().BeNull();
+    }
+
     [Fact(DisplayName = "Stop reports Stopped and the endpoint no longer accepts connections")]
     public async Task Stop_Reports_Stopped()
     {
