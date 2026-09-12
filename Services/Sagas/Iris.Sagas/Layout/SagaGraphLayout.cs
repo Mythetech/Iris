@@ -12,6 +12,21 @@ public static class SagaGraphLayout
     private const double LoopReach = 56;
     private const double BackEdgeReach = 70;
 
+    // Labels render as start-anchored 11px text, so one grows to the right of its position and
+    // sits on it as a baseline. There is no text measurement available at layout time, so the
+    // width is an estimate from the character count; it only has to be close enough to keep a
+    // label off a node.
+    private const double LabelFontSize = 11;
+    private const double LabelCharWidth = 6;
+
+    /// <summary>
+    /// The area an edge's label text covers. Placement uses this to keep labels off nodes.
+    /// </summary>
+    public static LabelBounds LabelBox(EdgeLayout edge) => LabelBox(edge.LabelX, edge.LabelY, edge.Transition.EventName);
+
+    private static LabelBounds LabelBox(double x, double y, string eventName)
+        => new(x, y - LabelFontSize, x + eventName.Length * LabelCharWidth, y);
+
     public static SagaGraphLayoutResult Compute(SagaGraph graph)
     {
         if (graph.States.Count == 0)
@@ -46,6 +61,7 @@ public static class SagaGraphLayout
         var lookup = nodes.ToDictionary(n => n.State);
         var edges = new List<EdgeLayout>();
         var labelSlots = new Dictionary<(string, string), int>();
+        var placedLabels = new List<LabelBounds>();
         foreach (var t in graph.Transitions)
         {
             if (!lookup.TryGetValue(t.FromState, out var from) || !lookup.TryGetValue(t.ToState, out var to))
@@ -55,21 +71,25 @@ public static class SagaGraphLayout
             labelSlots[(t.FromState, t.ToState)] = slot + 1;
             var labelOffset = slot * 14;
 
+            EdgeLayout edge;
             if (t.FromState == t.ToState)
             {
-                var (path, lx, ly) = SelfLoop(from);
-                edges.Add(new EdgeLayout(t, path, lx, ly + labelOffset, false, true));
+                var (path, lx, ly) = SelfLoop(from, t.EventName, labelOffset, nodes, placedLabels);
+                edge = new EdgeLayout(t, path, lx, ly, false, true);
             }
             else if (backEdges.Contains((t.FromState, t.ToState)))
             {
                 var (path, lx, ly) = BackEdge(from, to);
-                edges.Add(new EdgeLayout(t, path, lx, ly + labelOffset, true, false));
+                edge = new EdgeLayout(t, path, lx, ly + labelOffset, true, false);
             }
             else
             {
-                var (path, lx, ly) = ForwardEdge(from, to);
-                edges.Add(new EdgeLayout(t, path, lx, ly + labelOffset, false, false));
+                var (path, lx, ly) = ForwardEdge(from, to, t.EventName, labelOffset, nodes, placedLabels);
+                edge = new EdgeLayout(t, path, lx, ly, false, false);
             }
+
+            edges.Add(edge);
+            placedLabels.Add(LabelBox(edge));
         }
 
         // Transitions sharing a state pair stack their labels downward via labelOffset,
@@ -162,14 +182,39 @@ public static class SagaGraphLayout
         return false;
     }
 
-    private static (string Path, double LabelX, double LabelY) ForwardEdge(NodeLayout from, NodeLayout to)
+    // Walked outward from the midpoint, so a label that already sits clear keeps the position
+    // that reads best and only a blocked one moves, by as little as possible.
+    private static readonly double[] LabelSamples = [0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74, 0.18, 0.82];
+
+    private static (string Path, double LabelX, double LabelY) ForwardEdge(
+        NodeLayout from, NodeLayout to, string eventName, double labelOffset,
+        List<NodeLayout> nodes, List<LabelBounds> placed)
     {
         var (x1, y1) = (from.CenterX, from.Bottom);
         var (x2, y2) = (to.CenterX, to.Y);
         var bend = Math.Max(24, (y2 - y1) / 2);
         var path = Cubic(x1, y1, x1, y1 + bend, x2, y2 - bend, x2, y2);
-        var (lx, ly) = CubicPoint(0.5, x1, y1, x1, y1 + bend, x2, y2 - bend, x2, y2);
-        return (path, lx + 6, ly);
+
+        // An edge between non adjacent layers runs through the rows in between, so its midpoint
+        // can land on a node belonging to some unrelated transition. Two edges leaving one state
+        // for different targets then dodge that node into the same gap and land on each other,
+        // so a spot has to be free of both before it is worth taking.
+        foreach (var sample in LabelSamples)
+        {
+            var (sx, sy) = CubicPoint(sample, x1, y1, x1, y1 + bend, x2, y2 - bend, x2, y2);
+            var (lx, ly) = (sx + 6, sy + labelOffset);
+            if (IsClear(lx, ly, eventName, nodes, placed))
+                return (path, lx, ly);
+        }
+
+        var (mx, my) = CubicPoint(0.5, x1, y1, x1, y1 + bend, x2, y2 - bend, x2, y2);
+        return (path, mx + 6, my + labelOffset);
+    }
+
+    private static bool IsClear(double x, double y, string eventName, List<NodeLayout> nodes, List<LabelBounds> placed)
+    {
+        var box = LabelBox(x, y, eventName);
+        return !nodes.Any(box.Overlaps) && !placed.Any(box.Overlaps);
     }
 
     private static (string Path, double LabelX, double LabelY) BackEdge(NodeLayout from, NodeLayout to)
@@ -182,12 +227,22 @@ public static class SagaGraphLayout
         return (path, lx + 6, ly);
     }
 
-    private static (string Path, double LabelX, double LabelY) SelfLoop(NodeLayout node)
+    private static (string Path, double LabelX, double LabelY) SelfLoop(
+        NodeLayout node, string eventName, double labelOffset,
+        List<NodeLayout> nodes, List<LabelBounds> placed)
     {
         var (x, y1, y2) = (node.Right, node.Y + node.Height * 0.3, node.Y + node.Height * 0.7);
         var reach = x + LoopReach;
         var path = Cubic(x, y1, reach, y1 - 28, reach, y2 + 28, x, y2);
-        return (path, reach - 8, node.CenterY);
+
+        var (besideX, besideY) = (reach - 8, node.CenterY + labelOffset);
+        if (IsClear(besideX, besideY, eventName, nodes, placed))
+            return (path, besideX, besideY);
+
+        // The loop occupies the gap beside its node, which is exactly where the next node in the
+        // same layer starts. Sit the label above the arc instead, stacking upward so a second
+        // loop on the same state clears the node rather than dropping back onto it.
+        return (path, x + 4, node.Y - 4 - labelOffset);
     }
 
     private static string Cubic(double x1, double y1, double c1x, double c1y, double c2x, double c2y, double x2, double y2)

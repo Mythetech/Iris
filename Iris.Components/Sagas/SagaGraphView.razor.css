@@ -77,6 +77,8 @@
     fill: var(--mud-palette-lines-default);
 }
 
+/* SagaGraphLayout sizes a label from this font-size and the default start anchor to keep labels
+   off the nodes. Changing either means changing LabelFontSize and LabelCharWidth to match. */
 .edge-label {
     fill: var(--mud-palette-text-secondary);
     font-size: 11px;

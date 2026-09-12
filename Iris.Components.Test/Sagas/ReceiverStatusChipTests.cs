@@ -141,6 +141,50 @@ public class ReceiverStatusChipTests : IrisTestContext
             Arg.Any<DialogOptions>());
     }
 
+    [Fact(DisplayName = "A chip already on screen follows the span counts as they climb")]
+    public async Task Counts_Follow_Ingest_Without_A_Fresh_Render()
+    {
+        _receiver.Status.Returns(OtlpReceiverStatus.Listening);
+        _receiver.Endpoint.Returns("http://127.0.0.1:4318");
+        var instances = Services.GetRequiredService<SagaInstanceState>();
+        var cut = RenderComponent<ReceiverStatusChip>();
+        cut.Find(".receiver-counts").TextContent.Trim().Should().Be("0 spans, 0 mapped");
+
+        await instances.IngestAsync([StubSpanMapper.Span(Guid.NewGuid(), "Nowhere", "Elsewhere")]);
+
+        cut.Find(".receiver-counts").TextContent.Trim().Should().Be("1 spans, 1 mapped",
+            "the page never re-creates this chip, so it has to follow the state it reads rather than wait for a parent render");
+    }
+
+    [Fact(DisplayName = "A chip already on screen follows the receiver coming up")]
+    public async Task Status_Follows_The_Receiver_Without_A_Fresh_Render()
+    {
+        _receiver.Status.Returns(OtlpReceiverStatus.Stopped);
+        var cut = RenderComponent<ReceiverStatusChip>();
+        cut.Markup.Should().Contain("Stopped");
+
+        _receiver.Status.Returns(OtlpReceiverStatus.Listening);
+        _receiver.Endpoint.Returns("http://127.0.0.1:4318");
+        await Services.GetRequiredService<IMessageBus>()
+            .PublishAsync(new Iris.Telemetry.Messages.OtlpReceiverStatusChanged(
+                OtlpReceiverStatus.Listening, "http://127.0.0.1:4318", null));
+
+        cut.Markup.Should().Contain("Listening").And.Contain("http://127.0.0.1:4318");
+        cut.Markup.Should().NotContain("Stopped");
+    }
+
+    [Fact(DisplayName = "The copy control carries one tooltip rather than a second stacked over it")]
+    public void Copy_Control_Has_A_Single_Tooltip()
+    {
+        _receiver.Status.Returns(OtlpReceiverStatus.Listening);
+        _receiver.Endpoint.Returns("http://127.0.0.1:4318");
+
+        var cut = RenderComponent<ReceiverStatusChip>();
+
+        cut.FindAll(".mud-tooltip-root").Should().ContainSingle(
+            "MtCopyButton brings its own tooltip, which also swaps to Copied on success, so wrapping it in another one renders both at once");
+    }
+
     [Fact(DisplayName = "Shows the error when the receiver failed")]
     public void Shows_Failure()
     {
