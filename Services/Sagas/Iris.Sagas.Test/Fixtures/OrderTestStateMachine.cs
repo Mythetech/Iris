@@ -14,7 +14,10 @@ public class OrderTestState : SagaStateMachineInstance
 }
 
 /// <summary>
-/// CancelTestOrder is valid in two states so the provider's edge pairing is exercised on a shared event.
+/// CancelTestOrder is valid in three states, and it does not lead to the same target from all of them.
+/// That is what discriminates a real per-behaviour transition walk from a naive cross product of an
+/// event's source states against its target states: the cross product would invent Accepted to Failed
+/// and Shipped to Cancelled, neither of which this machine can perform.
 /// </summary>
 public class OrderTestStateMachine : MassTransitStateMachine<OrderTestState>
 {
@@ -37,17 +40,21 @@ public class OrderTestStateMachine : MassTransitStateMachine<OrderTestState>
         During(Accepted,
             When(Ship).TransitionTo(Shipped),
             When(Cancel).TransitionTo(Cancelled));
+
+        During(Shipped,
+            When(Cancel).TransitionTo(Failed));
     }
 
     public State Submitted { get; private set; } = null!;
     public State Accepted { get; private set; } = null!;
     public State Shipped { get; private set; } = null!;
     public State Cancelled { get; private set; } = null!;
+    public State Failed { get; private set; } = null!;
 
     public Event<SubmitTestOrder> Submit { get; private set; } = null!;
     // MassTransit derives the event name from the property name, and this fixture needs an event
     // literally named Accept, which collides with MassTransitStateMachine.Accept(StateMachineVisitor).
-    // Hiding it is harmless because the graph visitor reaches Accept through the StateMachine interface.
+    // Hiding it is harmless because Iris reaches Accept through the non generic StateMachine interface.
     public new Event<AcceptTestOrder> Accept { get; private set; } = null!;
     public Event<ShipTestOrder> Ship { get; private set; } = null!;
     public Event<CancelTestOrder> Cancel { get; private set; } = null!;
