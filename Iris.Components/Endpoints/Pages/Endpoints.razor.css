@@ -1,0 +1,19 @@
+/* MudDataGrid renders its scroll container (.mud-table-container) as its own
+   internal markup, which never carries a CSS-isolation scope attribute. Anchoring
+   on the literal wrapper div below (which does carry it) lets ::deep reach that
+   internal element, so the grid scrolls inside the card instead of running past it.
+
+   The bound is derived from the same --iris-page-body-height token the card itself
+   uses (rather than a second, unrelated literal) so the two cannot drift apart.
+   The extra subtraction accounts for the card's own padding, its header row, and
+   the grid's pager, none of which are part of the token. overflow: hidden is a
+   backstop: MudCard sets no overflow of its own, so if that margin ever goes
+   negative this clips instead of letting the pager spill outside the card. */
+.endpoints-grid-wrapper {
+    overflow: hidden;
+}
+
+.endpoints-grid-wrapper ::deep .mud-table-container {
+    max-height: calc(var(--iris-page-body-height) - 110px);
+    overflow-y: auto;
+}

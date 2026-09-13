@@ -5,78 +5,99 @@
 @using Iris.Contracts.Brokers.Models
 @page "/Endpoints"
 
-<IrisCard>
-    <MudDataGrid Loading="@Loading"
-                 RowsPerPage="10"
-                 Items="@_endpoints"
-                 T="Contracts.Brokers.Models.EndpointDetails"
-                 Hover="true"
-                 RowClick="EndpointRowClicked"
-                 Class="iris-table"
-                 Filterable="false"
-                 Dense="true"
-                 QuickFilter="@_quickFilter">
-        <ToolBarContent>
-            <MudSpacer />
-            <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
-                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="MudBlazor.Size.Medium" Class="mt-0"></MudTextField>
-        </ToolBarContent>
-        <Columns>
-            <TemplateColumn CellClass="grid-icon-col" Filterable="false">
-                <CellTemplate>
-                    <MudTooltip Text="@(context?.Item?.Provider ?? " Provider")">
-                        <MudIcon Size="Size.Small" Class="@($"icon-{context?.Item?.Provider}")" />
-                    </MudTooltip>
-                </CellTemplate>
-            </TemplateColumn>
-            <PropertyColumn Property="x => x!.Provider" Title="Provider" />
-            <PropertyColumn Property="x => x!.Address" Title="Address" />
-            <PropertyColumn Property="x => x!.Name" Title="Name" />
-            <PropertyColumn Property="x => x!.Type" Title="Type" />
-            <TemplateColumn CellClass="grid-icon-col" Filterable="false">
-                <CellTemplate>
-                    <GridActionsMenu
-                        OnSendClicked="@(() => HandleSendClicked(context?.Item!))"
-                        OnReadClicked="@(() => HandleReadClicked(context?.Item!))"
-                        CanRead="@CanRead(context?.Item)"
-                        ReadDisabledReason="@GetReadDisabledReason(context?.Item)" />
-                </CellTemplate>
-            </TemplateColumn>
-        </Columns>
-        <PagerContent>
-            <MudDataGridPager T="Contracts.Brokers.Models.EndpointDetails" />
-        </PagerContent>
-        <LoadingContent>
-            <MudPaper Class="mud-width-full bg-black" Square="true" Style="margin-top:-1em;margin-bottom:-1em;overflow:hidden;">
-                <MudGrid Class="pa-4">
-                    @for (int i = 0; i < 11; i++)
-                    {
-                        <MudItem xs="1">
-                            <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
-                        </MudItem>
-                        <MudItem xs="4">
-                            <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
-                        </MudItem>
-                        <MudItem xs="2">
-                            <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
-                        </MudItem>
-                        <MudItem xs="1">
-                            <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
-                        </MudItem>
-                    }
-                </MudGrid>
-            </MudPaper>
-        </LoadingContent>
-        <NoRecordsContent>
-            <MudStack Class="w-100" Justify="Justify.Center" AlignItems="AlignItems.Center" Style="@($"height:245px;")">
-                <MudIcon Size="MudBlazor.Size.Large" Icon="@IrisIcons.NoEndpoints" />
-                <MudText>No Endpoints</MudText>
-            </MudStack>
-        </NoRecordsContent>
-    </MudDataGrid>
+<IrisPageHeader Icon="@IrisIcons.Endpoints" Title="Endpoints">
+    <Status>
+        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+            @_endpoints.Count endpoint@(_endpoints.Count != 1 ? "s" : "")
+        </MudText>
+    </Status>
+    <Actions>
+        <MudTextField @bind-Value="_searchString"
+                      Placeholder="Search"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@IrisIcons.Search"
+                      Immediate="true"
+                      Class="mt-0" />
+        <MudTooltip Text="Refresh">
+            <MudIconButton Icon="@IrisIcons.Refresh"
+                           Class="endpoints-refresh-button"
+                           Size="Size.Small"
+                           Disabled="@Loading"
+                           OnClick="@RefreshAsync" />
+        </MudTooltip>
+    </Actions>
+</IrisPageHeader>
+
+<IrisCard Height="var(--iris-page-body-height)">
+    <div class="endpoints-grid-wrapper">
+        <MudDataGrid Loading="@Loading"
+                     RowsPerPage="25"
+                     FixedHeader="true"
+                     Items="@_endpoints"
+                     T="Contracts.Brokers.Models.EndpointDetails"
+                     Hover="true"
+                     RowClick="EndpointRowClicked"
+                     Class="iris-table"
+                     Filterable="false"
+                     Dense="true"
+                     QuickFilter="@_quickFilter">
+            <Columns>
+                <TemplateColumn CellClass="grid-icon-col" Filterable="false">
+                    <CellTemplate>
+                        <MudTooltip Text="@(context?.Item?.Provider ?? " Provider")">
+                            <MudIcon Size="Size.Small" Class="@($"icon-{context?.Item?.Provider}")" />
+                        </MudTooltip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x!.Provider" Title="Provider" />
+                <PropertyColumn Property="x => x!.Address" Title="Address" />
+                <PropertyColumn Property="x => x!.Name" Title="Name" />
+                <PropertyColumn Property="x => x!.Type" Title="Type" />
+                <TemplateColumn CellClass="grid-icon-col" Filterable="false">
+                    <CellTemplate>
+                        <GridActionsMenu
+                            OnSendClicked="@(() => HandleSendClicked(context?.Item!))"
+                            OnReadClicked="@(() => HandleReadClicked(context?.Item!))"
+                            CanRead="@CanRead(context?.Item)"
+                            ReadDisabledReason="@GetReadDisabledReason(context?.Item)" />
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager T="Contracts.Brokers.Models.EndpointDetails" />
+            </PagerContent>
+            <LoadingContent>
+                <MudPaper Class="mud-width-full bg-black" Square="true" Style="margin-top:-1em;margin-bottom:-1em;overflow:hidden;">
+                    <MudGrid Class="pa-4">
+                        @for (int i = 0; i < 11; i++)
+                        {
+                            <MudItem xs="1">
+                                <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
+                            </MudItem>
+                            <MudItem xs="4">
+                                <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
+                            </MudItem>
+                            <MudItem xs="2">
+                                <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
+                            </MudItem>
+                            <MudItem xs="1">
+                                <MudSkeleton Class="loading-box-shadow" SkeletonType="SkeletonType.Rectangle" Height="32px" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudPaper>
+            </LoadingContent>
+            <NoRecordsContent>
+                <MudStack Class="w-100" Justify="Justify.Center" AlignItems="AlignItems.Center" Style="@($"height:245px;")">
+                    <MudIcon Size="MudBlazor.Size.Large" Icon="@IrisIcons.NoEndpoints" />
+                    <MudText>No Endpoints</MudText>
+                </MudStack>
+            </NoRecordsContent>
+        </MudDataGrid>
+    </div>
 </IrisCard>
 <MudDrawer @bind-Open="_isOpen" Variant="DrawerVariant.Temporary" Anchor="Anchor.End">
     <EndpointOffcanvas Endpoint="@_selectedEndpoint"
@@ -104,26 +125,37 @@
     protected override async Task OnInitializedAsync()
     {
         if (_endpoints is null || _endpoints.Count == 0)
+            await LoadAsync();
+
+        await base.OnInitializedAsync();
+    }
+
+    private async Task RefreshAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        Loading = true;
+        StateHasChanged();
+
+        try
         {
-            Loading = true;
-
-            StateHasChanged();
-
             _endpoints = await Client.GetEndpointsAsync();
 
             // Probe reader capabilities once per distinct connection address.
             // The dialog uses these to decide which Peek/Receive/DLQ buttons
             // to show; the actions menu uses CanReceive as the floor for
             // enabling the Read item.
+            _caps.Clear();
             foreach (var addr in _endpoints.Select(e => e.Address).Distinct())
                 _caps[addr] = await Client.GetReaderCapabilitiesAsync(addr);
-
-            Loading = false;
         }
-
-        StateHasChanged();
-
-        await base.OnInitializedAsync();
+        finally
+        {
+            // A refresh button stays bound to Loading, so a broker failure here
+            // must not leave it permanently disabled with no way to try again.
+            Loading = false;
+            StateHasChanged();
+        }
     }
 
     private bool CanRead(Contracts.Brokers.Models.EndpointDetails? e) =>
