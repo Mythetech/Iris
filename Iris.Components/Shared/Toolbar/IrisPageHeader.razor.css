@@ -1,0 +1,19 @@
+.iris-page-header-title {
+    white-space: nowrap;
+}
+
+/* Own flex context so a long status line truncates instead of pushing the actions off. */
+.iris-page-header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.iris-page-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
