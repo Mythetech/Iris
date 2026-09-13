@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Iris.Assemblies.CodeGeneration;
+using Iris.Assemblies;
 using Iris.Brokers;
 using Iris.Brokers.Exceptions;
 using Iris.Brokers.Frameworks;
@@ -8,6 +8,7 @@ using Iris.Components.Brokers;
 using Mythetech.Framework.Infrastructure.MessageBus;
 using Iris.Components.Messaging;
 using Iris.Components.PackageManagement;
+using Iris.Contracts.Assemblies;
 using Iris.Contracts.Brokers.Endpoints;
 using Iris.Contracts.Brokers.Models;
 using Iris.Contracts.Brokers.Events;
@@ -16,6 +17,7 @@ using Iris.Contracts.Messaging.Frameworks;
 using Iris.Contracts.Messaging.Models;
 using Iris.Contracts.Results;
 using Iris.Desktop.PackageManagement;
+using Microsoft.Extensions.Logging;
 using ConnectionData = Iris.Contracts.Brokers.Models.ConnectionData;
 using EndpointDetails = Iris.Contracts.Brokers.Models.EndpointDetails;
 using CreateConnectionResponse = Iris.Contracts.Brokers.Endpoints.CreateConnection.CreateConnectionResponse;
@@ -30,22 +32,27 @@ public class LocalConnectionManager : IBrokerService, IMessageService
     private readonly IBrokerConnectionManager _connectionManager;
     private readonly IMessageBus _bus;
     private readonly IFrameworkProvider _frameworks;
-    private readonly ICodeGenerator _codeGenerator;
+    private readonly ISampleJsonGenerator _sampleJson;
     private readonly IPackageService _packageService;
+    private readonly AssemblySettings _assemblySettings;
     private readonly MessageState _state;
     private readonly ConnectionRepository _connectionRepository;
+    private readonly ILogger<LocalConnectionManager> _logger;
 
     public LocalConnectionManager(IBrokerConnectionManager connectionManager, IMessageBus bus,
-        IFrameworkProvider frameworks, ICodeGenerator codeGenerator, IPackageService packageService, MessageState state,
-        ConnectionRepository connectionRepository)
+        IFrameworkProvider frameworks, ISampleJsonGenerator sampleJson, IPackageService packageService,
+        AssemblySettings assemblySettings, MessageState state,
+        ConnectionRepository connectionRepository, ILogger<LocalConnectionManager> logger)
     {
         _connectionManager = connectionManager;
         _bus = bus;
         _frameworks = frameworks;
-        _codeGenerator = codeGenerator;
+        _sampleJson = sampleJson;
         _packageService = packageService;
+        _assemblySettings = assemblySettings;
         _state = state;
         _connectionRepository = connectionRepository;
+        _logger = logger;
     }
 
     public async Task<Result<CreateConnectionResponse>> CreateConnectionAsync(ConnectionData data)
@@ -163,47 +170,60 @@ public class LocalConnectionManager : IBrokerService, IMessageService
 
     }
 
+    /// <summary>
+    /// Builds the sample body for a message type the same way the type picker does, through
+    /// <see cref="TypeMapper"/> and <see cref="ISampleJsonGenerator"/>.
+    ///
+    /// This used to emit a dynamic clone of the type and serialize a default instance of it.
+    /// That clone was defined with <c>AssemblyBuilderAccess.Run</c>, which is non-collectible,
+    /// while every user type comes from the collectible context <see cref="AssemblyLoader"/>
+    /// creates, so the moment a message had a property of a user-defined type, which is any
+    /// nested class, enum or record, defining the field threw and the caller showed an empty
+    /// editor. The types users most want a sample for were exactly the ones that never worked.
+    /// </summary>
     public Task<string> GetMessageStructureAsync(string messageType)
     {
-        messageType = messageType.Replace(":", ".");
-        
-        var types = ((LocalPackageService)_packageService).GetLoadedTypes().Distinct().ToList();
+        var type = ResolveLoadedType(messageType);
 
-        var type = types.FirstOrDefault(x => x.Name == messageType);
-
-        type ??= types.FirstOrDefault(x => x.FullName.Equals(messageType));
+        if (type is null)
+            return Task.FromResult("");
 
         try
         {
-            var dynamicType = _codeGenerator.Create(type);
+            var sample = _sampleJson.GenerateSample(type.ToContract(_assemblySettings.MaxTypeDepth));
 
-            var response = Activator.CreateInstance(dynamicType);
-
-            return Task.FromResult(JsonSerializer.Serialize(response));
-
+            return Task.FromResult(sample.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
         }
-        catch
+        catch (Exception e)
         {
+            // Reflecting over a loaded type can still fail when a dependency it needs is not
+            // resolvable. An empty editor is the right fallback, but it must not be silent.
+            _logger.LogError(e, "Unable to build a sample body for {MessageType}", messageType);
             return Task.FromResult("");
         }
     }
 
     private string? ResolveMessageAssemblyName(string messageType)
+        => ResolveLoadedType(messageType)?.Assembly.GetName().Name;
+
+    /// <summary>
+    /// Endpoint names arrive spelled the way their broker spells them, so a RabbitMQ exchange
+    /// carries <c>Namespace:Type</c> where the .NET name has a dot. Matching on the short name
+    /// first keeps a bare queue name like <c>OrderPlaced</c> working.
+    /// </summary>
+    private Type? ResolveLoadedType(string messageType)
     {
         if (string.IsNullOrWhiteSpace(messageType))
             return null;
 
-        var normalized = messageType.Replace(":", ".");
-
         if (_packageService is not LocalPackageService local)
             return null;
 
+        var normalized = messageType.Replace(":", ".");
         var types = local.GetLoadedTypes().Distinct().ToList();
 
-        var type = types.FirstOrDefault(x => x.Name == normalized)
-                   ?? types.FirstOrDefault(x => x.FullName != null && x.FullName.Equals(normalized));
-
-        return type?.Assembly.GetName().Name;
+        return types.FirstOrDefault(x => x.Name == normalized)
+               ?? types.FirstOrDefault(x => x.FullName != null && x.FullName.Equals(normalized));
     }
 
     public async Task<Result<bool>> SendMessageAsync(string messageType, string messageJson, string? address,

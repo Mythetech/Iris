@@ -1,3 +1,4 @@
+using System.Reflection;
 using Iris.Assemblies;
 using Iris.Assemblies.Messages;
 using Iris.Components.PackageManagement;
@@ -38,13 +39,13 @@ public class LocalPackageService : IPackageService, IDisposable
     public async Task<Result<AssemblyData>> UploadAssemblyAsync(IBrowserFile file)
     {
         using var stream = file.OpenReadStream();
-        return await LoadAssemblyFromStreamAsync(stream);
+        return await LoadAssemblyFromStreamAsync(stream, assemblyPath: null);
     }
 
     public async Task<Result<AssemblyData>> UploadAssemblyAsync(string filePath)
     {
         await using var stream = File.OpenRead(filePath);
-        var result = await LoadAssemblyFromStreamAsync(stream);
+        var result = await LoadAssemblyFromStreamAsync(stream, filePath);
 
         if (result is Success<AssemblyData> success)
         {
@@ -76,16 +77,32 @@ public class LocalPackageService : IPackageService, IDisposable
         return new Success<bool>(true);
     }
 
-    private async Task<Result<AssemblyData>> LoadAssemblyFromStreamAsync(Stream stream)
+    private async Task<Result<AssemblyData>> LoadAssemblyFromStreamAsync(Stream stream, string? assemblyPath)
     {
         using var memoryStream = new MemoryStream();
         await stream.CopyToAsync(memoryStream);
         memoryStream.Position = 0;
 
-        var loaded = await _assemblyLoader.LoadAssemblyAsync(memoryStream);
+        var loaded = await _assemblyLoader.LoadAssemblyAsync(memoryStream, assemblyPath);
 
         if (loaded == null)
             return new Failure<AssemblyData>("Failed to load assembly. The file may be invalid or unsupported.");
+
+        // Mapping is what actually walks the assembly's types, so it is where a dependency the
+        // load context could not find finally surfaces. Do it before the entry is kept and
+        // announced: an assembly that cannot be mapped once cannot be mapped later either, and
+        // keeping it would make every subsequent GetLoadedAssembliesAsync rethrow and leave the
+        // Packages page broken until restart.
+        AssemblyData contract;
+        try
+        {
+            contract = loaded.Assembly.ToContract(_settings.MaxTypeDepth);
+        }
+        catch (Exception e)
+        {
+            loaded.Context.Unload();
+            return new Failure<AssemblyData>(DescribeMappingFailure(e));
+        }
 
         // Unload existing assembly with same FullName (reload support)
         var existing = _assemblies.FirstOrDefault(la => la.Assembly.FullName == loaded.Assembly.FullName);
@@ -100,7 +117,28 @@ public class LocalPackageService : IPackageService, IDisposable
         _assemblies.Add(loaded);
         await _bus.PublishAsync(new AssemblyLoaded(loaded));
 
-        return new Success<AssemblyData>(loaded.Assembly.ToContract(_settings.MaxTypeDepth));
+        return new Success<AssemblyData>(contract);
+    }
+
+    /// <summary>
+    /// Names the assembly that is actually missing where the runtime knows it, because
+    /// "copy the DLL it needs next to it" is only actionable advice if the user is told which.
+    /// </summary>
+    private static string DescribeMappingFailure(Exception e)
+    {
+        var missing = e switch
+        {
+            ReflectionTypeLoadException rtle => rtle.LoaderExceptions
+                .OfType<FileNotFoundException>()
+                .Select(x => x.FileName)
+                .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)),
+            FileNotFoundException fnf => fnf.FileName,
+            _ => null
+        };
+
+        return missing is null
+            ? $"Loaded the assembly but could not read its types: {e.Message}"
+            : $"Loaded the assembly but could not read its types because '{missing}' is missing. Copy it next to the assembly and try again.";
     }
 
     public void Dispose()
