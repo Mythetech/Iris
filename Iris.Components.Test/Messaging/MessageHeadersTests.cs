@@ -7,6 +7,8 @@ using Iris.Components.Shared;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using MudBlazor.Services;
+using Mythetech.Framework.Infrastructure.MessageBus;
+using NSubstitute;
 
 namespace Iris.Components.Test.Messaging
 {
@@ -14,6 +16,8 @@ namespace Iris.Components.Test.Messaging
     {
         public MessageHeadersTests()
         {
+            Services.AddSingleton(Substitute.For<IMessageBus>());
+            Services.AddSingleton<MessagingSettings>();
             Services.AddScoped<MessageState>();
 
             JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true);
