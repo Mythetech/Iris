@@ -13,8 +13,9 @@ namespace Iris.Integration.Tests
 {
     // Top-level so MassTransit's MessageUrn resolves to
     // "urn:message:Iris.Integration.Tests:IrisMtTestMessage",
-    // which is what MassTransitAdapter.CreateWrappedMessage must emit for a round-trip
-    // (it replaces '/' with ':' in the supplied MessageType string).
+    // which is what MassTransitAdapter.CreateWrappedMessage must emit for a round-trip.
+    // The adapter has to reach that one urn from three different spellings of the same type,
+    // which is what the theory below covers.
     public record IrisMtTestMessage(int Red, int Green, int Blue);
 
     [Collection("RabbitMQ")]
@@ -64,8 +65,15 @@ namespace Iris.Integration.Tests
             }
         }
 
-        [Fact(DisplayName = "Iris MassTransit-wrapped message round-trips to a real MassTransit consumer on RabbitMQ")]
-        public async Task Can_Consume_MassTransit_Message()
+        [Theory(DisplayName = "Iris MassTransit-wrapped message round-trips to a real MassTransit consumer on RabbitMQ")]
+        // An Azure Service Bus entity name, which is how a discovered endpoint is spelled.
+        [InlineData("Iris.Integration.Tests/IrisMtTestMessage")]
+        // A RabbitMQ exchange name, which is already the urn spelling.
+        [InlineData("Iris.Integration.Tests:IrisMtTestMessage")]
+        // A .NET fully qualified name, which is what the type picker and the Type name field's
+        // help text produce. This is the spelling that silently stopped routing.
+        [InlineData("Iris.Integration.Tests.IrisMtTestMessage")]
+        public async Task Can_Consume_MassTransit_Message(string typeName)
         {
             // Arrange — wrap a message exactly as LocalConnectionManager.SendMessageAsync does.
             var adapter = new MassTransitAdapter();
@@ -74,7 +82,7 @@ namespace Iris.Integration.Tests
                 messageType: "Iris.Integration.Tests/IrisMtTestMessage",
                 json: "{\"Red\":1,\"Green\":2,\"Blue\":3}",
                 generateIrisHeaders: false,
-                messageFullyQualifiedName: "Iris.Integration.Tests/IrisMtTestMessage",
+                messageFullyQualifiedName: typeName,
                 framework: "MassTransit");
 
             request.WrapMessage(adapter);
@@ -117,13 +125,14 @@ namespace Iris.Integration.Tests
             context.Message.Blue.Should().Be(3);
             context.MessageId.Should().NotBeNull();
 
-            // NOTE: context.SourceAddress is deliberately NOT asserted.
-            // MassTransitAdapter.IrisMessageEnvelope sets SourceAddress => "iris",
-            // which is not a valid absolute URI. Accessing ConsumeContext.SourceAddress
-            // throws UriFormatException on the consumer side. This is a real adapter bug
-            // surfaced by this test — tracked for a follow-up fix (candidates: "urn:iris",
-            // or deriving it from the connection's host URI). Do not "fix" by asserting
-            // round-trip passes while leaving consumers downstream to blow up.
+            // SourceAddress used to be the bare string "iris", so reading this property threw
+            // UriFormatException on the consumer side. Asserting it keeps the address absolute.
+            context.SourceAddress.Should().Be(new Uri("loopback://localhost/iris"));
+
+            // A non-null RequestId makes a consumer treat the send as a request awaiting a
+            // response, which is not what a user typing a message into Iris asked for.
+            context.RequestId.Should().BeNull();
+            context.InitiatorId.Should().BeNull();
         }
 
         private sealed class TestIrisConsumer : IConsumer<IrisMtTestMessage>

@@ -77,9 +77,11 @@ public class FrameworkDescriptorTests
         foreach (var adapter in rabbitOnly)
             adapter.VerifiedProviders.Should().BeEquivalentTo(new[] { ConnectorProviders.RabbitMq }, adapter.Name);
 
-        var everywhere = new IFramework[] { new MassTransitAdapter(), new NServiceBusAdapter() };
-        foreach (var adapter in everywhere)
-            adapter.VerifiedProviders.Should().BeEquivalentTo(ConnectorProviders.All, adapter.Name);
+        new MassTransitAdapter().VerifiedProviders.Should().BeEquivalentTo(ConnectorProviders.All);
+
+        // NServiceBus has no consumer round-trip test against any transport, so it claims
+        // nothing. The UI flags it as unverified everywhere, which is the truth.
+        new NServiceBusAdapter().VerifiedProviders.Should().BeEmpty();
     }
 
     [Fact]
