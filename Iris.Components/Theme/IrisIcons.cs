@@ -80,7 +80,7 @@ public static partial class IrisIcons
 
     public static string Warning => Round("warning");
 
-    public static string Info => Round("circle_info");
+    public static string Info => Round("info");
 
     public static string Add => Round("add");
 

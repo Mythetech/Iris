@@ -143,6 +143,7 @@ public class MessageState : IDisposable
                     Description = input.Description,
                     AllowedValues = input.AllowedValues,
                     Required = input.Required,
+                    Immutable = true,
                 });
             }
             else
@@ -150,6 +151,7 @@ public class MessageState : IDisposable
                 row.Description = input.Description;
                 row.AllowedValues = input.AllowedValues;
                 row.Required = input.Required;
+                row.Immutable = true;
             }
         }
 

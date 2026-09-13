@@ -143,4 +143,27 @@ public class MessageStateFrameworkInputTests
 
         state.GetFrameworkProperties().Should().Equal(new Dictionary<string, string> { ["a"] = "2" });
     }
+    [Fact(DisplayName = "Framework rows are locked; rows the user adds stay editable")]
+    public void SetFramework_LocksDescriptorRows()
+    {
+        var state = NewState();
+        state.SetFramework(Brighter);
+        state.AddAdditionalProperty(new DictionaryViewModel { Key = "mine", Value = "1" });
+
+        state.AdditionalProperties.Where(r => r.Key != "mine").Should().OnlyContain(r => r.Immutable);
+        state.AdditionalProperties.Single(r => r.Key == "mine").Immutable.Should().BeFalse();
+    }
+
+    [Fact(DisplayName = "A hand-added row the framework declares becomes a locked framework row, keeping its value")]
+    public void SetFramework_LocksAdoptedRows()
+    {
+        var state = NewState();
+        state.AddAdditionalProperty(new DictionaryViewModel { Key = "TypeName", Value = "MyApp.Order" });
+
+        state.SetFramework(Rebus);
+
+        var row = state.AdditionalProperties.Single(r => r.Key == "TypeName");
+        row.Immutable.Should().BeTrue();
+        row.Value.Should().Be("MyApp.Order");
+    }
 }
