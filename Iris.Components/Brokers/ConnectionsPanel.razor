@@ -1,58 +1,53 @@
 @using Iris.Components.Theme
 @implements IDisposable
 
-<MudStack Class="pa-2 w-100" Spacing="0">
-    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-               EndIcon="@Icons.Material.Filled.OpenInNew" OnClick="OpenConnectionsPage">
-        Open Connections Page
-    </MudButton>
-
-    <MudDivider Class="my-2" />
-
-    @if (_loading)
-    {
-        <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="align-self-center my-4" />
-    }
-    else if (_providers == null || _providers.Count == 0)
-    {
-        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 flex-grow-1">
-            <MudIcon Icon="@IrisIcons.NoConnections" Size="Size.Large" Class="mud-text-secondary mb-2" />
-            <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary mb-3">
-                No active connections
+<ContextPanelLayout Title="Connections" PageHref="/Connections">
+    <ChildContent>
+        @if (_loading)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="align-self-center my-4" />
+        }
+        else if (_providers == null || _providers.Count == 0)
+        {
+            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 flex-grow-1">
+                <MudIcon Icon="@IrisIcons.NoConnections" Size="Size.Large" Class="mud-text-secondary mb-2" />
+                <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary mb-3">
+                    No active connections
+                </MudText>
+            </MudStack>
+        }
+        else
+        {
+            <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">
+                @_providers.Count active connection@(_providers.Count != 1 ? "s" : "")
             </MudText>
-        </MudStack>
-    }
-    else
-    {
-        <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">
-            @_providers.Count active connection@(_providers.Count != 1 ? "s" : "")
-        </MudText>
 
-        <MudList T="Provider" Dense="true">
-            @foreach (var provider in _providers)
-            {
-                <MudListItem T="Provider"
-                             Value="provider"
-                             Icon="@($"icon-{provider.Name}")"
-                             IconColor="Color.Primary"
-                             OnClick="@(() => OpenConnectionDetails(provider))">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                        <MudText Typo="Typo.body2" Class="text-truncate">@provider.Address</MudText>
-                        <MudSpacer />
-                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@provider.Endpoints</MudChip>
-                    </MudStack>
-                </MudListItem>
-            }
-        </MudList>
-    }
+            <MudList T="Provider" Dense="true">
+                @foreach (var provider in _providers)
+                {
+                    <MudListItem T="Provider"
+                                 Value="provider"
+                                 Icon="@($"icon-{provider.Name}")"
+                                 IconColor="Color.Primary"
+                                 OnClick="@(() => OpenConnectionDetails(provider))">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudText Typo="Typo.body2" Class="text-truncate">@provider.Address</MudText>
+                            <MudSpacer />
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@provider.Endpoints</MudChip>
+                        </MudStack>
+                    </MudListItem>
+                }
+            </MudList>
+        }
 
-    <MudSpacer />
-
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
-               StartIcon="@IrisIcons.AddConnection" OnClick="AddConnectionAsync" Size="Size.Small">
-        Add Connection
-    </MudButton>
-</MudStack>
+    </ChildContent>
+    <FooterContent>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                   StartIcon="@IrisIcons.AddConnection" OnClick="AddConnectionAsync" Size="Size.Small">
+            Add Connection
+        </MudButton>
+    </FooterContent>
+</ContextPanelLayout>
 
 @code {
     [Inject] IBrokerService BrokerClient { get; set; } = default!;
@@ -69,7 +64,6 @@
         _loading = false;
     }
 
-    private void OpenConnectionsPage() => NavigationManager.NavigateTo("/Connections");
 
     private void OpenConnectionDetails(Provider provider)
         => NavigationManager.NavigateTo($"/connections/{provider.Id}");

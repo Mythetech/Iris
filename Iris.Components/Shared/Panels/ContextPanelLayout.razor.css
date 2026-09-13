@@ -1,0 +1,17 @@
+/* Fills what the drawer's panel header leaves behind, rather than the whole drawer. */
+.context-panel-layout {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    padding: 8px;
+}
+
+.context-panel-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
