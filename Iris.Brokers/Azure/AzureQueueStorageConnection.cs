@@ -59,7 +59,10 @@ namespace Iris.Brokers.Azure
             }
             catch (Exception ex)
             {
+                // Swallowing here reported failed sends to the user as successes and wrote
+                // them to history. Every other provider lets the caller map the failure.
                 _logger.LogError(ex, "Error sending message to Azure Queue Storage {Endpoint}", endpoint.Name);
+                throw;
             }
         }
 
