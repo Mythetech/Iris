@@ -11,7 +11,7 @@
         }
     </MudStack>
 
-    <MudStack AlignItems="AlignItems.Center" Row="true" Class="pr-3">
+    <MudStack AlignItems="AlignItems.Center" Row="true" Class="px-3">
         <MudSlider T="int"
                    Value="@MessageState.Repeat"
                    ValueChanged="@((int x) => MessageState.SetRepeat(x))"
@@ -36,7 +36,7 @@
         }
     </MudStack>
 
-    <MudStack AlignItems="AlignItems.Center" Row="true" Class="pr-3">
+    <MudStack AlignItems="AlignItems.Center" Row="true" Class="px-3">
         <MudSlider T="int"
                    Value="@MessageState.Delay"
                    ValueChanged="@((int x) => MessageState.SetDelay(x))"

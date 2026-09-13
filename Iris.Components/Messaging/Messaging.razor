@@ -8,52 +8,47 @@
 @inherits IrisPageBase
 @implements IDisposable
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex gap-4 mud-height-full" Style="flex-direction:column;height: 82dvh;">
-    <MudGrid class="mud-height-full">
-        <MudItem xs="12">
-            <IrisPageHeader Icon="@IrisIcons.Send" Title="Messaging">
-                <Status>
-                    <ProviderSelector
-                        @ref="_providerSelect"
-                        Providers="@_providers"
-                        @bind-Value="@_selectedProvider" />
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex mud-height-full" Style="flex-direction:column;height: 82dvh;">
+    <IrisPageHeader Icon="@IrisIcons.Send" Title="Messaging">
+        <Actions>
+            <ProviderSelector
+                @ref="_providerSelect"
+                Providers="@_providers"
+                @bind-Value="@_selectedProvider" />
 
-                    <EndpointSelector
-                        Endpoints="@_endpoints"
-                        @bind-Value="@_selectedEndpoint"
-                        SelectedProviderAddress="@_selectedProvider?.Address"
-                        SelectedEndpointChanged="@TrySetMessageStructure" />
-                </Status>
-                <Actions>
-                    <IrisLoadingButton
-                        Loading="@_loading"
-                        OnClick="@SendClicked"
-                        Icon="@IrisIcons.Send"
-                        Text="Send"
-                        LoadingText="Sending" />
-                </Actions>
-            </IrisPageHeader>
-        </MudItem>
+            <EndpointSelector
+                Endpoints="@_endpoints"
+                @bind-Value="@_selectedEndpoint"
+                SelectedProviderAddress="@_selectedProvider?.Address"
+                SelectedEndpointChanged="@TrySetMessageStructure" />
 
-        <MudItem xs="12" Class="mud-height-full">
-            <IrisSplitter SplitterOrientation="Microsoft.Fast.Components.FluentUI.Orientation.Horizontal">
-                <Panel1>
-                    <div class="messaging-pane">
-                        <MessageEditor
-                            @ref="@_editor"
-                            OnCreateSampleData="CreateSampleMessageDataAsync"
-                            OnImportFromPackage="ImportFromPackageAsync"
-                            OnTemplateSaved="SaveTemplateAsync" />
-                    </div>
-                </Panel1>
-                <Panel2>
-                    <div class="messaging-pane">
-                        <OptionsPanel />
-                    </div>
-                </Panel2>
-            </IrisSplitter>
-        </MudItem>
-    </MudGrid>
+            <IrisLoadingButton
+                Loading="@_loading"
+                OnClick="@SendClicked"
+                Icon="@IrisIcons.Send"
+                Text="Send"
+                LoadingText="Sending" />
+        </Actions>
+    </IrisPageHeader>
+
+    <div class="messaging-body">
+        <IrisSplitter SplitterOrientation="Microsoft.Fast.Components.FluentUI.Orientation.Horizontal">
+            <Panel1>
+                <div class="messaging-pane">
+                    <MessageEditor
+                        @ref="@_editor"
+                        OnCreateSampleData="CreateSampleMessageDataAsync"
+                        OnImportFromPackage="ImportFromPackageAsync"
+                        OnTemplateSaved="SaveTemplateAsync" />
+                </div>
+            </Panel1>
+            <Panel2>
+                <div class="messaging-pane">
+                    <OptionsPanel />
+                </div>
+            </Panel2>
+        </IrisSplitter>
+    </div>
 </MudContainer>
 
 @code {

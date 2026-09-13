@@ -1,3 +1,10 @@
+/* The gap between every page's header and the content below it lives here, once.
+   The literal wrapper exists to carry it: the header's own root is IrisToolBar, a
+   component tag, which never receives the CSS-isolation scope attribute. */
+.iris-page-header {
+    margin-bottom: 16px;
+}
+
 .iris-page-header-title {
     white-space: nowrap;
 }
@@ -16,4 +23,9 @@
     align-items: center;
     gap: 8px;
     flex: 0 0 auto;
+}
+
+/* Selectors in the actions row collapse to nothing without a floor. */
+.iris-page-header-actions ::deep .mud-select {
+    min-width: 180px;
 }
