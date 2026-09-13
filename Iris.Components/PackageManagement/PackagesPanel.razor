@@ -1,14 +1,7 @@
 @using Iris.Components.Theme
 @using Iris.Contracts.Assemblies.Models
 
-<MudStack Class="pa-2 w-100" Spacing="0">
-    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-               EndIcon="@Icons.Material.Filled.OpenInNew" OnClick="OpenPackagesPage">
-        Open Packages Page
-    </MudButton>
-
-    <MudDivider Class="my-2" />
-
+<ContextPanelLayout Title="Packages" PageHref="/Packages">
     @if (_loading)
     {
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="align-self-center my-4" />
@@ -28,7 +21,7 @@
             @_packages.Count package@(_packages.Count != 1 ? "s" : "") loaded
         </MudText>
 
-        <MudList T="string" Dense="true" Style="overflow-y:auto;max-height:calc(100dvh - 200px);">
+        <MudList T="string" Dense="true">
             @foreach (var package in _packages)
             {
                 <MudListItem T="string" Icon="@IrisIcons.Packages" Dense="true">
@@ -43,11 +36,10 @@
             }
         </MudList>
     }
-</MudStack>
+</ContextPanelLayout>
 
 @code {
     [Inject] IPackageService PackageService { get; set; } = default!;
-    [Inject] NavigationManager NavigationManager { get; set; } = default!;
 
     private List<AssemblyData>? _packages;
     private bool _loading = true;
@@ -59,5 +51,4 @@
         _loading = false;
     }
 
-    private void OpenPackagesPage() => NavigationManager.NavigateTo("/Packages");
 }
