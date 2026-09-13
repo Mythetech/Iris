@@ -3,6 +3,7 @@ using FluentAssertions;
 using Iris.Components.Brokers;
 using Iris.Components.Endpoints;
 using Iris.Contracts.Brokers.Models;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
 using MudBlazor.Services;
@@ -122,6 +123,35 @@ public class EndpointOffcanvasTests : TestContext
         cut.Markup.Should().Contain("amq.topic");
     }
 
+    /// <summary>
+    /// The refresh button binds Disabled to _propertiesLoading. Before this fix, a
+    /// broker failure during LoadPropertiesAsync left _propertiesLoading stuck true
+    /// because nothing reset it on the failing path, permanently disabling the only
+    /// way to try again and leaving the skeleton rendered forever (same defect class
+    /// as Endpoints.LoadAsync, now fixed here too).
+    /// </summary>
+    [Fact(DisplayName = "A failed refresh still clears the loading skeleton so the refresh button recovers")]
+    public async Task Failed_Refresh_Recovers_Loading_State()
+    {
+        var first = new EndpointPropertiesDto(new List<EndpointPropertyEntry> { new("Messages", "1") });
+        _brokerService.GetEndpointPropertiesAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<EndpointPropertiesDto?>(first),
+                      Task.FromException<EndpointPropertiesDto?>(new InvalidOperationException("broker unavailable")));
+
+        var cut = RenderComponent<EndpointOffcanvas>(p => p
+            .Add(x => x.Endpoint, Sample()));
+
+        cut.Find("button[aria-label=\"Refresh properties\"]").HasAttribute("disabled").Should().BeFalse();
+
+        var refreshButton = cut.Find("button[aria-label=\"Refresh properties\"]");
+        var act = async () => await refreshButton.ClickAsync(new MouseEventArgs());
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+
+        cut.Find("button[aria-label=\"Refresh properties\"]").HasAttribute("disabled").Should().BeFalse();
+    }
+
     [Fact(DisplayName = "Refresh button forces re-fetch even when cached")]
     public void Refresh_bypasses_cache()
     {
@@ -137,8 +167,7 @@ public class EndpointOffcanvasTests : TestContext
         var valueElements = cut.FindAll(".key-value-row-value");
         valueElements.Should().Contain(e => e.TextContent.Contains("1"));
 
-        var refreshButton = cut.FindAll("button")
-            .First(b => b.OuterHtml.Contains("M17.65 6.35"));
+        var refreshButton = cut.Find("button[aria-label=\"Refresh properties\"]");
         refreshButton.Click();
 
         cut.WaitForState(() => cut.FindAll(".key-value-row-value").Any(e => e.TextContent.Contains("5678")));

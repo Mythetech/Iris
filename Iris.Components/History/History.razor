@@ -9,7 +9,9 @@
 @using Iris.Contracts.Audit
 @using Iris.Components.Shared.Time
 
-<IrisCard HeaderIcon="@IrisIcons.Account" Title="@($"User History")" Height="90vh">
+<IrisPageHeader Icon="@IrisIcons.History" Title="User History" />
+
+<IrisCard Height="var(--iris-page-body-height)">
     <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex gap-4 mt-2 overflow-auto" Style="flex-direction:column;">
         <MudGrid>
             <MudItem xs="12">
@@ -17,7 +19,7 @@
                     <ToolBarContent>
                         <MudSpacer />
                         <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
-                                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="MudBlazor.Size.Medium" Class="mt-0"></MudTextField>
+                                      AdornmentIcon="@IrisIcons.Search" IconSize="MudBlazor.Size.Medium" Class="mt-0"></MudTextField>
                     </ToolBarContent>
                     <Columns>
                         <HierarchyColumn T="HistoryRecord" />

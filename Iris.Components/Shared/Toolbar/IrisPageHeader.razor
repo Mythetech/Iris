@@ -1,0 +1,39 @@
+@inherits IrisBaseComponent
+@namespace Iris.Components.Shared.Toolbar
+
+<IrisToolBar Class="@Class" Style="@Style">
+    @if (!string.IsNullOrWhiteSpace(Icon))
+    {
+        <MudIcon Icon="@Icon" Size="Size.Small" Class="iris-page-header-icon" />
+    }
+
+    <div class="iris-page-header-title">
+        <MudText Typo="Typo.h6">@Title</MudText>
+    </div>
+
+    @if (Status is not null)
+    {
+        <div class="iris-page-header-status">@Status</div>
+    }
+
+    <MudSpacer />
+
+    @if (Actions is not null)
+    {
+        <div class="iris-page-header-actions">@Actions</div>
+    }
+</IrisToolBar>
+
+@code {
+    /// <summary>Page icon, from <see cref="Iris.Components.Theme.IrisIcons"/>. Omit to render no icon.</summary>
+    [Parameter] public string Icon { get; set; } = "";
+
+    /// <summary>Page name, rendered as the header title.</summary>
+    [Parameter] public string Title { get; set; } = "";
+
+    /// <summary>Counts, status chips, anything that describes the page. Sits beside the title.</summary>
+    [Parameter] public RenderFragment? Status { get; set; }
+
+    /// <summary>Page-level actions. Right aligned.</summary>
+    [Parameter] public RenderFragment? Actions { get; set; }
+}

@@ -5,6 +5,11 @@
 
 :root {
     background: transparent;
+    /* Shared bound for a page's main IrisCard: viewport height minus the app
+       chrome above it (window titlebar, nav, page header). Keeps page bodies
+       that need to scroll internally (grids, lists) from running past the
+       viewport instead of the whole page scrolling. */
+    --iris-page-body-height: calc(100dvh - 190px);
     --iris-primary: rgb(54, 76, 126);
     --iris-primary-rgb: 54, 76, 126;
     --iris-accent: rgb(71, 35, 84);

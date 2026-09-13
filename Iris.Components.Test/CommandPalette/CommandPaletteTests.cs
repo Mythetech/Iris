@@ -2,6 +2,7 @@ using Bunit;
 using FluentAssertions;
 using Iris.Components.CommandPalette;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -49,11 +50,11 @@ public class CommandPaletteTests : IrisTestContext
     }
 
     [Fact(DisplayName = "Typing in the search input filters the results")]
-    public void Typing_filters_results()
+    public async Task Typing_filters_results()
     {
         var cut = Render();
 
-        cut.Find("input").Input("mess");
+        await cut.Find("input").InputAsync(new ChangeEventArgs { Value = "mess" });
 
         var options = cut.FindAll("[role='option']");
         options.Should().HaveCount(1);
@@ -61,77 +62,77 @@ public class CommandPaletteTests : IrisTestContext
     }
 
     [Fact(DisplayName = "Filter matches description text via keyword")]
-    public void Filter_matches_description_through_service()
+    public async Task Filter_matches_description_through_service()
     {
         var cut = Render();
 
-        cut.Find("input").Input("compose");
+        await cut.Find("input").InputAsync(new ChangeEventArgs { Value = "compose" });
 
         var options = cut.FindAll("[role='option']");
         options.Select(o => o.GetAttribute("data-command-id")).Should().Equal("messaging");
     }
 
     [Fact(DisplayName = "ArrowDown moves selection forward and wraps at end")]
-    public void ArrowDown_wraps_at_end()
+    public async Task ArrowDown_wraps_at_end()
     {
         var cut = Render();
         var input = cut.Find("input");
 
-        input.KeyDown("ArrowDown");
+        await input.KeyDownAsync(new KeyboardEventArgs { Key = "ArrowDown" });
         input.GetAttribute("aria-activedescendant").Should().Be("cmd-messaging");
 
-        input.KeyDown("ArrowDown");
+        await input.KeyDownAsync(new KeyboardEventArgs { Key = "ArrowDown" });
         input.GetAttribute("aria-activedescendant").Should().Be("cmd-history");
 
-        input.KeyDown("ArrowDown");
+        await input.KeyDownAsync(new KeyboardEventArgs { Key = "ArrowDown" });
         input.GetAttribute("aria-activedescendant").Should().Be("cmd-home");
     }
 
     [Fact(DisplayName = "ArrowUp moves selection backward and wraps at start")]
-    public void ArrowUp_wraps_at_start()
+    public async Task ArrowUp_wraps_at_start()
     {
         var cut = Render();
         var input = cut.Find("input");
 
-        input.KeyDown("ArrowUp");
+        await input.KeyDownAsync(new KeyboardEventArgs { Key = "ArrowUp" });
         input.GetAttribute("aria-activedescendant").Should().Be("cmd-history");
 
-        input.KeyDown("ArrowUp");
+        await input.KeyDownAsync(new KeyboardEventArgs { Key = "ArrowUp" });
         input.GetAttribute("aria-activedescendant").Should().Be("cmd-messaging");
     }
 
     [Fact(DisplayName = "Home key jumps selection to first command")]
-    public void Home_jumps_to_first()
+    public async Task Home_jumps_to_first()
     {
         var cut = Render();
         var input = cut.Find("input");
 
-        input.KeyDown("ArrowDown");
-        input.KeyDown("ArrowDown");
-        input.KeyDown("Home");
+        await input.KeyDownAsync(new KeyboardEventArgs { Key = "ArrowDown" });
+        await input.KeyDownAsync(new KeyboardEventArgs { Key = "ArrowDown" });
+        await input.KeyDownAsync(new KeyboardEventArgs { Key = "Home" });
 
         input.GetAttribute("aria-activedescendant").Should().Be("cmd-home");
     }
 
     [Fact(DisplayName = "End key jumps selection to last command")]
-    public void End_jumps_to_last()
+    public async Task End_jumps_to_last()
     {
         var cut = Render();
         var input = cut.Find("input");
 
-        input.KeyDown("End");
+        await input.KeyDownAsync(new KeyboardEventArgs { Key = "End" });
 
         input.GetAttribute("aria-activedescendant").Should().Be("cmd-history");
     }
 
     [Fact(DisplayName = "Enter invokes the selected command and fires OnInvoked")]
-    public void Enter_invokes_selected_command_and_fires_callback()
+    public async Task Enter_invokes_selected_command_and_fires_callback()
     {
         var cut = Render();
         var input = cut.Find("input");
 
-        input.KeyDown("ArrowDown"); // select messaging
-        input.KeyDown("Enter");
+        await input.KeyDownAsync(new KeyboardEventArgs { Key = "ArrowDown" }); // select messaging
+        await input.KeyDownAsync(new KeyboardEventArgs { Key = "Enter" });
 
         _invokedIds.Should().Equal("messaging");
         _invokedCount.Should().Be(1);
@@ -139,11 +140,11 @@ public class CommandPaletteTests : IrisTestContext
     }
 
     [Fact(DisplayName = "Escape fires OnCancel without invoking any command")]
-    public void Escape_cancels_without_invoking()
+    public async Task Escape_cancels_without_invoking()
     {
         var cut = Render();
 
-        cut.Find("input").KeyDown("Escape");
+        await cut.Find("input").KeyDownAsync(new KeyboardEventArgs { Key = "Escape" });
 
         _invokedIds.Should().BeEmpty();
         _cancelCount.Should().Be(1);
@@ -151,33 +152,33 @@ public class CommandPaletteTests : IrisTestContext
     }
 
     [Fact(DisplayName = "Selection resets to index 0 when filter results change")]
-    public void Selection_resets_when_filter_changes()
+    public async Task Selection_resets_when_filter_changes()
     {
         var cut = Render();
         var input = cut.Find("input");
 
-        input.KeyDown("End"); // select history
+        await input.KeyDownAsync(new KeyboardEventArgs { Key = "End" }); // select history
         input.GetAttribute("aria-activedescendant").Should().Be("cmd-history");
 
         // typing should reset selection to first matching command
-        input.Input("h");
+        await input.InputAsync(new ChangeEventArgs { Value = "h" });
 
         // both home and history match — selection should land on home (index 0 of filtered)
         input.GetAttribute("aria-activedescendant").Should().Be("cmd-home");
     }
 
     [Fact(DisplayName = "Empty results render the empty-state message and Enter is a no-op")]
-    public void Empty_state_renders_and_enter_is_noop()
+    public async Task Empty_state_renders_and_enter_is_noop()
     {
         var cut = Render();
         var input = cut.Find("input");
 
-        input.Input("zzznotacommand");
+        await input.InputAsync(new ChangeEventArgs { Value = "zzznotacommand" });
 
         cut.FindAll("[role='option']").Should().BeEmpty();
         cut.Markup.Should().Contain("No commands match");
 
-        input.KeyDown("Enter");
+        await input.KeyDownAsync(new KeyboardEventArgs { Key = "Enter" });
         _invokedIds.Should().BeEmpty();
         _invokedCount.Should().Be(0);
         _cancelCount.Should().Be(0);
@@ -195,11 +196,11 @@ public class CommandPaletteTests : IrisTestContext
     }
 
     [Fact(DisplayName = "Click on a row invokes that command and fires OnInvoked")]
-    public void Click_invokes_command_and_fires_callback()
+    public async Task Click_invokes_command_and_fires_callback()
     {
         var cut = Render();
 
-        cut.FindAll("[role='option']")[1].Click();
+        await cut.FindAll("[role='option']")[1].ClickAsync(new MouseEventArgs());
 
         _invokedIds.Should().Equal("messaging");
         _invokedCount.Should().Be(1);

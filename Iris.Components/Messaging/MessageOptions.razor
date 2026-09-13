@@ -11,10 +11,10 @@
         }
     </MudStack>
 
-    <MudStack AlignItems="AlignItems.Center" Row="true">
+    <MudStack AlignItems="AlignItems.Center" Row="true" Class="pr-3">
         <MudSlider T="int"
                    Value="@MessageState.Repeat"
-                   ValueChanged="@(async (x) => { MessageState.SetRepeat(x); })"
+                   ValueChanged="@((int x) => MessageState.SetRepeat(x))"
                    Min="0"
                    Max="5"
                    TickMarks="true"
@@ -36,10 +36,10 @@
         }
     </MudStack>
 
-    <MudStack AlignItems="AlignItems.Center" Row="true">
+    <MudStack AlignItems="AlignItems.Center" Row="true" Class="pr-3">
         <MudSlider T="int"
                    Value="@MessageState.Delay"
-                   ValueChanged="@(async (x) => { MessageState.SetDelay(x); })"
+                   ValueChanged="@((int x) => MessageState.SetDelay(x))"
                    Min="0"
                    Max="@MessageState.MaxDelay"
                    TickMarks="false"
