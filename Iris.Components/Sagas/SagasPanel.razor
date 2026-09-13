@@ -1,11 +1,4 @@
-<MudStack Class="pa-2 w-100" Spacing="0">
-    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-               EndIcon="@IrisIcons.OpenInNew" OnClick="OpenSagasPage">
-        Open Sagas Page
-    </MudButton>
-
-    <MudDivider Class="my-2" />
-
+<ContextPanelLayout Title="Sagas" PageHref="/Sagas">
     @if (Definitions.Graphs.Count == 0)
     {
         <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 flex-grow-1">
@@ -34,11 +27,8 @@
             </MudList>
         </div>
     }
-</MudStack>
+</ContextPanelLayout>
 
 @code {
     [Inject] SagaDefinitionState Definitions { get; set; } = default!;
-    [Inject] NavigationManager NavigationManager { get; set; } = default!;
-
-    private void OpenSagasPage() => NavigationManager.NavigateTo("/Sagas");
 }

@@ -1,14 +1,7 @@
 @using Iris.Components.Theme
 @using Iris.Components.Brokers
 
-<MudStack Class="pa-2 w-100" Spacing="0">
-    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-               EndIcon="@Icons.Material.Filled.OpenInNew" OnClick="OpenEndpointsPage">
-        Open Endpoints Page
-    </MudButton>
-
-    <MudDivider Class="my-2" />
-
+<ContextPanelLayout Title="Endpoints" PageHref="/Endpoints">
     @if (_loading)
     {
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="align-self-center my-4" />
@@ -29,7 +22,7 @@
 
         </MudText>
 
-        <MudList T="string" Dense="true" Style="overflow-y:auto;max-height:calc(100dvh - 200px);">
+        <MudList T="string" Dense="true">
             @foreach (var group in _groupedEndpoints)
             {
                 <MudListSubheader>
@@ -54,11 +47,10 @@
             }
         </MudList>
     }
-</MudStack>
+</ContextPanelLayout>
 
 @code {
     [Inject] IBrokerService BrokerClient { get; set; } = default!;
-    [Inject] NavigationManager NavigationManager { get; set; } = default!;
 
     private List<EndpointDetails>? _endpoints;
     private List<IGrouping<string, EndpointDetails>> _groupedEndpoints = new();
@@ -72,5 +64,4 @@
         _loading = false;
     }
 
-    private void OpenEndpointsPage() => NavigationManager.NavigateTo("/Endpoints");
 }

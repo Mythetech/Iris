@@ -1,0 +1,50 @@
+@using Iris.Components.Theme
+
+<div class="context-panel-layout">
+    <div class="context-panel-body">
+        @ChildContent
+    </div>
+
+    @if (FooterContent is not null || !string.IsNullOrWhiteSpace(PageHref))
+    {
+        <div class="context-panel-footer">
+            @FooterContent
+
+            @if (!string.IsNullOrWhiteSpace(PageHref))
+            {
+                <MudDivider Class="my-2" />
+
+                <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
+                           EndIcon="@IrisIcons.OpenInNew" OnClick="OpenPage">
+                    @($"Open {Title} Page")
+                </MudButton>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+
+    /// <summary>
+    /// Panel name, used for the footer link text.
+    /// </summary>
+    [Parameter] public string Title { get; set; } = "";
+
+    /// <summary>
+    /// Route the footer link navigates to. Omit to drop the link entirely.
+    /// </summary>
+    [Parameter] public string? PageHref { get; set; }
+
+    /// <summary>
+    /// Panel body. Scrolls when it outgrows the drawer, keeping the footer pinned.
+    /// </summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Panel actions, pinned above the footer link.
+    /// </summary>
+    [Parameter] public RenderFragment? FooterContent { get; set; }
+
+    private void OpenPage() => NavigationManager.NavigateTo(PageHref!);
+}

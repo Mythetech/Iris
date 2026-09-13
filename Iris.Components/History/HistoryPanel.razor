@@ -1,14 +1,7 @@
 @using Iris.Components.Theme
 @using Iris.Contracts.Audit.Models
 
-<MudStack Class="pa-2 w-100" Spacing="0">
-    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-               EndIcon="@Icons.Material.Filled.OpenInNew" OnClick="OpenHistoryPage">
-        Open History Page
-    </MudButton>
-
-    <MudDivider Class="my-2" />
-
+<ContextPanelLayout Title="History" PageHref="/History">
     @if (_loading)
     {
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="align-self-center my-4" />
@@ -26,7 +19,7 @@
     {
         <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">Recent activity</MudText>
 
-        <MudList T="string" Dense="true" Style="overflow-y:auto;max-height:calc(100dvh - 200px);">
+        <MudList T="string" Dense="true">
             @foreach (var record in _recentHistory)
             {
                 <MudListItem T="string" Dense="true">
@@ -38,11 +31,10 @@
             }
         </MudList>
     }
-</MudStack>
+</ContextPanelLayout>
 
 @code {
     [Inject] IHistoryService HistoryService { get; set; } = default!;
-    [Inject] NavigationManager NavigationManager { get; set; } = default!;
 
     private List<AuditRecord>? _recentHistory;
     private bool _loading = true;
@@ -54,5 +46,4 @@
         _loading = false;
     }
 
-    private void OpenHistoryPage() => NavigationManager.NavigateTo("/History");
 }

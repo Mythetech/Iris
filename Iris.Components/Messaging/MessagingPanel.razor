@@ -1,13 +1,6 @@
 @using Iris.Components.Theme
 
-<MudStack Class="pa-2 w-100" Spacing="0">
-    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-               EndIcon="@Icons.Material.Filled.OpenInNew" OnClick="OpenMessagingPage">
-        Open Messaging Page
-    </MudButton>
-
-    <MudDivider Class="my-2" />
-
+<ContextPanelLayout Title="Messaging" PageHref="/Messaging">
     <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 flex-grow-1">
         <MudIcon Icon="@IrisIcons.Send" Size="Size.Large" Class="mud-text-secondary mb-2" />
         <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary mb-3">
@@ -18,7 +11,7 @@
             New Message
         </MudButton>
     </MudStack>
-</MudStack>
+</ContextPanelLayout>
 
 @code {
     [Inject] NavigationManager NavigationManager { get; set; } = default!;
