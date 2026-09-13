@@ -2,14 +2,7 @@
 @using Iris.Contracts.Templates.Models
 @implements IDisposable
 
-<MudStack Class="pa-2 w-100" Spacing="0">
-    <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-               EndIcon="@IrisIcons.OpenInNew" OnClick="OpenTemplatesPage">
-        Open Templates Page
-    </MudButton>
-
-    <MudDivider Class="my-2" />
-
+<ContextPanelLayout Title="Templates" PageHref="/Templates">
     @if (_loading)
     {
         <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="align-self-center my-4" />
@@ -31,18 +24,16 @@
     {
         <MudText Typo="Typo.caption" Class="mud-text-secondary mb-2">@TemplatesState.Templates.Count template(s)</MudText>
 
-        <div style="overflow-y:auto;max-height:calc(100dvh - 200px);">
-            @foreach (var template in TemplatesState.Templates)
-            {
-                <TemplateCard Template="template"
-                              FullMode="false"
-                              OnPreview="ShowPreview"
-                              OnDuplicate="DuplicateTemplate"
-                              OnDelete="DeleteTemplate" />
-            }
-        </div>
+        @foreach (var template in TemplatesState.Templates)
+        {
+            <TemplateCard Template="template"
+                          FullMode="false"
+                          OnPreview="ShowPreview"
+                          OnDuplicate="DuplicateTemplate"
+                          OnDelete="DeleteTemplate" />
+        }
     }
-</MudStack>
+</ContextPanelLayout>
 
 @code {
     [Inject] TemplatesState TemplatesState { get; set; } = default!;
@@ -62,7 +53,6 @@
 
     private void OnStateChanged() => InvokeAsync(StateHasChanged);
 
-    private void OpenTemplatesPage() => NavigationManager.NavigateTo("/Templates");
 
     private void NavigateToNewTemplate() => NavigationManager.NavigateTo("/Templates/new");
 

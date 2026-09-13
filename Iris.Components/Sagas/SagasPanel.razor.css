@@ -1,4 +1,3 @@
 .sagas-panel-list {
-    overflow-y: auto;
-    max-height: calc(100dvh - 200px);
+    min-height: 0;
 }
