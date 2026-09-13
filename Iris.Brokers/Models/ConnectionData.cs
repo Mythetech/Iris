@@ -15,7 +15,12 @@ namespace Iris.Brokers.Models
         public string? ConnectionString { get; set; }
 
         public string? Region { get; set; }
-        
+
+        /// <summary>
+        /// RabbitMQ's virtual host. Blank means the broker's default, "/".
+        /// </summary>
+        public string? VHost { get; set; }
+
         public static ConnectionData FromContract(Iris.Contracts.Brokers.Models.ConnectionData data)
         {
             return new ConnectionData
@@ -24,7 +29,8 @@ namespace Iris.Brokers.Models
                 Username = data.Username,
                 Password = data.Password,
                 ConnectionString = data.ConnectionString,
-                Region = data.Region
+                Region = data.Region,
+                VHost = data.VHost
             };
         }
     }
