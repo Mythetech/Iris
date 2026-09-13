@@ -1,8 +1,11 @@
-﻿@implements IConnectionDataProvider
+@implements IConnectionDataProvider
 
 <MudTextField Label="Uri" @bind-Value="@Data!.Uri"></MudTextField>
 <MudTextField Label="Username" @bind-Value="@Data!.Username"></MudTextField>
 <MudTextField Label="Password" @bind-Value="@Data!.Password"></MudTextField>
+<MudTextField Label="Virtual Host" @bind-Value="@Data!.VHost"
+              Placeholder="/"
+              HelperText="Leave blank for the default vhost"></MudTextField>
 
 @code {
     public string ProviderName { get => "rabbitmq"; }
@@ -12,4 +15,3 @@
     [Parameter]
     public ConnectionData? Data { get; set; }
 }
-

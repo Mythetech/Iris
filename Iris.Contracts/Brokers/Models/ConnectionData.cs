@@ -17,6 +17,11 @@ namespace Iris.Contracts.Brokers.Models
 
         public string? Region { get; set; }
 
+        /// <summary>
+        /// RabbitMQ's virtual host. Blank means the broker's default, "/".
+        /// </summary>
+        public string? VHost { get; set; }
+
         public string ToJson()
         {
             return JsonSerializer.Serialize(this);
