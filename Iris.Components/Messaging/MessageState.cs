@@ -1,19 +1,34 @@
 using Iris.Components.Messaging;
 using Iris.Contracts.Brokers.Models;
+using Mythetech.Framework.Infrastructure.MessageBus;
+using Mythetech.Framework.Infrastructure.Settings.Events;
 
-public class MessageState
+public class MessageState : IDisposable
 {
     private const string IrisHeaderKey = "iris-key";
 
     private const string DefaultIrisKeyMessage = "{{ Generated on Send }}";
 
-    private static DictionaryViewModel IrisKey => new DictionaryViewModel()
+    private readonly MessagingSettings _settings;
+    private readonly IMessageBus _bus;
+    private readonly SettingsSubscription _settingsSubscription;
+
+    private readonly DictionaryViewModel _irisKeyHeader = new()
     {
         Key = IrisHeaderKey,
         Value = DefaultIrisKeyMessage,
         Immutable = true
     };
-    
+
+    public MessageState(MessagingSettings settings, IMessageBus bus)
+    {
+        _settings = settings;
+        _bus = bus;
+        _settingsSubscription = new SettingsSubscription(this);
+        _bus.Subscribe(_settingsSubscription);
+        SyncIrisHeader();
+    }
+
     public int MaxDelay { get; set; } = 60;
     public bool Sending { get; set; }
     public int Delay { get; set; }
@@ -23,8 +38,12 @@ public class MessageState
 
     public string? SelectedFramework { get; private set; }
 
-    public bool SendIrisHeader { get; private set; } = true;
-    
+    /// <summary>
+    /// Read straight off the settings model rather than mirrored into a field, so the
+    /// toggle in the settings dialog cannot drift from what actually ships on a send.
+    /// </summary>
+    public bool SendIrisHeader => _settings.SendIrisHeader;
+
     public List<DictionaryViewModel> AdditionalProperties { get; private set; } = new()
     {
         new DictionaryViewModel
@@ -40,10 +59,7 @@ public class MessageState
         return AdditionalProperties.ToDictionary(p => p.Key, p => p.Value);
     }
 
-    public List<DictionaryViewModel> HeaderMap { get; set; } = new()
-    {
-        IrisKey
-    };
+    public List<DictionaryViewModel> HeaderMap { get; set; } = new();
 
     private void NotifyStateChanged()
         => StateChanged?.Invoke();
@@ -161,21 +177,50 @@ public class MessageState
             AdditionalProperties.Add(new DictionaryViewModel { Key = "EndpointType", Value = selectedEndpoint.Type });
     }
 
-    public void EnableIrisHeader()
+    /// <summary>
+    /// Keeps the generated-on-send placeholder row in the headers grid aligned with the
+    /// setting. Only the row this state owns is added or removed, so a user header that
+    /// happens to start with "iris-" survives the toggle.
+    /// </summary>
+    private void SyncIrisHeader()
     {
-        SendIrisHeader = true;
-        if (!HeaderMap.Any(x => x.Key.Equals(IrisHeaderKey)))
+        if (SendIrisHeader)
         {
-            HeaderMap.Add(IrisKey);
+            if (!HeaderMap.Contains(_irisKeyHeader))
+            {
+                HeaderMap.Insert(0, _irisKeyHeader);
+            }
         }
-        
-        StateChanged?.Invoke();
+        else
+        {
+            HeaderMap.Remove(_irisKeyHeader);
+        }
     }
-    
-    public void DisableIrisHeader()
+
+    public void Dispose()
     {
-        SendIrisHeader = false;
-        HeaderMap.RemoveAll(x => x.Key != null && x.Key.Contains("iris-"));
-        StateChanged?.Invoke();
+        _bus.Unsubscribe(_settingsSubscription);
+    }
+
+    /// <summary>
+    /// Bridges the settings event onto this state without making MessageState itself an
+    /// IConsumer: assembly scanning would register the scoped state as a root-resolved
+    /// consumer type and hand the bus a different instance than the UI holds.
+    /// </summary>
+    private sealed class SettingsSubscription : IConsumer<SettingsModelChanged<MessagingSettings>>
+    {
+        private readonly MessageState _state;
+
+        public SettingsSubscription(MessageState state)
+        {
+            _state = state;
+        }
+
+        public Task Consume(SettingsModelChanged<MessagingSettings> message)
+        {
+            _state.SyncIrisHeader();
+            _state.NotifyStateChanged();
+            return Task.CompletedTask;
+        }
     }
 }
