@@ -15,3 +15,10 @@
     min-height: 0;
     overflow-y: auto;
 }
+
+/* Its own flex item, so the divider inside can't absorb the layout's free space. */
+.context-panel-footer {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+}

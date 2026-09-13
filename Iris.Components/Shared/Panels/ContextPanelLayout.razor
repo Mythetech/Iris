@@ -5,19 +5,21 @@
         @ChildContent
     </div>
 
-    @if (FooterContent is not null)
+    @if (FooterContent is not null || !string.IsNullOrWhiteSpace(PageHref))
     {
-        @FooterContent
-    }
+        <div class="context-panel-footer">
+            @FooterContent
 
-    @if (!string.IsNullOrWhiteSpace(PageHref))
-    {
-        <MudDivider Class="my-2" />
+            @if (!string.IsNullOrWhiteSpace(PageHref))
+            {
+                <MudDivider Class="my-2" />
 
-        <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
-                   EndIcon="@IrisIcons.OpenInNew" OnClick="OpenPage">
-            @($"Open {Title} Page")
-        </MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
+                           EndIcon="@IrisIcons.OpenInNew" OnClick="OpenPage">
+                    @($"Open {Title} Page")
+                </MudButton>
+            }
+        </div>
     }
 </div>
 
