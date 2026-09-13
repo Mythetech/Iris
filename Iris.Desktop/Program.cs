@@ -20,6 +20,8 @@ using Iris.Components.NativeMenu;
 using Iris.Desktop.Telemetry;
 using Iris.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Iris.Desktop.Configuration;
 using Mythetech.Framework.Desktop;
 using Mythetech.Framework.Desktop.Hermes;
@@ -39,18 +41,29 @@ public class Program
     [STAThread]
     static void Main(string[] args)
     {
+        CrashReporter.Install();
+
         try
         {
             VelopackApp.Build().Run();
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Velopack initialization failed: {ex.Message}");
+            CrashReporter.Report("Velopack initialization failed", ex);
         }
 
         var builder = HermesBlazorAppBuilder.CreateDefault(args);
 
-        builder.Services.AddLogging();
+        // Hermes builds on an empty host, so no logging provider exists unless one is added
+        // here. Without this every ILogger call in the application is silently discarded.
+        builder.Logging.SetMinimumLevel(builder.Environment.IsDevelopment() ? LogLevel.Debug : LogLevel.Information);
+        builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+        builder.Logging.AddSimpleConsole(options =>
+        {
+            options.TimestampFormat = "HH:mm:ss ";
+            options.SingleLine = true;
+        });
+
         builder.RootComponents.Add<App>("#app");
 
         builder.ConfigureWindow(options =>
@@ -119,22 +132,29 @@ public class Program
         builder.Services.AddInitializationHook<RestorePackagesInitializationHook>();
         builder.Services.AddInitializationHook<SagaTelemetryInitializationHook>();
 
-        var app = builder.Build();
-
-        app.RegisterHermesProvider();
-
-        // Initialize native menus
-        var menuService = app.Services.GetRequiredService<INativeMenuService>();
-        menuService.Initialize(app.MainWindow.MenuBar);
-
-        app.Services.UseMessageBus(typeof(Program).Assembly, typeof(IrisServiceRegistrationExtensions).Assembly);
-        app.Services.UseSettingsFramework();
-        app.Services.UseUpdateService();
-        AppDomain.CurrentDomain.UnhandledException += (sender, error) =>
+        try
         {
-            Console.Error.WriteLine($"Fatal exception: {error.ExceptionObject}");
-        };
+            var app = builder.Build();
 
-        app.Run();
+            CrashReporter.AttachLogger(app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Iris.Desktop"));
+
+            app.RegisterHermesProvider();
+
+            var menuService = app.Services.GetRequiredService<INativeMenuService>();
+            menuService.Initialize(app.MainWindow.MenuBar);
+
+            app.Services.UseMessageBus(typeof(Program).Assembly, typeof(IrisServiceRegistrationExtensions).Assembly);
+            app.Services.UseSettingsFramework();
+            app.Services.UseUpdateService();
+
+            app.Run();
+        }
+        catch (Exception ex)
+        {
+            // Build, native menu initialization and the window loop all ran outside the
+            // previous handler's reach, so a failure in any of them left no record at all.
+            CrashReporter.Report("Fatal startup exception", ex);
+            throw;
+        }
     }
 }
