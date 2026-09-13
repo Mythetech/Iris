@@ -1,20 +1,182 @@
 @using Iris.Components.Theme
+@using Iris.Components.Brokers
+@using Iris.Contracts.Brokers.Models
+@using System.Text.Json
 
 <ContextPanelLayout Title="Messaging" PageHref="/Messaging">
-    <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 flex-grow-1">
-        <MudIcon Icon="@IrisIcons.Send" Size="Size.Large" Class="mud-text-secondary mb-2" />
-        <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary mb-3">
-            Compose and send messages to your connected broker endpoints.
-        </MudText>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                   StartIcon="@IrisIcons.Send" OnClick="OpenMessagingPage">
-            New Message
-        </MudButton>
+    <MudStack Spacing="3" Class="pa-1">
+        <ProviderSelector Providers="@_providers"
+                          Value="@_selectedProvider"
+                          ValueChanged="@OnProviderChangedAsync" />
+
+        <EndpointSelector Endpoints="@_endpoints"
+                          Value="@_selectedEndpoint"
+                          ValueChanged="@OnEndpointChangedAsync"
+                          SelectedProviderAddress="@_selectedProvider?.Address" />
+
+        <MudSelect T="string"
+                   Value="@_framework"
+                   ValueChanged="@OnFrameworkChangedAsync"
+                   Label="Framework"
+                   Dense="true"
+                   Variant="Variant.Text"
+                   Clearable="true">
+            <MudSelectItem Value="@("MassTransit")" />
+            <MudSelectItem Value="@("NServiceBus")" />
+        </MudSelect>
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">Body</MudText>
+            <MudSpacer />
+            <MudTooltip Text="Format">
+                <MudIconButton Icon="@IrisIcons.Format" Size="Size.Small" OnClick="@FormatJsonAsync" />
+            </MudTooltip>
+        </MudStack>
+
+        <div class="messaging-panel-json">
+            <MudTextField T="string"
+                          Value="@_json"
+                          ValueChanged="@OnJsonChangedAsync"
+                          Lines="10"
+                          Immediate="true"
+                          Variant="Variant.Outlined"
+                          Error="@(_jsonError is not null)"
+                          ErrorText="@_jsonError" />
+        </div>
+
+        @if (_selectionError is not null)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Error" Class="messaging-panel-selection-error">@_selectionError</MudText>
+        }
+
+        <IrisLoadingButton Loading="@_sending"
+                           OnClick="@SendAsync"
+                           Icon="@IrisIcons.Send"
+                           Text="Send"
+                           LoadingText="Sending"
+                           Class="messaging-panel-send" />
     </MudStack>
 </ContextPanelLayout>
 
 @code {
-    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IBrokerService BrokerService { get; set; } = default!;
+    [Inject] IMessageSendOrchestrator SendOrchestrator { get; set; } = default!;
+    [Inject] ISnackbar Snackbar { get; set; } = default!;
 
-    private void OpenMessagingPage() => NavigationManager.NavigateTo("/Messaging");
+    private List<Provider> _providers = new();
+    private List<EndpointDetails> _endpoints = new();
+    private Provider? _selectedProvider;
+    private EndpointDetails? _selectedEndpoint;
+    private string? _framework;
+    private string _json = "{\n\n}";
+    private string? _jsonError;
+    private string? _selectionError;
+    private bool _sending;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _providers = await BrokerService.GetProvidersAsync();
+        _endpoints = await BrokerService.GetEndpointsAsync();
+    }
+
+    private Task OnProviderChangedAsync(Provider provider)
+    {
+        _selectedProvider = provider;
+        _selectedEndpoint = null;
+        _selectionError = null;
+        return Task.CompletedTask;
+    }
+
+    private Task OnEndpointChangedAsync(EndpointDetails endpoint)
+    {
+        _selectedEndpoint = endpoint;
+        _selectionError = null;
+        return Task.CompletedTask;
+    }
+
+    private Task OnFrameworkChangedAsync(string framework)
+    {
+        _framework = framework;
+        return Task.CompletedTask;
+    }
+
+    private Task OnJsonChangedAsync(string json)
+    {
+        _json = json;
+        _jsonError = null;
+        return Task.CompletedTask;
+    }
+
+    private Task FormatJsonAsync()
+    {
+        if (!TryParseJson(out var document))
+            return Task.CompletedTask;
+
+        using (document)
+        {
+            _json = JsonSerializer.Serialize(
+                document.RootElement,
+                new JsonSerializerOptions { WriteIndented = true });
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task SendAsync()
+    {
+        _selectionError = _selectedProvider is null
+            ? "Select a connection before sending"
+            : _selectedEndpoint is null
+                ? "Select an endpoint before sending"
+                : null;
+
+        if (_selectionError is not null)
+            return;
+
+        if (!TryParseJson(out var document))
+            return;
+
+        document.Dispose();
+
+        _sending = true;
+
+        try
+        {
+            var result = await SendOrchestrator.SendAsync(new SendContext
+            {
+                Json = _json,
+                Provider = _selectedProvider,
+                Endpoint = _selectedEndpoint,
+                Framework = _framework,
+                Headers = new Dictionary<string, string>(),
+                Repeat = 0,
+                Delay = 0,
+                IsolateFromMessageState = true,
+            });
+
+            Snackbar.Add(
+                result.Error ? "Send failed" : "Message sent",
+                result.Error ? Severity.Error : Severity.Success);
+        }
+        finally
+        {
+            _sending = false;
+        }
+    }
+
+    private bool TryParseJson(out JsonDocument document)
+    {
+        try
+        {
+            document = JsonDocument.Parse(_json);
+            _jsonError = null;
+            return true;
+        }
+        catch (JsonException ex)
+        {
+            document = default!;
+            _jsonError = $"That is not valid JSON: {ex.Message}";
+            return false;
+        }
+    }
 }

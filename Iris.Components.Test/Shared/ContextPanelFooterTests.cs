@@ -5,6 +5,7 @@ using Iris.Components.Endpoints;
 using Iris.Components.Messaging;
 using Iris.Contracts.Brokers.Models;
 using Microsoft.Extensions.DependencyInjection;
+using MudBlazor;
 using NSubstitute;
 
 namespace Iris.Components.Test.Shared;
@@ -16,9 +17,25 @@ namespace Iris.Components.Test.Shared;
 /// </summary>
 public class ContextPanelFooterTests : IrisTestContext
 {
+    private void RegisterMessagingPanelDependencies()
+    {
+        var broker = Substitute.For<IBrokerService>();
+        broker.GetProvidersAsync().Returns(Task.FromResult(new List<Provider>()));
+        broker.GetEndpointsAsync().Returns(Task.FromResult(new List<EndpointDetails>()));
+        Services.AddSingleton(broker);
+        Services.AddSingleton(Substitute.For<IMessageSendOrchestrator>());
+
+        // MessagingPanel's selectors are MudSelect, which registers a popover on
+        // init and throws if none is mounted.
+        JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true);
+        RenderComponent<MudPopoverProvider>();
+    }
+
     [Fact]
     public void MessagingPanel_RendersPageLink()
     {
+        RegisterMessagingPanelDependencies();
+
         var cut = RenderComponent<MessagingPanel>();
 
         cut.Markup.Should().Contain("Open Messaging Page");
@@ -39,6 +56,8 @@ public class ContextPanelFooterTests : IrisTestContext
     [Fact]
     public void MessagingPanel_RendersLayoutShell()
     {
+        RegisterMessagingPanelDependencies();
+
         var cut = RenderComponent<MessagingPanel>();
 
         cut.FindAll("div.context-panel-layout").Should().ContainSingle();

@@ -1,4 +1,6 @@
-<MudButton Variant="Variant.Outlined" Color="@Color" Disabled="@Loading" Class="btn-sm" OnClick="@OnClick" FullWidth="@FullWidth">
+@inherits IrisBaseComponent
+
+<MudButton Variant="Variant.Outlined" Color="@Color" Disabled="@Loading" Class="@($"btn-sm {Class}")" OnClick="@OnClick" FullWidth="@FullWidth">
     @if (!string.IsNullOrWhiteSpace(Icon))
     {
         <MudIcon Icon="@Icon" Size="Size.Small"/>

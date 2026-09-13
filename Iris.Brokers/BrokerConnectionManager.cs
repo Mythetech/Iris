@@ -6,8 +6,6 @@ namespace Iris.Brokers
 
         private List<IConnection> _connections = new();
 
-        private List<EndpointDetails> _endpoints = new();
-
         private IConnection? _active = default!;
 
         public BrokerConnectionManager(IEnumerable<IConnector> connectors)
@@ -49,14 +47,18 @@ namespace Iris.Brokers
 
         public async Task<List<EndpointDetails>> GetEndpointsAsync()
         {
-            _endpoints = new();
+            // Aggregate into a local: callers overlap, and a shared field would collect
+            // every in-flight caller's endpoints into a single list. Snapshot the
+            // connections too, because auto discovery can register one while this
+            // aggregation is awaiting a broker.
+            var endpoints = new List<EndpointDetails>();
 
-            foreach (var connection in Connections)
+            foreach (var connection in Connections.ToList())
             {
-                _endpoints.AddRange(await connection.GetEndpointsAsync());
+                endpoints.AddRange(await connection.GetEndpointsAsync());
             }
 
-            return _endpoints;
+            return endpoints;
         }
 
         public List<IConnector> GetProviders()

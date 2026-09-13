@@ -1,5 +1,8 @@
+/* Derived from the same --iris-page-body-height token the card itself uses, so
+   the body and its card cannot drift apart the way they did when the card was
+   a flat 90vh and this rule was not updated with it. */
 .sagas-body {
-    height: calc(90vh - 96px);
+    height: calc(var(--iris-page-body-height) - 96px);
 }
 
 .saga-definition-list {

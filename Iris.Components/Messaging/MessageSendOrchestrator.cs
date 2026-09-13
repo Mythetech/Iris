@@ -26,19 +26,19 @@ public sealed class MessageSendOrchestrator : IMessageSendOrchestrator
 
         Result<bool>? lastResponse = null;
 
-        if (_messageState.Repeat > 0)
+        int repeat = context.Repeat ?? _messageState.Repeat;
+
+        if (repeat > 0)
         {
             // Match the original behaviour: repeat + 1 total sends (for the 0th message)
-            var total = _messageState.Repeat + 1;
+            var total = repeat + 1;
             for (int i = 0; i < total; i++)
             {
-                _messageState.RepeatText = $"{total - i} remaining";
-                _messageState.NotifyStateChanged();
+                _messageState.SetRepeatText($"{total - i} remaining");
                 lastResponse = await SendOnceAsync(messageType, context, cancellationToken);
                 progress?.Report(lastResponse);
             }
-            _messageState.RepeatText = "";
-            _messageState.NotifyStateChanged();
+            _messageState.SetRepeatText("");
         }
         else
         {
@@ -51,20 +51,25 @@ public sealed class MessageSendOrchestrator : IMessageSendOrchestrator
 
     private async Task<Result<bool>> SendOnceAsync(string? messageType, SendContext context, CancellationToken cancellationToken)
     {
-        if (_messageState.Delay > 0)
+        int delay = context.Delay ?? _messageState.Delay;
+
+        if (delay > 0)
         {
-            await HandleDelayAsync(_messageState.Delay, cancellationToken);
+            await HandleDelayAsync(delay, cancellationToken);
         }
 
-        _messageState.SetEndpointMetadata(context.Endpoint);
+        if (!context.IsolateFromMessageState)
+        {
+            _messageState.SetEndpointMetadata(context.Endpoint);
+        }
 
         return await _messageService.SendMessageAsync(
             messageType!,
             context.Json,
             context.Provider?.Address,
-            _messageState.SelectedFramework,
+            context.Framework ?? _messageState.SelectedFramework,
             _messageState.GetFrameworkProperties(),
-            _messageState.Headers);
+            context.Headers ?? _messageState.Headers);
     }
 
     private async Task HandleDelayAsync(int delay, CancellationToken cancellationToken)
@@ -72,12 +77,10 @@ public sealed class MessageSendOrchestrator : IMessageSendOrchestrator
         for (int i = 0; i < delay; i++)
         {
             int remaining = delay - (i + 1);
-            _messageState.DelayText = remaining > 0 ? $"Sending in {remaining}..." : "Sending...";
-            _messageState.NotifyStateChanged();
+            _messageState.SetDelayText(remaining > 0 ? $"Sending in {remaining}..." : "Sending...");
             await Task.Delay(1000, cancellationToken);
         }
 
-        _messageState.DelayText = "";
-        _messageState.NotifyStateChanged();
+        _messageState.SetDelayText("");
     }
 }

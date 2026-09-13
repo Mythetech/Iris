@@ -35,13 +35,22 @@
                 @foreach (var endpoint in group.Take(10))
                 {
                     <MudListItem T="string" Dense="true">
-                        <MudText Typo="Typo.body2" Class="text-truncate">@endpoint.Name</MudText>
+                        <button type="button"
+                                class="endpoints-panel-row"
+                                @onclick="@(() => ShowDetailsAsync(endpoint))">
+                            <MudText Typo="Typo.body2" Class="text-truncate">@endpoint.Name</MudText>
+                        </button>
                     </MudListItem>
                 }
                 @if (group.Count() > 10)
                 {
                     <MudListItem T="string" Dense="true">
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary">+@(group.Count() - 10) more</MudText>
+                        <MudButton Variant="Variant.Text"
+                                   Size="Size.Small"
+                                   Class="endpoints-panel-more"
+                                   OnClick="@OpenEndpointsPage">
+                            +@(group.Count() - 10) more
+                        </MudButton>
                     </MudListItem>
                 }
             }
@@ -51,10 +60,17 @@
 
 @code {
     [Inject] IBrokerService BrokerClient { get; set; } = default!;
+    [Inject] IDialogService DialogService { get; set; } = default!;
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
 
     private List<EndpointDetails>? _endpoints;
     private List<IGrouping<string, EndpointDetails>> _groupedEndpoints = new();
     private bool _loading = true;
+
+    // Keyed by broker address, same shape as the Endpoints page's cache, so a
+    // second click on an endpoint whose broker was already probed does not
+    // re-query it.
+    private readonly Dictionary<string, ReaderCapabilitiesDto?> _capsCache = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -64,4 +80,26 @@
         _loading = false;
     }
 
+    private async Task ShowDetailsAsync(EndpointDetails endpoint)
+    {
+        if (!_capsCache.TryGetValue(endpoint.Address, out var caps))
+        {
+            caps = await BrokerClient.GetReaderCapabilitiesAsync(endpoint.Address);
+            _capsCache[endpoint.Address] = caps;
+        }
+
+        var parameters = new DialogParameters
+        {
+            { nameof(EndpointDetailsDialog.Endpoint), endpoint },
+            { nameof(EndpointDetailsDialog.CanRead), EndpointReadPolicy.CanRead(endpoint, caps) },
+            { nameof(EndpointDetailsDialog.ReadDisabledReason), EndpointReadPolicy.DisabledReason(endpoint) },
+        };
+
+        await DialogService.ShowAsync<EndpointDetailsDialog>(
+            endpoint.Name,
+            parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true, NoHeader = true });
+    }
+
+    private void OpenEndpointsPage() => NavigationManager.NavigateTo("/Endpoints");
 }
