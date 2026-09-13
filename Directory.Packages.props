@@ -47,7 +47,7 @@
     <PackageVersion Include="Testcontainers.Azurite" Version="4.0.0" />
     <PackageVersion Include="Docker.DotNet" Version="3.125.15" />
     <PackageVersion Include="Xunit.SkippableFact" Version="1.5.61" />
-    <PackageVersion Include="Mythetech.Framework" Version="0.19.1" />
+    <PackageVersion Include="Mythetech.Framework" Version="0.19.3" />
     <PackageVersion Include="Mythetech.Framework.Desktop" Version="0.19.2" />
     <PackageVersion Include="Google.Protobuf" Version="3.36.1" />
     <PackageVersion Include="Grpc.Tools" Version="2.83.0" />
