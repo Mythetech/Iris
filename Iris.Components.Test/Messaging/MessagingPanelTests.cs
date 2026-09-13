@@ -64,6 +64,8 @@ public class MessagingPanelTests : IrisTestContext
     {
         var cut = RenderComponent<MessagingPanel>();
 
+        await SelectProviderAndEndpointAsync(cut);
+
         await cut.Find("textarea").InputAsync(new() { Value = "{ not json" });
         await cut.Find("button.messaging-panel-send").ClickAsync(new());
 
@@ -78,6 +80,8 @@ public class MessagingPanelTests : IrisTestContext
     {
         var cut = RenderComponent<MessagingPanel>();
 
+        await SelectProviderAndEndpointAsync(cut);
+
         await cut.Find("textarea").InputAsync(new() { Value = "{\"orderId\":\"1\"}" });
         await cut.Find("button.messaging-panel-send").ClickAsync(new());
 
@@ -85,5 +89,61 @@ public class MessagingPanelTests : IrisTestContext
             Arg.Is<SendContext>(c => c.Json == "{\"orderId\":\"1\"}"),
             Arg.Any<IProgress<Result<bool>>?>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Send_WithNothingSelected_BlocksSend_AndShowsAnError()
+    {
+        var cut = RenderComponent<MessagingPanel>();
+
+        await cut.Find("textarea").InputAsync(new() { Value = "{\"orderId\":\"1\"}" });
+        await cut.Find("button.messaging-panel-send").ClickAsync(new());
+
+        await _orchestrator.DidNotReceive().SendAsync(
+            Arg.Any<SendContext>(), Arg.Any<IProgress<Result<bool>>?>(), Arg.Any<CancellationToken>());
+
+        cut.Markup.Should().Contain("Select a connection before sending");
+    }
+
+    [Fact]
+    public async Task Send_WithProviderButNoEndpoint_BlocksSend_AndShowsAnError()
+    {
+        var cut = RenderComponent<MessagingPanel>();
+
+        var provider = new Provider { Name = "RabbitMq", Address = "http://127.0.0.1:15672" };
+        await cut.InvokeAsync(() => cut.FindComponent<ProviderSelector>().Instance.ValueChanged.InvokeAsync(provider));
+
+        await cut.Find("textarea").InputAsync(new() { Value = "{\"orderId\":\"1\"}" });
+        await cut.Find("button.messaging-panel-send").ClickAsync(new());
+
+        await _orchestrator.DidNotReceive().SendAsync(
+            Arg.Any<SendContext>(), Arg.Any<IProgress<Result<bool>>?>(), Arg.Any<CancellationToken>());
+
+        cut.Markup.Should().Contain("Select an endpoint before sending");
+    }
+
+    [Fact]
+    public async Task Send_PassesIsolatedRepeatAndDelay_SoADrawerSendNeverInheritsPageState()
+    {
+        var cut = RenderComponent<MessagingPanel>();
+
+        await SelectProviderAndEndpointAsync(cut);
+
+        await cut.Find("textarea").InputAsync(new() { Value = "{\"orderId\":\"1\"}" });
+        await cut.Find("button.messaging-panel-send").ClickAsync(new());
+
+        await _orchestrator.Received(1).SendAsync(
+            Arg.Is<SendContext>(c => c.Repeat == 0 && c.Delay == 0 && c.IsolateFromMessageState),
+            Arg.Any<IProgress<Result<bool>>?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    private static async Task SelectProviderAndEndpointAsync(IRenderedComponent<MessagingPanel> cut)
+    {
+        var provider = new Provider { Name = "RabbitMq", Address = "http://127.0.0.1:15672" };
+        var endpoint = new EndpointDetails { Name = "orders", Address = "http://127.0.0.1:15672", Provider = "RabbitMq", Type = "Queue" };
+
+        await cut.InvokeAsync(() => cut.FindComponent<ProviderSelector>().Instance.ValueChanged.InvokeAsync(provider));
+        await cut.InvokeAsync(() => cut.FindComponent<EndpointSelector>().Instance.ValueChanged.InvokeAsync(endpoint));
     }
 }

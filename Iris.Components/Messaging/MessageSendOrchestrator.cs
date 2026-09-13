@@ -26,10 +26,12 @@ public sealed class MessageSendOrchestrator : IMessageSendOrchestrator
 
         Result<bool>? lastResponse = null;
 
-        if (_messageState.Repeat > 0)
+        int repeat = context.Repeat ?? _messageState.Repeat;
+
+        if (repeat > 0)
         {
             // Match the original behaviour: repeat + 1 total sends (for the 0th message)
-            var total = _messageState.Repeat + 1;
+            var total = repeat + 1;
             for (int i = 0; i < total; i++)
             {
                 _messageState.SetRepeatText($"{total - i} remaining");
@@ -49,12 +51,17 @@ public sealed class MessageSendOrchestrator : IMessageSendOrchestrator
 
     private async Task<Result<bool>> SendOnceAsync(string? messageType, SendContext context, CancellationToken cancellationToken)
     {
-        if (_messageState.Delay > 0)
+        int delay = context.Delay ?? _messageState.Delay;
+
+        if (delay > 0)
         {
-            await HandleDelayAsync(_messageState.Delay, cancellationToken);
+            await HandleDelayAsync(delay, cancellationToken);
         }
 
-        _messageState.SetEndpointMetadata(context.Endpoint);
+        if (!context.IsolateFromMessageState)
+        {
+            _messageState.SetEndpointMetadata(context.Endpoint);
+        }
 
         return await _messageService.SendMessageAsync(
             messageType!,

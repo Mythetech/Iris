@@ -34,4 +34,25 @@ public sealed class SendContext
     /// <see cref="MessageState.Headers"/>.
     /// </summary>
     public Dictionary<string, string>? Headers { get; init; }
+
+    /// <summary>
+    /// Repeat count for this send. When null the orchestrator falls back to the
+    /// ambient <see cref="MessageState.Repeat"/>.
+    /// </summary>
+    public int? Repeat { get; init; }
+
+    /// <summary>
+    /// Delay in seconds before each send. When null the orchestrator falls back to
+    /// the ambient <see cref="MessageState.Delay"/>.
+    /// </summary>
+    public int? Delay { get; init; }
+
+    /// <summary>
+    /// True when this context is fully self-contained and the orchestrator must not
+    /// write to the ambient <see cref="MessageState"/> (for example, recording
+    /// endpoint metadata). Callers that compose outside the Messaging page, like the
+    /// quick-send panel, set this so a drawer send never mutates state the page is
+    /// still using.
+    /// </summary>
+    public bool IsolateFromMessageState { get; init; }
 }

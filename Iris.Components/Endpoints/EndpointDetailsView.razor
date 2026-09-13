@@ -140,12 +140,21 @@
         _currentProperties = null;
         StateHasChanged();
 
-        var dto = await BrokerService.GetEndpointPropertiesAsync(
-            Endpoint.Address, Endpoint.Name, Endpoint.Type);
+        try
+        {
+            var dto = await BrokerService.GetEndpointPropertiesAsync(
+                Endpoint.Address, Endpoint.Name, Endpoint.Type);
 
-        _propertiesCache[key] = dto;
-        _currentProperties = dto;
-        _propertiesLoading = false;
-        StateHasChanged();
+            _propertiesCache[key] = dto;
+            _currentProperties = dto;
+        }
+        finally
+        {
+            // The refresh button stays bound to _propertiesLoading, so a broker
+            // failure here must not leave it permanently disabled with no way
+            // to try again (same defect class as Endpoints.LoadAsync).
+            _propertiesLoading = false;
+            StateHasChanged();
+        }
     }
 }

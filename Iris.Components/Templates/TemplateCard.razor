@@ -67,6 +67,8 @@
                          Size="Size.Small"
                          AnchorOrigin="Origin.BottomRight"
                          TransformOrigin="Origin.TopRight">
+                    @* tier-copy-menu has no CSS rule; it only marks this item for a test proving
+                       MudMenu portals its content out of the card's own subtree. *@
                     <MudMenuItem Icon="@IrisIcons.Copy" Class="tier-copy-menu"
                                  OnClick="@(() => OnCopy.InvokeAsync(Template))">Copy JSON</MudMenuItem>
                     <MudMenuItem Icon="@IrisIcons.Duplicate"
