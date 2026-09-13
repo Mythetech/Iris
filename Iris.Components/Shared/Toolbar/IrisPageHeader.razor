@@ -1,28 +1,30 @@
 @inherits IrisBaseComponent
 @namespace Iris.Components.Shared.Toolbar
 
-<IrisToolBar Class="@Class" Style="@Style">
-    @if (!string.IsNullOrWhiteSpace(Icon))
-    {
-        <MudIcon Icon="@Icon" Size="Size.Small" Class="iris-page-header-icon" />
-    }
+<div class="iris-page-header">
+    <IrisToolBar Class="@Class" Style="@Style">
+        @if (!string.IsNullOrWhiteSpace(Icon))
+        {
+            <MudIcon Icon="@Icon" Size="Size.Small" Class="iris-page-header-icon" />
+        }
 
-    <div class="iris-page-header-title">
-        <MudText Typo="Typo.h6">@Title</MudText>
-    </div>
+        <div class="iris-page-header-title">
+            <MudText Typo="Typo.h6">@Title</MudText>
+        </div>
 
-    @if (Status is not null)
-    {
-        <div class="iris-page-header-status">@Status</div>
-    }
+        @if (Status is not null)
+        {
+            <div class="iris-page-header-status">@Status</div>
+        }
 
-    <MudSpacer />
+        <MudSpacer />
 
-    @if (Actions is not null)
-    {
-        <div class="iris-page-header-actions">@Actions</div>
-    }
-</IrisToolBar>
+        @if (Actions is not null)
+        {
+            <div class="iris-page-header-actions">@Actions</div>
+        }
+    </IrisToolBar>
+</div>
 
 @code {
     /// <summary>Page icon, from <see cref="Iris.Components.Theme.IrisIcons"/>. Omit to render no icon.</summary>
@@ -31,9 +33,16 @@
     /// <summary>Page name, rendered as the header title.</summary>
     [Parameter] public string Title { get; set; } = "";
 
-    /// <summary>Counts, status chips, anything that describes the page. Sits beside the title.</summary>
+    /// <summary>
+    /// Passive information about the page, such as a count. Sits beside the title.
+    /// Nothing interactive belongs here: every control goes in <see cref="Actions"/>,
+    /// so that across the app the page reads as name on the left, interaction on the right.
+    /// </summary>
     [Parameter] public RenderFragment? Status { get; set; }
 
-    /// <summary>Page-level actions. Right aligned.</summary>
+    /// <summary>
+    /// Everything interactive this page offers: buttons, search, toggles, selectors.
+    /// Right aligned, past the spacer.
+    /// </summary>
     [Parameter] public RenderFragment? Actions { get; set; }
 }
