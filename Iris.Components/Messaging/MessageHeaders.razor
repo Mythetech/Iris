@@ -1,5 +1,6 @@
 ﻿@using Iris.Components.Theme
 @inherits DynamicTabView
+@implements IDisposable
 
 <MudStack>
     <MudDataGrid Class="iris-table" Hover="true" T="DictionaryViewModel" Dense="true" Items="@MessageState.HeaderMap" QuickFilter="@QuickFilter" ReadOnly="false"
@@ -43,6 +44,16 @@
 public MessageState MessageState { get; set; } = default!;
 
 private string? _filterString;
+
+    protected override void OnInitialized()
+    {
+        MessageState.StateChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        MessageState.StateChanged -= StateHasChanged;
+    }
 
     private bool QuickFilter(DictionaryViewModel x)
     {

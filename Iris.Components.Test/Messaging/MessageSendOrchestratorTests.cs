@@ -1,7 +1,8 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Iris.Components.Messaging;
 using Iris.Contracts.Brokers.Models;
 using Iris.Contracts.Results;
+using Mythetech.Framework.Infrastructure.MessageBus;
 using NSubstitute;
 using Xunit;
 
@@ -10,7 +11,7 @@ namespace Iris.Components.Test.Messaging;
 public class MessageSendOrchestratorTests
 {
     private readonly IMessageService _messageService = Substitute.For<IMessageService>();
-    private readonly MessageState _state = new();
+    private readonly MessageState _state = new(new MessagingSettings(), Substitute.For<IMessageBus>());
     private readonly MessageSendOrchestrator _sut;
 
     public MessageSendOrchestratorTests()

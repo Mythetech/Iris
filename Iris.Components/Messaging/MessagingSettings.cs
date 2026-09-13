@@ -11,7 +11,7 @@ public class MessagingSettings : SettingsBase
     public override int Order => 10;
 
     [Setting(Label = "Iris Key", Description = "Send requests with additional header to uniquely identify test requests")]
-    public bool SendIrisHeader { get; set; }
+    public bool SendIrisHeader { get; set; } = true;
 
     public override Type? EndingContent => typeof(LayoutSettingsDisplay);
 }
