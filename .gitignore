@@ -408,3 +408,5 @@ Iris.Cloud.Demo/appsettings.Local.json
 
 *.internal/
 *.claude/
+# Superpowers brainstorming scratch
+.superpowers/
