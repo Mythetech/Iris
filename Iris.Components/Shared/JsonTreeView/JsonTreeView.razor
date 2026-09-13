@@ -35,8 +35,13 @@
     [Parameter]
     public bool Sorted { get; set; }
 
-    /// <inheritdoc />
-    protected override void OnInitialized()
+    /// <summary>
+    /// Parsed on every parameter change, not once on initialization. Blazor reuses a
+    /// component instance when the same position in the render tree gets new parameters,
+    /// so a tree that only parsed in OnInitialized kept displaying the first Json it was
+    /// ever handed.
+    /// </summary>
+    protected override void OnParametersSet()
     {
         Root = JsonNode.Parse(Json);
     }

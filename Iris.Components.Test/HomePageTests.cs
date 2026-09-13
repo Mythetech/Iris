@@ -74,7 +74,7 @@ public class HomePageTests : TestContext
         });
 
         // Act
-        var component = RenderComponent<Home.Home>();
+        var component = RenderComponent<Iris.Components.Home.Home>();
 
         // Assert
         component.Should().NotBeNull();
@@ -100,7 +100,7 @@ public class HomePageTests : TestContext
 
 
         // Act
-        var component = RenderComponent<Home.Home>();
+        var component = RenderComponent<Iris.Components.Home.Home>();
 
         // Assert
         component.Should().NotBeNull();
@@ -154,7 +154,7 @@ public class HomePageTests : TestContext
         },
     });
 
-        var component = RenderComponent<Home.Home>();
+        var component = RenderComponent<Iris.Components.Home.Home>();
         var original = component.FindComponent<ProviderEndpointCard>();
         original.FindAll(".mud-table-row").Count.Should().Be(4);
 

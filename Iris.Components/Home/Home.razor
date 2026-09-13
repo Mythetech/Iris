@@ -133,9 +133,12 @@
 
     private IReadOnlyCollection<string> _endpointFilters = default!;
     
-    private ConnectionDoughnut connectionChart = default!;
+    // Nullable, and null-checked at every call site. Both @ref assignments are inside
+    // "@if (_endpoints != null && !_loadingEndpoints)", so adding a connection while the
+    // first endpoint load was still running dereferenced a ref that had never been set.
+    private ConnectionDoughnut? connectionChart;
 
-    private ProviderEndpointBarChart endpointChart = default!;
+    private ProviderEndpointBarChart? endpointChart;
 
     private ProviderCarousel _providerCarousel = default!;
 
@@ -257,7 +260,7 @@
             StateHasChanged();            
         }
         
-        if (FilterEndpointsByActiveProvider)
+        if (FilterEndpointsByActiveProvider && endpointChart is not null)
             await endpointChart.RefreshAsync();
 
         int index = -1;
@@ -305,9 +308,11 @@
 
             await Task.Yield();
 
-            await connectionChart.Refresh();
+            if (connectionChart is not null)
+                await connectionChart.Refresh();
 
-            await endpointChart.RefreshAsync();
+            if (endpointChart is not null)
+                await endpointChart.RefreshAsync();
         }
 
         StateHasChanged();
@@ -332,7 +337,8 @@
 
     public async Task FilterRemoved(string filter)
     {
-        await endpointChart.RemoveFilterAsync(filter);
+        if (endpointChart is not null)
+            await endpointChart.RemoveFilterAsync(filter);
         StateHasChanged();
 
         await Task.Yield();
@@ -340,7 +346,8 @@
 
     public async Task FiltersCleared()
     {
-        await endpointChart.ClearFiltersAsync();
+        if (endpointChart is not null)
+            await endpointChart.ClearFiltersAsync();
         StateHasChanged();
 
         await Task.Yield();
