@@ -18,12 +18,22 @@ namespace Iris.Brokers.RabbitMQ
         private readonly ConnectionMetadata _metadata;
         private readonly EasyNetQ.Management.Client.ManagementClient _client;
         private readonly string _address = "";
+        private readonly string _vhost;
+        private readonly Vhost _vhostRef;
         private List<EndpointDetails> _endpoints;
 
         public RabbitMqConnection(ConnectionMetadata metadata,
-            EasyNetQ.Management.Client.ManagementClient client)
+            EasyNetQ.Management.Client.ManagementClient client,
+            string vhost = RabbitMqConnector.DefaultVHost)
         {
             Connector = metadata.Connector;
+            _vhost = string.IsNullOrWhiteSpace(vhost) ? RabbitMqConnector.DefaultVHost : vhost;
+
+            // Built here rather than fetched with GetVhostAsync on every operation. That call
+            // hits GET /api/vhosts/{name}, which the management plugin restricts to users with
+            // the administrator tag, so a plain management user could not peek, read, inspect or
+            // discover anything. The client only ever uses the name to build its request path.
+            _vhostRef = new Vhost(_vhost, Tracing: false);
             _address = client.Endpoint.GetLeftPart(UriPartial.Authority);
             _metadata = metadata;
             _client = client;
@@ -39,7 +49,8 @@ namespace Iris.Brokers.RabbitMQ
 
         public Guid Id { get; } = Guid.NewGuid();
 
-        private RabbitMqConnector Rabbit => (RabbitMqConnector)Connector;
+        /// <summary>The virtual host every operation on this connection is scoped to.</summary>
+        public string VHost => _vhost;
 
         public string Name { get; set; } = "RabbitMq";
 
@@ -47,9 +58,13 @@ namespace Iris.Brokers.RabbitMQ
 
         public int EndpointCount => _endpoints.Count;
 
+        /// <summary>
+        /// Scoped to this connection's virtual host. Listing across every vhost showed queues
+        /// that no send, read or inspect on this connection could reach.
+        /// </summary>
         public async Task<List<EndpointDetails>> GetEndpointsAsync()
         {
-            var queues = await _client.GetQueuesAsync();
+            var queues = await _client.GetQueuesAsync(_vhostRef);
 
             var endpoints = queues.Select(x => new EndpointDetails
             {
@@ -60,7 +75,7 @@ namespace Iris.Brokers.RabbitMQ
             })
              .ToList();
 
-            var exchanges = await _client.GetExchangesAsync();
+            var exchanges = await _client.GetExchangesAsync(_vhostRef);
 
             endpoints.AddRange(exchanges.Select(x => new EndpointDetails
             {
@@ -113,7 +128,7 @@ namespace Iris.Brokers.RabbitMQ
                 ? "amq.default"
                 : endpoint!.Name;
 
-            await _client.PublishAsync($"{Rabbit.VHost}", exchange,
+            await _client.PublishAsync(_vhost, exchange,
                 new PublishInfo(endpoint?.Name ?? "/", message.Json, Properties: properties));
         }
 
@@ -183,9 +198,8 @@ namespace Iris.Brokers.RabbitMQ
         private async Task<string?> ResolveDlqNameAsync(
             string sourceQueueName, CancellationToken cancellationToken)
         {
-            var vhost = await _client.GetVhostAsync(Rabbit.VHost, cancellationToken);
             var queue = await _client.GetQueueAsync(
-                vhost, sourceQueueName, cancellationToken: cancellationToken);
+                _vhostRef, sourceQueueName, cancellationToken: cancellationToken);
 
             if (!queue.Arguments.TryGetValue("x-dead-letter-exchange", out var dlxValue)
                 || dlxValue is null)
@@ -205,7 +219,7 @@ namespace Iris.Brokers.RabbitMQ
             }
 
             var bindings = await _client.GetBindingsWithSourceAsync(
-                vhost, dlxName, cancellationToken);
+                _vhostRef, dlxName, cancellationToken);
 
             var queueBindings = bindings
                 .Where(b => string.Equals(b.DestinationType, "queue", StringComparison.OrdinalIgnoreCase))
@@ -232,10 +246,9 @@ namespace Iris.Brokers.RabbitMQ
             CancellationToken cancellationToken,
             ReadSource source = ReadSource.Main)
         {
-            var vhost = await _client.GetVhostAsync(Rabbit.VHost, cancellationToken);
             var criteria = new GetMessagesFromQueueInfo(count, ackMode, "auto");
             var messages = await _client.GetMessagesFromQueueAsync(
-                vhost, endpoint.Name, criteria, cancellationToken);
+                _vhostRef, endpoint.Name, criteria, cancellationToken);
             return messages.Select(m => Map(m) with { Source = source }).ToList();
         }
 
@@ -314,12 +327,11 @@ namespace Iris.Brokers.RabbitMQ
             CancellationToken cancellationToken = default)
         {
             var entries = new List<Iris.Contracts.Brokers.Models.EndpointPropertyEntry>();
-            var vhost = await _client.GetVhostAsync(Rabbit.VHost, cancellationToken);
 
             if (string.Equals(type, "Exchange", StringComparison.OrdinalIgnoreCase))
             {
                 var exchange = await _client.GetExchangeAsync(
-                    vhost, endpointName, cancellationToken: cancellationToken);
+                    _vhostRef, endpointName, cancellationToken: cancellationToken);
 
                 entries.Add(new("Type", exchange.Type));
                 entries.Add(new("Vhost", exchange.Vhost));
@@ -331,13 +343,13 @@ namespace Iris.Brokers.RabbitMQ
                     entries.Add(new("Arguments", FormatArguments(exchange.Arguments)));
 
                 var bindings = await _client.GetBindingsWithSourceAsync(
-                    vhost, endpointName, cancellationToken);
+                    _vhostRef, endpointName, cancellationToken);
                 entries.Add(new("Bindings", FormatBindings(bindings, fromExchange: true)));
             }
             else
             {
                 var queue = await _client.GetQueueAsync(
-                    vhost, endpointName, cancellationToken: cancellationToken);
+                    _vhostRef, endpointName, cancellationToken: cancellationToken);
 
                 entries.Add(new("Vhost", queue.Vhost));
                 entries.Add(new("State", queue.State));
@@ -367,7 +379,7 @@ namespace Iris.Brokers.RabbitMQ
                 }
 
                 var bindings = await _client.GetBindingsForQueueAsync(
-                    vhost, endpointName, cancellationToken);
+                    _vhostRef, endpointName, cancellationToken);
                 entries.Add(new("Bindings", FormatBindings(bindings, fromExchange: false)));
             }
 
