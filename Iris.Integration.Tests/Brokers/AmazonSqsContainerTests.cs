@@ -4,7 +4,6 @@ using Amazon;
 using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using DotNet.Testcontainers.Containers;
 using FluentAssertions;
 using Iris.Brokers;
 using Iris.Brokers.Amazon;
@@ -16,18 +15,18 @@ namespace Iris.Integration.Tests.Brokers
 {
     /// <summary>
     /// Emulator-backed integration tests for <see cref="AmazonSimpleQueueServiceConnection"/>.
-    /// Uses ElasticMQ (Apache 2.0, single-container, SQS-compatible) so the
-    /// suite can run committable tests without real AWS credentials.
+    /// Uses LocalEmu so the suite can run committable tests without real AWS credentials, and
+    /// so there is one AWS emulator rather than one per service.
     /// </summary>
-    [Collection("ElasticMQ")]
+    [Collection("LocalEmu")]
     [Trait("Category", "Container")]
     public class AmazonSqsContainerTests
     {
-        private readonly IContainer _container;
+        private readonly LocalEmuContainerFixture _emulator;
 
-        public AmazonSqsContainerTests(ElasticMqContainerFixture fixture)
+        public AmazonSqsContainerTests(LocalEmuContainerFixture emulator)
         {
-            _container = fixture.Container;
+            _emulator = emulator;
         }
 
         private AmazonSQSClient CreateSqsClient()
@@ -36,8 +35,8 @@ namespace Iris.Integration.Tests.Brokers
                 new BasicAWSCredentials("test", "test"),
                 new AmazonSQSConfig
                 {
-                    ServiceURL = $"http://localhost:{_container.GetMappedPublicPort(ElasticMqContainerFixture.SqsPort)}",
-                    AuthenticationRegion = "elasticmq",
+                    ServiceURL = _emulator.ServiceUrl,
+                    AuthenticationRegion = "us-east-1",
                 });
         }
 
@@ -47,7 +46,7 @@ namespace Iris.Integration.Tests.Brokers
             var metadata = new ConnectionMetadata
             {
                 Connector = connector,
-                Address = $"http://localhost:{_container.GetMappedPublicPort(ElasticMqContainerFixture.SqsPort)}",
+                Address = _emulator.ServiceUrl,
             };
             return new AmazonSimpleQueueServiceConnection(metadata, client);
         }
@@ -55,7 +54,7 @@ namespace Iris.Integration.Tests.Brokers
         private static EndpointDetails Endpoint(string queueName) => new()
         {
             Provider = "Amazon",
-            Address = "elasticmq",
+            Address = "localemu",
             Type = "Queue",
             Name = queueName,
         };
@@ -153,7 +152,7 @@ namespace Iris.Integration.Tests.Brokers
             var mainUrl = mainUrlResp.QueueUrl;
 
             // Send a message to the main queue, then drive its delivery
-            // count past maxReceiveCount=1 so ElasticMQ moves it to the DLQ.
+            // count past maxReceiveCount=1 so the broker moves it to the DLQ.
             // Step 1: send.
             await client.SendMessageAsync(mainUrl, "{\"will\":\"dead-letter\"}");
             await Task.Delay(300);
@@ -174,7 +173,7 @@ namespace Iris.Integration.Tests.Brokers
             // again — this is the trigger for the redrive policy.
             await Task.Delay(2000);
 
-            // Step 3: receive again — ElasticMQ counts this as the 2nd
+            // Step 3: receive again — the broker counts this as the 2nd
             // delivery attempt and moves the message to the DLQ instead of
             // returning it. The receive call returns empty.
             var secondAttempt = await client.ReceiveMessageAsync(new ReceiveMessageRequest

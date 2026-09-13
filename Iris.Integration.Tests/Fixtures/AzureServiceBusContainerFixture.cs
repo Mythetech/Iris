@@ -1,200 +1,179 @@
 using System;
-using System.IO;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure.Messaging.ServiceBus;
 using Docker.DotNet;
 using Docker.DotNet.Models;
 
 namespace Iris.Integration.Tests.Fixtures;
 
+/// <summary>
+/// Runs the Service Bus suite against OpenServiceBus, the same emulator TsTransit uses.
+///
+/// It replaced Microsoft's emulator image, which needed a SQL Edge sidecar on its own Docker
+/// network. SQL Edge is amd64 only, so on Apple Silicon it ran under emulation and took minutes
+/// to come up, and the whole arrangement had to bind host port 5672 because the connection
+/// string named no other one. Anything already holding 5672, which locally is a RabbitMQ
+/// container that stays up, made the suite unrunnable outside CI.
+///
+/// OpenServiceBus is one container, it speaks the Service Bus AMQP data plane the connector
+/// uses, and it accepts a port in the endpoint, so both ports are ephemeral and nothing
+/// collides. Its management plane is a small JSON REST API rather than the real Service Bus
+/// management protocol, so entities are seeded through <see cref="CreateQueue"/> below instead
+/// of a ServiceBusAdministrationClient. The image is pinned by digest because a floating tag
+/// changes emulator behaviour under a commit that changed nothing.
+/// </summary>
 public class AzureServiceBusContainerFixture : IAsyncLifetime
 {
-    private const string MainQueue = "iris-main-test";
-    private const string DlqQueue = "iris-dlq-test";
-    private const string SqlPassword = "YourStrongPassword123!";
-    private const ushort ServiceBusPort = 5672;
+    public const string MainQueue = "iris-main-test";
+    public const string DlqQueue = "iris-dlq-test";
 
-    public const string ConnectionString =
-        "Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;" +
-        "SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;";
+    private const string Image =
+        "mauritsarissen/openservicebus@sha256:c944c328793d26f684d4dc0d097dd10b4aff002a189a03abd8f86b11b4ce9e0c";
+    private const string AmqpPort = "5672/tcp";
+    private const string ManagementPort = "5300/tcp";
 
     private readonly DockerClient _docker = new DockerClientConfiguration().CreateClient();
-    private string? _networkId;
-    private string? _sqlContainerId;
-    private string? _sbContainerId;
+    private readonly HttpClient _http = new();
+    private string? _containerId;
+
+    /// <summary>
+    /// Set once the emulator is up. The port is whatever Docker assigned, which is why this is
+    /// an instance member rather than the constant it used to be.
+    /// </summary>
+    public string ConnectionString { get; private set; } = string.Empty;
+
+    public string ManagementUrl { get; private set; } = string.Empty;
 
     public async Task InitializeAsync()
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
 
-        // 1. Create a dedicated network
-        var network = await _docker.Networks.CreateNetworkAsync(
-            new NetworksCreateParameters { Name = $"sb-net-{Guid.NewGuid():N}" },
-            cts.Token);
-        _networkId = network.ID;
+        await PullImageIfMissing(Image, cts.Token);
 
-        // 2. Start SQL Edge sidecar
-        await PullImageIfMissing("mcr.microsoft.com/azure-sql-edge:latest", cts.Token);
-        var sqlCreate = await _docker.Containers.CreateContainerAsync(
+        var created = await _docker.Containers.CreateContainerAsync(
             new CreateContainerParameters
             {
-                Image = "mcr.microsoft.com/azure-sql-edge:latest",
-                Env = ["ACCEPT_EULA=Y", $"MSSQL_SA_PASSWORD={SqlPassword}"],
-                HostConfig = new HostConfig
-                {
-                    NetworkMode = _networkId,
-                },
-                NetworkingConfig = new NetworkingConfig
-                {
-                    EndpointsConfig = new Dictionary<string, EndpointSettings>
-                    {
-                        [_networkId] = new() { Aliases = ["sqledge"] }
-                    }
-                }
-            },
-            cts.Token);
-        _sqlContainerId = sqlCreate.ID;
-        await _docker.Containers.StartContainerAsync(_sqlContainerId, null, cts.Token);
-
-        // 3. Resolve Config.json from build output
-        var configPath = Path.Combine(AppContext.BaseDirectory, "Brokers", "Resources", "Config.json");
-        if (!File.Exists(configPath))
-            throw new FileNotFoundException("Config.json not found in build output", configPath);
-
-        // 4. Start SB emulator with bind-mounted config
-        await PullImageIfMissing("mcr.microsoft.com/azure-messaging/servicebus-emulator:latest", cts.Token);
-        var sbCreate = await _docker.Containers.CreateContainerAsync(
-            new CreateContainerParameters
-            {
-                Image = "mcr.microsoft.com/azure-messaging/servicebus-emulator:latest",
-                Env =
-                [
-                    "ACCEPT_EULA=Y",
-                    "SQL_SERVER=sqledge",
-                    $"MSSQL_SA_PASSWORD={SqlPassword}",
-                    "SQL_WAIT_INTERVAL=30",
-                ],
-                HostConfig = new HostConfig
-                {
-                    NetworkMode = _networkId,
-                    PortBindings = new Dictionary<string, IList<PortBinding>>
-                    {
-                        [$"{ServiceBusPort}/tcp"] = [new PortBinding { HostPort = ServiceBusPort.ToString() }]
-                    },
-                    Binds = [$"{configPath}:/ServiceBus_Emulator/ConfigFiles/Config.json:ro"],
-                },
+                Image = Image,
                 ExposedPorts = new Dictionary<string, EmptyStruct>
                 {
-                    [$"{ServiceBusPort}/tcp"] = default
+                    [AmqpPort] = default,
+                    [ManagementPort] = default,
                 },
-                NetworkingConfig = new NetworkingConfig
+                HostConfig = new HostConfig
                 {
-                    EndpointsConfig = new Dictionary<string, EndpointSettings>
+                    // An empty HostPort asks Docker for a free one, so two runs, or a run
+                    // alongside another broker, never contend for the same number.
+                    PortBindings = new Dictionary<string, IList<PortBinding>>
                     {
-                        [_networkId] = new() { Aliases = ["servicebus"] }
-                    }
-                }
+                        [AmqpPort] = [new PortBinding { HostPort = string.Empty }],
+                        [ManagementPort] = [new PortBinding { HostPort = string.Empty }],
+                    },
+                    AutoRemove = true,
+                },
             },
             cts.Token);
-        _sbContainerId = sbCreate.ID;
-        await _docker.Containers.StartContainerAsync(_sbContainerId, null, cts.Token);
+        _containerId = created.ID;
 
-        // 5. Poll container logs for the "Successfully Up" message
-        await WaitForLogMessage(_sbContainerId, "Emulator Service is Successfully Up",
-            TimeSpan.FromMinutes(2), cts.Token);
+        await _docker.Containers.StartContainerAsync(_containerId, null, cts.Token);
 
-        // 6. Poll via AMQP peek until pre-declared queues accept connections.
-        //    ServiceBusAdministrationClient uses HTTP (port 5300) which the
-        //    emulator exposes separately; peeking over AMQP on 5672 is simpler.
-        await using var probeClient = new ServiceBusClient(ConnectionString);
-        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
-        string lastError = "no attempts made";
-        while (DateTime.UtcNow < deadline)
-        {
-            cts.Token.ThrowIfCancellationRequested();
-            try
-            {
-                await using var mainReceiver = probeClient.CreateReceiver(MainQueue);
-                await using var dlqReceiver = probeClient.CreateReceiver(DlqQueue);
-                // PeekMessageAsync succeeds (even with null result) once the queue exists.
-                await mainReceiver.PeekMessageAsync(cancellationToken: cts.Token);
-                await dlqReceiver.PeekMessageAsync(cancellationToken: cts.Token);
-                return;
-            }
-            catch (Exception ex)
-            {
-                lastError = $"{ex.GetType().Name}: {ex.Message}";
-            }
-            await Task.Delay(1000, cts.Token);
-        }
-        throw new TimeoutException(
-            $"Service Bus emulator queues not ready within 60s. Last status: {lastError}");
+        var inspection = await _docker.Containers.InspectContainerAsync(_containerId, cts.Token);
+        ConnectionString =
+            $"Endpoint=sb://localhost:{HostPortOf(inspection, AmqpPort)};" +
+            "SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;" +
+            "UseDevelopmentEmulator=true;";
+        ManagementUrl = $"http://localhost:{HostPortOf(inspection, ManagementPort)}";
+
+        await WaitForHealthy(cts.Token);
+
+        // The queues the suite reads and writes. MaxDeliveryCount of 1 on the dead-letter
+        // queue is what lets a single abandon move a message to its dead-letter sub-queue.
+        await CreateQueue(MainQueue, maxDeliveryCount: 10, lockDuration: "00:01:00", cts.Token);
+        await CreateQueue(DlqQueue, maxDeliveryCount: 1, lockDuration: "00:05:00", cts.Token);
     }
 
     public async Task DisposeAsync()
     {
-        if (_sbContainerId is not null)
+        if (_containerId is not null)
         {
             try
             {
-                await _docker.Containers.StopContainerAsync(_sbContainerId,
+                // AutoRemove takes the container away once it stops.
+                await _docker.Containers.StopContainerAsync(_containerId,
                     new ContainerStopParameters { WaitBeforeKillSeconds = 5 });
-                await _docker.Containers.RemoveContainerAsync(_sbContainerId,
-                    new ContainerRemoveParameters { Force = true });
             }
-            catch { /* best-effort */ }
-        }
-
-        if (_sqlContainerId is not null)
-        {
-            try
+            catch (DockerApiException)
             {
-                await _docker.Containers.StopContainerAsync(_sqlContainerId,
-                    new ContainerStopParameters { WaitBeforeKillSeconds = 5 });
-                await _docker.Containers.RemoveContainerAsync(_sqlContainerId,
-                    new ContainerRemoveParameters { Force = true });
+                // Best effort. A container that is already gone is the outcome we wanted.
             }
-            catch { /* best-effort */ }
         }
 
-        if (_networkId is not null)
-        {
-            try { await _docker.Networks.DeleteNetworkAsync(_networkId); }
-            catch { /* best-effort */ }
-        }
-
+        _http.Dispose();
         _docker.Dispose();
     }
 
-    private async Task WaitForLogMessage(string containerId, string target,
-        TimeSpan timeout, CancellationToken ct)
+    private static string HostPortOf(ContainerInspectResponse inspection, string containerPort)
     {
-        using var logCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        logCts.CancelAfter(timeout);
-
-        var muxStream = await _docker.Containers.GetContainerLogsAsync(containerId,
-            false,
-            new ContainerLogsParameters { ShowStdout = true, ShowStderr = true, Follow = true },
-            logCts.Token);
-
-        var buffer = new byte[8192];
-        while (!logCts.Token.IsCancellationRequested)
+        if (inspection.NetworkSettings.Ports.TryGetValue(containerPort, out var bindings)
+            && bindings is { Count: > 0 })
         {
-            var result = await muxStream.ReadOutputAsync(buffer, 0, buffer.Length, logCts.Token);
-            if (result.Count == 0)
+            return bindings[0].HostPort;
+        }
+
+        throw new InvalidOperationException(
+            $"The emulator container published no host port for {containerPort}.");
+    }
+
+    private async Task WaitForHealthy(CancellationToken ct)
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
+        var lastError = "no attempts made";
+
+        while (DateTime.UtcNow < deadline)
+        {
+            ct.ThrowIfCancellationRequested();
+            try
             {
-                await Task.Delay(250, logCts.Token);
-                continue;
+                var response = await _http.GetAsync($"{ManagementUrl}/health", ct);
+                if (response.IsSuccessStatusCode)
+                    return;
+
+                lastError = $"HTTP {(int)response.StatusCode}";
+            }
+            catch (HttpRequestException ex)
+            {
+                lastError = ex.Message;
             }
 
-            var text = System.Text.Encoding.UTF8.GetString(buffer, 0, result.Count);
-            if (text.Contains(target, StringComparison.OrdinalIgnoreCase))
-                return;
+            await Task.Delay(500, ct);
         }
 
         throw new TimeoutException(
-            $"Container {containerId} did not log \"{target}\" within {timeout.TotalSeconds}s.");
+            $"OpenServiceBus emulator was not healthy within 60s. Last status: {lastError}");
+    }
+
+    /// <summary>
+    /// Seeds one queue through the emulator's REST API. Durations are .NET TimeSpan text, not
+    /// ISO-8601 durations; sending "PT1M" is rejected with a 400.
+    ///
+    /// Scaffolding entities is not Iris's job and not the thing under test, so a test that needs
+    /// its own queue asks for one here rather than making a framework declare it.
+    /// </summary>
+    public async Task CreateQueue(string name, int maxDeliveryCount = 10, string lockDuration = "00:01:00", CancellationToken ct = default)
+    {
+        var response = await _http.PutAsJsonAsync(
+            $"{ManagementUrl}/queues/{Uri.EscapeDataString(name)}",
+            new { maxDeliveryCount, lockDuration },
+            ct);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                $"Creating queue '{name}' returned {(int)response.StatusCode}: " +
+                await response.Content.ReadAsStringAsync(ct));
+        }
     }
 
     private async Task PullImageIfMissing(string image, CancellationToken ct)
@@ -205,9 +184,13 @@ public class AzureServiceBusContainerFixture : IAsyncLifetime
         }
         catch (DockerImageNotFoundException)
         {
-            var parts = image.Split(':');
+            var separator = image.IndexOf('@');
             await _docker.Images.CreateImageAsync(
-                new ImagesCreateParameters { FromImage = parts[0], Tag = parts.Length > 1 ? parts[1] : "latest" },
+                new ImagesCreateParameters
+                {
+                    FromImage = image[..separator],
+                    Tag = image[(separator + 1)..],
+                },
                 null,
                 new Progress<JSONMessage>(),
                 ct);

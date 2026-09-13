@@ -20,27 +20,34 @@ namespace Iris.Integration.Tests
 
     [Collection("RabbitMQ")]
     [Trait("Category", "Container")]
-    public class MassTransitTests : IAsyncLifetime
+    public class MassTransitTests
     {
-        private const string QueueName = "iris-mt-test";
-
         private readonly RabbitMqContainer _rabbitMqContainer;
-
-        private IBusControl? _bus;
-        private readonly TestIrisConsumer _consumer = new();
 
         public MassTransitTests(RabbitMqContainerFixture fixture)
         {
             _rabbitMqContainer = fixture.Container;
         }
 
-        public async Task InitializeAsync()
+        [Theory(DisplayName = "Iris MassTransit-wrapped message round-trips to a real MassTransit consumer on RabbitMQ")]
+        // An Azure Service Bus entity name, which is how a discovered endpoint is spelled.
+        [InlineData("Iris.Integration.Tests/IrisMtTestMessage", "slash")]
+        // A RabbitMQ exchange name, which is already the urn spelling.
+        [InlineData("Iris.Integration.Tests:IrisMtTestMessage", "colon")]
+        // A .NET fully qualified name, which is what the type picker and the Type name field's
+        // help text produce. This is the spelling that silently stopped routing.
+        [InlineData("Iris.Integration.Tests.IrisMtTestMessage", "dot")]
+        public async Task Can_Consume_MassTransit_Message(string typeName, string queueSuffix)
         {
             Environment.SetEnvironmentVariable("MT_TELEMETRY", "false");
 
+            // Each case gets its own queue and its own bus, so one case's bus can never take a
+            // sibling's message and leave the sibling waiting for one already consumed.
+            var queueName = $"iris-mt-{queueSuffix}";
+            var consumer = new TestIrisConsumer();
             var amqpPort = _rabbitMqContainer.GetMappedPublicPort(5672);
 
-            _bus = Bus.Factory.CreateUsingRabbitMq(cfg =>
+            var bus = Bus.Factory.CreateUsingRabbitMq(cfg =>
             {
                 cfg.Host(new Uri($"rabbitmq://localhost:{amqpPort}/"), h =>
                 {
@@ -48,91 +55,76 @@ namespace Iris.Integration.Tests
                     h.Password("guest");
                 });
 
-                cfg.ReceiveEndpoint(QueueName, e =>
-                {
-                    e.Consumer(() => _consumer);
-                });
+                cfg.ReceiveEndpoint(queueName, e => e.Consumer(() => consumer));
             });
 
-            await _bus.StartAsync();
-        }
+            await bus.StartAsync();
 
-        public async Task DisposeAsync()
-        {
-            if (_bus is not null)
+            try
             {
-                await _bus.StopAsync();
-            }
-        }
+                // Arrange — wrap a message exactly as LocalConnectionManager.SendMessageAsync does.
+                var adapter = new MassTransitAdapter();
 
-        [Theory(DisplayName = "Iris MassTransit-wrapped message round-trips to a real MassTransit consumer on RabbitMQ")]
-        // An Azure Service Bus entity name, which is how a discovered endpoint is spelled.
-        [InlineData("Iris.Integration.Tests/IrisMtTestMessage")]
-        // A RabbitMQ exchange name, which is already the urn spelling.
-        [InlineData("Iris.Integration.Tests:IrisMtTestMessage")]
-        // A .NET fully qualified name, which is what the type picker and the Type name field's
-        // help text produce. This is the spelling that silently stopped routing.
-        [InlineData("Iris.Integration.Tests.IrisMtTestMessage")]
-        public async Task Can_Consume_MassTransit_Message(string typeName)
-        {
-            // Arrange — wrap a message exactly as LocalConnectionManager.SendMessageAsync does.
-            var adapter = new MassTransitAdapter();
+                var request = MessageRequest.Create(
+                    messageType: "Iris.Integration.Tests/IrisMtTestMessage",
+                    json: "{\"Red\":1,\"Green\":2,\"Blue\":3}",
+                    generateIrisHeaders: false,
+                    messageFullyQualifiedName: typeName,
+                    framework: "MassTransit");
 
-            var request = MessageRequest.Create(
-                messageType: "Iris.Integration.Tests/IrisMtTestMessage",
-                json: "{\"Red\":1,\"Green\":2,\"Blue\":3}",
-                generateIrisHeaders: false,
-                messageFullyQualifiedName: typeName,
-                framework: "MassTransit");
+                request.WrapMessage(adapter);
 
-            request.WrapMessage(adapter);
-
-            var managementPort = _rabbitMqContainer.GetMappedPublicPort(15672);
-            var connectionData = new ConnectionData
-            {
-                ConnectionString = $"http://localhost:{managementPort}",
-                Username = "guest",
-                Password = "guest",
-            };
-
-            var connector = new RabbitMqConnector();
-            var connection = await connector.ConnectAsync(connectionData, false);
-            connection.Should().NotBeNull("RabbitMqConnector must connect to the management API");
-
-            // Act — publish the wrapped envelope to the queue MassTransit is consuming from.
-            await connection!.SendAsync(
-                new EndpointDetails
+                var managementPort = _rabbitMqContainer.GetMappedPublicPort(15672);
+                var connectionData = new ConnectionData
                 {
-                    Provider = "rabbitmq",
-                    Address = $"http://localhost:{managementPort}",
-                    Name = QueueName,
-                    Type = "Queue",
-                },
-                request);
+                    ConnectionString = $"http://localhost:{managementPort}",
+                    Username = "guest",
+                    Password = "guest",
+                };
 
-            // Assert — the MassTransit consumer must deserialize and receive the payload.
-            var completed = await Task.WhenAny(
-                _consumer.Received.Task,
-                Task.Delay(TimeSpan.FromSeconds(30)));
+                var connector = new RabbitMqConnector();
+                var connection = await connector.ConnectAsync(connectionData, false);
+                connection.Should().NotBeNull("RabbitMqConnector must connect to the management API");
 
-            completed.Should().BeSameAs(
-                _consumer.Received.Task,
-                "MassTransit should consume the Iris-wrapped envelope within 30s — a timeout means the adapter produced a wire format MassTransit can't route or deserialize");
+                // Act — publish the wrapped envelope to the queue MassTransit is consuming from.
+                await connection!.SendAsync(
+                    new EndpointDetails
+                    {
+                        Provider = "rabbitmq",
+                        Address = $"http://localhost:{managementPort}",
+                        Name = queueName,
+                        Type = "Queue",
+                    },
+                    request);
 
-            var context = await _consumer.Received.Task;
-            context.Message.Red.Should().Be(1);
-            context.Message.Green.Should().Be(2);
-            context.Message.Blue.Should().Be(3);
-            context.MessageId.Should().NotBeNull();
+                // Assert — the MassTransit consumer must deserialize and receive the payload.
+                var completed = await Task.WhenAny(
+                    consumer.Received.Task,
+                    Task.Delay(TimeSpan.FromSeconds(30)));
 
-            // SourceAddress used to be the bare string "iris", so reading this property threw
-            // UriFormatException on the consumer side. Asserting it keeps the address absolute.
-            context.SourceAddress.Should().Be(new Uri("loopback://localhost/iris"));
+                completed.Should().BeSameAs(
+                    consumer.Received.Task,
+                    "MassTransit should consume the Iris-wrapped envelope within 30s — a timeout means the adapter produced a wire format MassTransit can't route or deserialize");
 
-            // A non-null RequestId makes a consumer treat the send as a request awaiting a
-            // response, which is not what a user typing a message into Iris asked for.
-            context.RequestId.Should().BeNull();
-            context.InitiatorId.Should().BeNull();
+                var context = await consumer.Received.Task;
+                context.Message.Red.Should().Be(1);
+                context.Message.Green.Should().Be(2);
+                context.Message.Blue.Should().Be(3);
+                context.MessageId.Should().NotBeNull();
+
+                // SourceAddress used to be the bare string "iris", so reading this property threw
+                // UriFormatException on the consumer side. Asserting it keeps the address absolute.
+                context.SourceAddress.Should().Be(new Uri("loopback://localhost/iris"));
+
+                // A non-null RequestId makes a consumer treat the send as a request awaiting a
+                // response, which is not what a user typing a message into Iris asked for.
+                context.RequestId.Should().BeNull();
+                context.InitiatorId.Should().BeNull();
+            }
+            finally
+            {
+                await bus.StopAsync();
+            }
         }
 
         private sealed class TestIrisConsumer : IConsumer<IrisMtTestMessage>
