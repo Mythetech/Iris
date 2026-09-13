@@ -157,8 +157,11 @@ public class AzureServiceBusContainerFixture : IAsyncLifetime
     /// <summary>
     /// Seeds one queue through the emulator's REST API. Durations are .NET TimeSpan text, not
     /// ISO-8601 durations; sending "PT1M" is rejected with a 400.
+    ///
+    /// Scaffolding entities is not Iris's job and not the thing under test, so a test that needs
+    /// its own queue asks for one here rather than making a framework declare it.
     /// </summary>
-    private async Task CreateQueue(string name, int maxDeliveryCount, string lockDuration, CancellationToken ct)
+    public async Task CreateQueue(string name, int maxDeliveryCount = 10, string lockDuration = "00:01:00", CancellationToken ct = default)
     {
         var response = await _http.PutAsJsonAsync(
             $"{ManagementUrl}/queues/{Uri.EscapeDataString(name)}",
