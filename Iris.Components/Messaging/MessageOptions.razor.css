@@ -1,0 +1,6 @@
+/* The outlined value chip is a circle flush to the row end; without this it
+   meets the card border and looks cut off. */
+.message-options-slider-row {
+    padding-right: 12px;
+    width: 100%;
+}

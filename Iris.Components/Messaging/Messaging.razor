@@ -38,15 +38,18 @@
         <MudItem xs="12" Class="mud-height-full">
             <IrisSplitter SplitterOrientation="Microsoft.Fast.Components.FluentUI.Orientation.Horizontal">
                 <Panel1>
-                    <MessageEditor
-                        @ref="@_editor"
-                        OnCreateSampleData="CreateSampleMessageDataAsync"
-                        OnImportFromPackage="ImportFromPackageAsync"
-                        OnTemplateSaved="SaveTemplateAsync"
-                        />
+                    <div class="messaging-pane">
+                        <MessageEditor
+                            @ref="@_editor"
+                            OnCreateSampleData="CreateSampleMessageDataAsync"
+                            OnImportFromPackage="ImportFromPackageAsync"
+                            OnTemplateSaved="SaveTemplateAsync" />
+                    </div>
                 </Panel1>
                 <Panel2>
-                    <OptionsPanel />
+                    <div class="messaging-pane">
+                        <OptionsPanel />
+                    </div>
                 </Panel2>
             </IrisSplitter>
         </MudItem>

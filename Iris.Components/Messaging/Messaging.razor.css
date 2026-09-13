@@ -1,0 +1,7 @@
+/* Both splitter halves share symmetric padding so the editor and the options
+   cards sit at matching heights. OptionsPanel previously carried its own
+   conflicting padding, which this wrapper replaces. */
+.messaging-pane {
+    height: 100%;
+    padding: 16px;
+}
