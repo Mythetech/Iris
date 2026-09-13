@@ -159,19 +159,13 @@
     }
 
     private bool CanRead(Contracts.Brokers.Models.EndpointDetails? e) =>
-        e is not null
-        && string.Equals(e.Type, "Queue", StringComparison.OrdinalIgnoreCase)
-        && _caps.TryGetValue(e.Address, out var c)
-        && c?.CanReceive == true;
+        EndpointReadPolicy.CanRead(e, GetCapabilities(e));
 
-    private string GetReadDisabledReason(Contracts.Brokers.Models.EndpointDetails? e)
-    {
-        if (e is null)
-            return "Unknown endpoint";
-        if (!string.Equals(e.Type, "Queue", StringComparison.OrdinalIgnoreCase))
-            return "Reading is only supported for queue endpoints";
-        return "Broker does not support reading messages";
-    }
+    private string GetReadDisabledReason(Contracts.Brokers.Models.EndpointDetails? e) =>
+        EndpointReadPolicy.DisabledReason(e);
+
+    private ReaderCapabilitiesDto? GetCapabilities(Contracts.Brokers.Models.EndpointDetails? e) =>
+        e is not null && _caps.TryGetValue(e.Address, out var c) ? c : null;
 
     private async Task HandleReadClicked(Contracts.Brokers.Models.EndpointDetails endpoint)
     {

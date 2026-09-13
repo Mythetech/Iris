@@ -1,0 +1,27 @@
+@using Iris.Contracts.Brokers.Models
+
+<MudDialog>
+    <DialogContent>
+        <EndpointDetailsView Endpoint="@Endpoint"
+                             CanRead="@CanRead"
+                             ReadDisabledReason="@ReadDisabledReason"
+                             OnReadClicked="@OnReadClicked" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public EndpointDetails? Endpoint { get; set; }
+
+    [Parameter] public bool CanRead { get; set; }
+
+    [Parameter] public string? ReadDisabledReason { get; set; }
+
+    [Parameter] public EventCallback<EndpointDetails> OnReadClicked { get; set; }
+
+    private void Close() => MudDialog.Cancel();
+}
