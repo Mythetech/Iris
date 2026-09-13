@@ -17,12 +17,11 @@ namespace Iris.Brokers
 
         public Task<List<EndpointDetails>> GetEndpointsAsync();
 
-        public Task SendAsync(EndpointDetails endpoint, string json);
-
-        public Task SendAsync(EndpointDetails endpoint, MessageRequest message)
-        {
-            return SendAsync(endpoint, message.Json);
-        }
+        /// <summary>
+        /// Sends the request body. Only the body is guaranteed; a connection that also
+        /// maps <see cref="MessageRequest.Headers"/> or <see cref="MessageRequest.TransportProperties"/>
+        /// says so by implementing <see cref="IHeaderCarrier"/> / <see cref="ITransportPropertyCarrier"/>.
+        /// </summary>
+        public Task SendAsync(EndpointDetails endpoint, MessageRequest message);
     }
 }
-

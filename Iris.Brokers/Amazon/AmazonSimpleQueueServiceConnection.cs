@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using Azure.Messaging.ServiceBus;
-using Azure.Messaging.ServiceBus.Administration;
 using Iris.Brokers.Models;
 
 namespace Iris.Brokers.Amazon
 {
-    public class AmazonSimpleQueueServiceConnection : IConnection, IMessageReceiver, IDeadLetterReceiver
+    public partial class AmazonSimpleQueueServiceConnection : IConnection, IHeaderCarrier, IMessageReceiver, IDeadLetterReceiver
     {
         // SQS ReceiveMessage API hard-caps at 10 messages per call.
         public int MaxReceiveBatchSize => 10;
@@ -50,10 +49,46 @@ namespace Iris.Brokers.Amazon
             return _endpoints = endpoints.ToList();
         }
 
-        public async Task SendAsync(EndpointDetails endpoint, string json)
+        // SQS allows ten message attributes per message, names of letters, digits,
+        // underscore, hyphen and period, and reserves the AWS. and Amazon. prefixes.
+        public int MaxHeaderCount => 10;
+
+        public bool IsValidHeaderKey(string key)
+            => AttributeName().IsMatch(key)
+               && !key.StartsWith("AWS.", StringComparison.OrdinalIgnoreCase)
+               && !key.StartsWith("Amazon.", StringComparison.OrdinalIgnoreCase);
+
+        public IReadOnlySet<HeaderDataType> SupportedDataTypes { get; } = new HashSet<HeaderDataType>
         {
-            var response = await _client.SendMessageAsync(endpoint.Name, json, CancellationToken.None);
+            HeaderDataType.String,
+            HeaderDataType.Integer,
+        };
+
+        public async Task SendAsync(EndpointDetails endpoint, MessageRequest message)
+        {
+            var queueUrl = (await _client.GetQueueUrlAsync(endpoint.Name)).QueueUrl;
+
+            var request = new SendMessageRequest
+            {
+                QueueUrl = queueUrl,
+                MessageBody = message.Json,
+                MessageAttributes = new Dictionary<string, MessageAttributeValue>(),
+            };
+
+            foreach (var header in message.Headers)
+            {
+                request.MessageAttributes[header.Key] = new MessageAttributeValue
+                {
+                    DataType = message.HeaderTypeOf(header.Key) == HeaderDataType.Integer ? "Number" : "String",
+                    StringValue = header.Value,
+                };
+            }
+
+            await _client.SendMessageAsync(request, CancellationToken.None);
         }
+
+        [GeneratedRegex(@"^[A-Za-z0-9_.\-]{1,256}$")]
+        private static partial Regex AttributeName();
 
         public async Task<IReadOnlyList<ReceivedMessage>> ReceiveAsync(
             EndpointDetails endpoint, int count, CancellationToken cancellationToken = default)

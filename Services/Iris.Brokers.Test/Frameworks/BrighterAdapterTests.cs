@@ -27,6 +27,32 @@ public class BrighterAdapterTests
             Properties = properties ?? new Dictionary<string, string>(),
         };
 
+    [Fact(DisplayName = "Declared keys match what CreateWrappedMessage writes")]
+    public void Keys_MatchWrite()
+    {
+        FrameworkKeyAssertions.AssertKeysMatchWrite(new BrighterAdapter(), NewRequest());
+    }
+
+    [Fact(DisplayName = "Sets the AMQP basic properties Brighter's RmqMessageCreator reads")]
+    public void CreateWrappedMessage_SetsTransportProperties()
+    {
+        var request = NewRequest();
+
+        new BrighterAdapter().CreateWrappedMessage(request);
+
+        request.TransportProperties.MessageId.Should().Be(request.Headers["MessageId"]);
+        request.TransportProperties.ContentType.Should().Be("application/json");
+        request.TransportProperties.Type.Should().Be("application/json");
+        request.TransportProperties.Timestamp.Should().NotBeNull();
+    }
+
+    [Fact(DisplayName = "Only MessageType is a required header")]
+    public void Keys_OnlyMessageTypeRequired()
+    {
+        new BrighterAdapter().Keys.Where(k => k.IsRequired).Select(k => k.Name)
+            .Should().BeEquivalentTo(new[] { "MessageType" });
+    }
+
     [Fact(DisplayName = "CreateWrappedMessage returns the POCO body unchanged")]
     public void CreateWrappedMessage_ReturnsBodyUnchanged()
     {
@@ -69,7 +95,7 @@ public class BrighterAdapterTests
         request.Headers["Topic"].Should().Be("OrderPlaced");
     }
 
-    [Fact(DisplayName = "Defaults Topic to MessageType when Properties['topic'] is absent")]
+    [Fact(DisplayName = "Defaults Topic to MessageType when Properties[TopicKey] is absent")]
     public void CreateWrappedMessage_FallsBackToMessageTypeForTopic()
     {
         var adapter = new BrighterAdapter();
@@ -80,13 +106,13 @@ public class BrighterAdapterTests
         request.Headers["Topic"].Should().Be("OrderPlaced");
     }
 
-    [Fact(DisplayName = "Derives Topic from Properties['topic'] when supplied")]
+    [Fact(DisplayName = "Derives Topic from Properties[TopicKey] when supplied")]
     public void CreateWrappedMessage_DerivesTopicFromPropertiesWhenPresent()
     {
         var adapter = new BrighterAdapter();
         var request = NewRequest(properties: new Dictionary<string, string>
         {
-            ["topic"] = "orders.placed",
+            [BrighterAdapter.TopicKey] = "orders.placed",
         });
 
         adapter.CreateWrappedMessage(request);
@@ -94,13 +120,13 @@ public class BrighterAdapterTests
         request.Headers["Topic"].Should().Be("orders.placed");
     }
 
-    [Fact(DisplayName = "Respects Properties['BrighterMessageType'] override (e.g. MT_COMMAND)")]
+    [Fact(DisplayName = "Respects Properties[MessageKindKey] override (e.g. MT_COMMAND)")]
     public void CreateWrappedMessage_RespectsBrighterMessageTypeProperty()
     {
         var adapter = new BrighterAdapter();
         var request = NewRequest(properties: new Dictionary<string, string>
         {
-            ["BrighterMessageType"] = "MT_COMMAND",
+            [BrighterAdapter.MessageKindKey] = "MT_COMMAND",
         });
 
         adapter.CreateWrappedMessage(request);

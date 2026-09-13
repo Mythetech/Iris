@@ -10,6 +10,7 @@
     <PackageVersion Include="AWSSDK.SQS" Version="4.0.2.24" />
     <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.20.1" />
     <PackageVersion Include="Azure.Storage.Queues" Version="12.25.0" />
+    <PackageVersion Include="EasyNetQ" Version="8.1.7" />
     <PackageVersion Include="EasyNetQ.Management.Client" Version="3.0.1" />
     <PackageVersion Include="LiteDB" Version="5.0.21" />
     <!-- MassTransit 9.x is commercially licensed and refuses to build a bus without a license key.
@@ -24,7 +25,7 @@
     <PackageVersion Include="Rebus" Version="8.9.0" />
     <PackageVersion Include="Rebus.RabbitMq" Version="10.1.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
-    <PackageVersion Include="WolverineFx" Version="5.29.0" />
+    <PackageVersion Include="WolverineFx.RabbitMQ" Version="5.29.0" />
     <PackageVersion Include="xunit" Version="2.9.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -55,5 +56,6 @@
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.18.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.18.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageVersion Include="Paramore.Brighter.MessagingGateway.RMQ.Async" Version="10.3.3" />
   </ItemGroup>
 </Project>

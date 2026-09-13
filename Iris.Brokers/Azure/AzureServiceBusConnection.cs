@@ -6,7 +6,7 @@ using Iris.Brokers.Models;
 
 namespace Iris.Brokers.Azure
 {
-    public class AzureServiceBusConnection : IConnection, IMessagePeeker, IMessageReceiver, IDeadLetterPeeker, IDeadLetterReceiver, IEndpointInspector
+    public class AzureServiceBusConnection : IConnection, IHeaderCarrier, ITransportPropertyCarrier, IMessagePeeker, IMessageReceiver, IDeadLetterPeeker, IDeadLetterReceiver, IEndpointInspector
     {
         // ServiceBusReceiver's practical batch ceiling is around 250 messages.
         public int MaxPeekBatchSize => 250;
@@ -71,11 +71,43 @@ namespace Iris.Brokers.Azure
             return _endpoints;
         }
 
-        public async Task SendAsync(EndpointDetails endpoint, string json)
+        public int MaxHeaderCount => int.MaxValue;
+
+        public bool IsValidHeaderKey(string key) => !string.IsNullOrWhiteSpace(key);
+
+        public IReadOnlySet<HeaderDataType> SupportedDataTypes { get; } =
+            new HashSet<HeaderDataType>(Enum.GetValues<HeaderDataType>());
+
+        /// <summary>
+        /// Service Bus has no AMQP <c>type</c> property of its own: <c>Subject</c> is the
+        /// AMQP <c>subject</c> field, which no consumer reading <c>type</c> ever sees, so
+        /// <see cref="TransportProperty.Type"/> is deliberately not carried here.
+        /// </summary>
+        public IReadOnlySet<TransportProperty> SupportedProperties { get; } = new HashSet<TransportProperty>
+        {
+            TransportProperty.MessageId,
+            TransportProperty.CorrelationId,
+            TransportProperty.ContentType,
+        };
+
+        public async Task SendAsync(EndpointDetails endpoint, MessageRequest message)
         {
             var sender = _client.CreateSender(endpoint.Name);
 
-            await sender.SendMessageAsync(new ServiceBusMessage(json));
+            var serviceBusMessage = new ServiceBusMessage(message.Json);
+
+            foreach (var header in message.Headers)
+            {
+                serviceBusMessage.ApplicationProperties[header.Key] =
+                    HeaderValueEncoder.Encode(header.Value, message.HeaderTypeOf(header.Key));
+            }
+
+            var transport = message.TransportProperties;
+            if (transport.MessageId is not null) serviceBusMessage.MessageId = transport.MessageId;
+            if (transport.CorrelationId is not null) serviceBusMessage.CorrelationId = transport.CorrelationId;
+            if (transport.ContentType is not null) serviceBusMessage.ContentType = transport.ContentType;
+
+            await sender.SendMessageAsync(serviceBusMessage);
         }
 
         public Task<IReadOnlyList<ReceivedMessage>> PeekAsync(

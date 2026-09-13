@@ -8,6 +8,7 @@ using DotNet.Testcontainers.Containers;
 using FluentAssertions;
 using Iris.Brokers;
 using Iris.Brokers.Amazon;
+using Iris.Brokers.Frameworks;
 using Iris.Brokers.Models;
 using Iris.Integration.Tests.Fixtures;
 
@@ -198,6 +199,33 @@ namespace Iris.Integration.Tests.Brokers
                 m.Source.Should().Be(Iris.Brokers.Models.ReadSource.DeadLetter);
                 m.Provider.Should().Be("AmazonSQS");
             });
+        }
+
+        [Fact(DisplayName = "Send maps headers to message attributes and drops what the compatibility check dropped", Timeout = 120000)]
+        public async Task Send_maps_headers_to_attributes()
+        {
+            using var client = CreateSqsClient();
+            var connection = CreateConnection(client);
+            var queueName = "iris-sqs-send-headers-test";
+            await client.CreateQueueAsync(queueName);
+
+            var adapter = new BrighterAdapter();
+            var request = MessageRequest.Create("OrderPlaced", "{\"i\":1}", generateIrisHeaders: true, "MyApp.OrderPlaced");
+            var compatibility = FrameworkCompatibility.Check(adapter, connection, request.Headers.Count);
+            compatibility.Supported.Should().BeTrue();
+            request.WrapMessage(adapter);
+            FrameworkCompatibility.RemoveDropped(request, compatibility);
+
+            await connection.SendAsync(Endpoint(queueName), request);
+            await Task.Delay(500);
+
+            var msgs = await ((IMessageReceiver)connection).ReceiveAsync(Endpoint(queueName), 10);
+
+            msgs.Should().ContainSingle();
+            msgs[0].Properties.Should().ContainKey("MessageType").WhoseValue.Should().Be("MT_EVENT");
+            msgs[0].Properties.Should().ContainKey("iris-key");
+            msgs[0].Properties.Should().NotContainKey("cloudEvents_time");
+            msgs[0].Properties.Count.Should().Be(10);
         }
     }
 }

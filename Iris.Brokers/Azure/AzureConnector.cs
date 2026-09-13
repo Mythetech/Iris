@@ -20,7 +20,7 @@ namespace Iris.Brokers.Azure
 
         public string Provider
         {
-            get => "Azure";
+            get => ConnectorProviders.Azure;
         }
         
         public Task<IConnection?> ConnectAsync(ConnectionData data, bool discoverEndpoints = true)

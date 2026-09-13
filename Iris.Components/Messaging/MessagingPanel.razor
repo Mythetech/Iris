@@ -1,6 +1,7 @@
 @using Iris.Components.Theme
 @using Iris.Components.Brokers
 @using Iris.Contracts.Brokers.Models
+@using Iris.Contracts.Messaging.Frameworks
 @using System.Text.Json
 
 <ContextPanelLayout Title="Messaging" PageHref="/Messaging">
@@ -21,8 +22,19 @@
                    Dense="true"
                    Variant="Variant.Text"
                    Clearable="true">
-            <MudSelectItem Value="@("MassTransit")" />
-            <MudSelectItem Value="@("NServiceBus")" />
+            @foreach (var framework in _frameworks)
+            {
+                <MudSelectItem T="string" Value="@framework.Name" Disabled="@(!framework.Supported)">
+                    @if (TooltipFor(framework) is { } tooltip)
+                    {
+                        <MudTooltip Text="@tooltip"><span>@framework.Name</span></MudTooltip>
+                    }
+                    else
+                    {
+                        <span>@framework.Name</span>
+                    }
+                </MudSelectItem>
+            }
         </MudSelect>
 
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
@@ -60,6 +72,8 @@
 
 @code {
     [Inject] IBrokerService BrokerService { get; set; } = default!;
+    [Inject] IFrameworkCatalog FrameworkCatalog { get; set; } = default!;
+    [Inject] MessageState MessageState { get; set; } = default!;
     [Inject] IMessageSendOrchestrator SendOrchestrator { get; set; } = default!;
     [Inject] ISnackbar Snackbar { get; set; } = default!;
 
@@ -68,6 +82,7 @@
     private Provider? _selectedProvider;
     private EndpointDetails? _selectedEndpoint;
     private string? _framework;
+    private IReadOnlyList<FrameworkDescriptor> _frameworks = [];
     private string _json = "{\n\n}";
     private string? _jsonError;
     private string? _selectionError;
@@ -77,14 +92,23 @@
     {
         _providers = await BrokerService.GetProvidersAsync();
         _endpoints = await BrokerService.GetEndpointsAsync();
+        await LoadFrameworksAsync();
     }
 
-    private Task OnProviderChangedAsync(Provider provider)
+    private async Task LoadFrameworksAsync()
+    {
+        _frameworks = await FrameworkCatalog.GetFrameworksAsync(_selectedProvider?.Address, MessageState.SendIrisHeader ? 1 : 0);
+
+        if (_framework is not null && !_frameworks.Any(f => f.Name == _framework && f.Supported))
+            _framework = null;
+    }
+
+    private async Task OnProviderChangedAsync(Provider provider)
     {
         _selectedProvider = provider;
         _selectedEndpoint = null;
         _selectionError = null;
-        return Task.CompletedTask;
+        await LoadFrameworksAsync();
     }
 
     private Task OnEndpointChangedAsync(EndpointDetails endpoint)
@@ -98,6 +122,26 @@
     {
         _framework = framework;
         return Task.CompletedTask;
+    }
+
+    private string? TooltipFor(FrameworkDescriptor framework)
+    {
+        if (!framework.Supported)
+            return framework.UnsupportedReason;
+
+        var parts = new List<string>();
+
+        if (!framework.Verified)
+        {
+            parts.Add(string.IsNullOrWhiteSpace(_selectedProvider?.Name)
+                ? "Not verified against this provider's consumer; the wire shape follows RabbitMQ."
+                : $"Not verified against a {_selectedProvider!.Name} consumer; the wire shape follows RabbitMQ.");
+        }
+
+        if (framework.DroppedKeys is { Count: > 0 } dropped)
+            parts.Add($"{dropped.Count} optional headers not sent: {string.Join(", ", dropped)}");
+
+        return parts.Count == 0 ? null : string.Join(" ", parts);
     }
 
     private Task OnJsonChangedAsync(string json)
@@ -154,9 +198,11 @@
                 IsolateFromMessageState = true,
             });
 
-            Snackbar.Add(
-                result.Error ? "Send failed" : "Message sent",
-                result.Error ? Severity.Error : Severity.Success);
+            var message = result.Error
+                ? string.IsNullOrWhiteSpace(result.Message) ? "Send failed" : result.Message
+                : "Message sent";
+
+            Snackbar.Add(message, result.Error ? Severity.Error : Severity.Success);
         }
         finally
         {
