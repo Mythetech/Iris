@@ -18,6 +18,7 @@
     <PackageReference Include="xunit.runner.visualstudio"  />
     <PackageReference Include="Testcontainers.RabbitMq" />
     <PackageReference Include="MassTransit.RabbitMQ" />
+    <PackageReference Include="MassTransit.AmazonSQS" />
     <PackageReference Include="MassTransit.Azure.ServiceBus.Core" />
     <PackageReference Include="Rebus" />
     <PackageReference Include="Rebus.RabbitMq" />
