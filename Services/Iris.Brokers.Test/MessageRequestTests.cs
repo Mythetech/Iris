@@ -77,5 +77,58 @@ namespace Iris.Brokers.Test
             result.Headers.Should().BeEmpty();
             result.Properties.Should().BeEmpty();
         }
+
+        [Fact(DisplayName = "MessageRequest.Create copies the header and property dictionaries")]
+        public void Create_CopiesDictionaries()
+        {
+            var headers = new Dictionary<string, string> { ["a"] = "1" };
+            var properties = new Dictionary<string, string> { ["p"] = "x" };
+
+            var result = MessageRequest.Create("T", "{}", generateIrisHeaders: false, headers: headers, properties: properties);
+            result.Headers["b"] = "2";
+            result.Properties["q"] = "y";
+
+            headers.Should().NotContainKey("b");
+            properties.Should().NotContainKey("q");
+            result.Headers.Should().ContainKey("a");
+        }
+
+        [Fact(DisplayName = "Two requests created from the same headers get distinct iris keys")]
+        public void Create_TwiceWithSameHeaders_GivesDistinctIrisKeys()
+        {
+            var headers = new Dictionary<string, string>();
+
+            var first = MessageRequest.Create("T", "{}", generateIrisHeaders: true, headers: headers);
+            var second = MessageRequest.Create("T", "{}", generateIrisHeaders: true, headers: headers);
+
+            first.Headers["iris-key"].Should().NotBe(second.Headers["iris-key"]);
+            headers.Should().BeEmpty();
+        }
+
+        [Fact(DisplayName = "TransportProperties start empty and report what is set")]
+        public void TransportProperties_TrackSetMembers()
+        {
+            var result = MessageRequest.Create("T", "{}", generateIrisHeaders: false);
+
+            result.TransportProperties.SetProperties().Should().BeEmpty();
+
+            result.TransportProperties.Type = "MyType";
+            result.TransportProperties.Persistent = true;
+
+            result.TransportProperties.SetProperties().Should().BeEquivalentTo(
+                new[] { TransportProperty.Type, TransportProperty.Persistent });
+            result.TransportProperties.IsSet(TransportProperty.MessageId).Should().BeFalse();
+
+            result.TransportProperties.Clear(TransportProperty.Type);
+            result.TransportProperties.IsSet(TransportProperty.Type).Should().BeFalse();
+        }
+
+        [Fact(DisplayName = "HeaderTypeOf defaults to String for undeclared keys")]
+        public void HeaderTypeOf_DefaultsToString()
+        {
+            var result = MessageRequest.Create("T", "{}", generateIrisHeaders: false);
+
+            result.HeaderTypeOf("anything").Should().Be(HeaderDataType.String);
+        }
     }
 }

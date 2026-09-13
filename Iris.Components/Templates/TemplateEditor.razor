@@ -112,11 +112,11 @@
         var dialogRef = await DialogService.ShowAsync<TypePickerDialog>(
             string.Empty, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
         var result = await dialogRef.Result;
-        if (result is { Canceled: false, Data: TypeData typeData })
+        if (result is { Canceled: false, Data: PickedType picked })
         {
-            _importedType = typeData;
-            _fields = typeData.Properties?.Select(TemplateFieldModel.FromPropertyData).ToList() ?? [];
-            if (_templateName is null or "Untitled") _templateName = typeData.Name;
+            _importedType = picked.Type;
+            _fields = picked.Type.Properties?.Select(TemplateFieldModel.FromPropertyData).ToList() ?? [];
+            if (_templateName is null or "Untitled") _templateName = picked.Type.Name;
             UpdateJsonPreview();
         }
     }

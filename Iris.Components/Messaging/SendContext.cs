@@ -15,10 +15,8 @@ public sealed class SendContext
     public EndpointDetails? Endpoint { get; init; }
 
     /// <summary>
-    /// If set, overrides the MessageState framework-property "MessageType" override
-    /// fallback, and overrides <see cref="EndpointDetails.Name"/> as the effective
-    /// message type. Usually left null — the orchestrator will derive the message
-    /// type automatically.
+    /// If set and the properties grid has no TypeName, becomes the TypeName framework
+    /// input. It never changes the destination endpoint.
     /// </summary>
     public string? MessageTypeOverride { get; init; }
 
@@ -30,8 +28,8 @@ public sealed class SendContext
     public string? Framework { get; init; }
 
     /// <summary>
-    /// Headers for this send. When null the orchestrator falls back to the ambient
-    /// <see cref="MessageState.Headers"/>.
+    /// Headers for this send. When null the orchestrator falls back to the Headers
+    /// tab via <see cref="MessageState.GetHeaders"/>.
     /// </summary>
     public Dictionary<string, string>? Headers { get; init; }
 

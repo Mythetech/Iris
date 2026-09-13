@@ -1,10 +1,11 @@
 ﻿using System;
 using Iris.Brokers;
+using Iris.Brokers.Models;
 
 namespace Iris.Integration.Tests.Brokers.EmulatedProvider
 {
 
-    public class EmulatedConnection : IConnection
+    public class EmulatedConnection : IConnection, IHeaderCarrier, ITransportPropertyCarrier
     {
         public EmulatedConnection() { }
 
@@ -58,8 +59,21 @@ namespace Iris.Integration.Tests.Brokers.EmulatedProvider
             return Task.FromResult(new List<EndpointDetails>());
         }
 
-        public Task SendAsync(EndpointDetails endpoint, string json)
+        public MessageRequest? LastRequest { get; private set; }
+
+        public int MaxHeaderCount => int.MaxValue;
+
+        public bool IsValidHeaderKey(string key) => !string.IsNullOrWhiteSpace(key);
+
+        public IReadOnlySet<HeaderDataType> SupportedDataTypes { get; } =
+            new HashSet<HeaderDataType>(Enum.GetValues<HeaderDataType>());
+
+        public IReadOnlySet<TransportProperty> SupportedProperties { get; } =
+            new HashSet<TransportProperty>(Enum.GetValues<TransportProperty>());
+
+        public Task SendAsync(EndpointDetails endpoint, MessageRequest message)
         {
+            LastRequest = message;
             return Task.CompletedTask;
         }
 

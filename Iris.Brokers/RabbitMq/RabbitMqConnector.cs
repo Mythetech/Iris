@@ -13,7 +13,7 @@ namespace Iris.Brokers.RabbitMQ
         {
         }
 
-        public string Provider { get => "RabbitMq"; }
+        public string Provider { get => ConnectorProviders.RabbitMq; }
 
         private ManagementClient CreateClient(ConnectionData data)
         {

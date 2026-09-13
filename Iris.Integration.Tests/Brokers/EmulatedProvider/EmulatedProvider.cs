@@ -69,7 +69,7 @@ namespace Iris.Integration.Tests.Brokers.EmulatedProvider
                 return Task.CompletedTask;
             }
 
-            public Task SendAsync(EndpointDetails endpoint, string json)
+            public Task SendAsync(EndpointDetails endpoint, MessageRequest message)
             {
                 return Task.CompletedTask;
             }

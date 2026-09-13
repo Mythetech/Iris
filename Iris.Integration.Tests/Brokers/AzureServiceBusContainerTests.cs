@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
@@ -6,6 +7,7 @@ using Azure.Messaging.ServiceBus.Administration;
 using FluentAssertions;
 using Iris.Brokers;
 using Iris.Brokers.Azure;
+using Iris.Brokers.Frameworks;
 using Iris.Brokers.Models;
 using Iris.Integration.Tests.Fixtures;
 
@@ -142,6 +144,46 @@ namespace Iris.Integration.Tests.Brokers
                 m.Source.Should().Be(ReadSource.DeadLetter);
                 m.Provider.Should().Be("AzureServiceBus");
             });
+        }
+
+        [Fact(DisplayName = "Send maps headers to ApplicationProperties and sets only the three carried properties", Timeout = 300000)]
+        public async Task Send_maps_headers_and_transport_properties()
+        {
+            var connection = CreateConnection();
+
+            // Drain first so the SDK peek below is guaranteed to see only this test's message.
+            var drainer = (IMessageReceiver)connection;
+            await drainer.ReceiveAsync(Endpoint(MainQueue, ConnectionString), 50);
+
+            // Brighter rather than EasyNetQ: Service Bus has no AMQP type property (Subject is
+            // the subject field, which no consumer reading type ever sees), so EasyNetQ's
+            // required Type fails the compatibility check here. Brighter's Type is optional
+            // and simply dropped, leaving the headers and the three carried properties.
+            var adapter = new Iris.Brokers.Frameworks.BrighterAdapter();
+            var request = MessageRequest.Create("OrderPlaced", "{\"i\":1}", generateIrisHeaders: false, "MyApp.OrderPlaced",
+                properties: new Dictionary<string, string> { [Iris.Brokers.Frameworks.BrighterAdapter.TopicKey] = MainQueue },
+                messageAssemblyName: "MyApp");
+
+            var compatibility = FrameworkCompatibility.Check(adapter, connection, request.Headers.Count);
+            compatibility.Supported.Should().BeTrue();
+            request.WrapMessage(adapter);
+            FrameworkCompatibility.RemoveDropped(request, compatibility);
+
+            await connection.SendAsync(Endpoint(MainQueue, ConnectionString), request);
+
+            // AzureServiceBusConnection.Map does not surface Subject or ApplicationProperties
+            // absence on the ReceivedMessage shape, so this inspects the emulator directly with
+            // the SDK to verify what actually landed on the wire.
+            await using var client = new ServiceBusClient(ConnectionString);
+            await using var receiver = client.CreateReceiver(MainQueue);
+            var peeked = await receiver.PeekMessageAsync();
+
+            peeked.Should().NotBeNull();
+            peeked!.ContentType.Should().Be("application/json");
+            peeked.Subject.Should().BeNull();
+            peeked.MessageId.Should().NotBeNullOrWhiteSpace();
+            peeked.ApplicationProperties.Should().ContainKey("MessageType").WhoseValue.Should().Be("MT_EVENT");
+            peeked.ApplicationProperties.Should().ContainKey("cloudEvents_type");
         }
     }
 }

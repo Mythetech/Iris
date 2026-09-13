@@ -71,7 +71,7 @@ namespace Iris.Integration.Tests.Brokers
                     Address = _rabbitMqContainer.IpAddress,
                     Type = "queue",
                     Name = "integration-test"
-                }, "{\"Red\": 0, \"Green\": 20, \"Blue\": 30}");
+                }, MessageRequest.Create(messageType: "integration-test", json: "{\"Red\": 0, \"Green\": 20, \"Blue\": 30}", generateIrisHeaders: false));
             };
 
             // Assert
@@ -113,7 +113,7 @@ namespace Iris.Integration.Tests.Brokers
                     Address = _rabbitMqContainer.IpAddress,
                     Type = "queue",
                     Name = queueName
-                }, $"{{\"index\":{i}}}");
+                }, MessageRequest.Create(messageType: queueName, json: $"{{\"index\":{i}}}", generateIrisHeaders: false));
             }
 
             return connection!;
@@ -191,7 +191,7 @@ namespace Iris.Integration.Tests.Brokers
                     Address = _rabbitMqContainer.IpAddress,
                     Type = "queue",
                     Name = sourceQueue
-                }, $"{{\"dlq-index\":{i}}}");
+                }, MessageRequest.Create(messageType: sourceQueue, json: $"{{\"dlq-index\":{i}}}", generateIrisHeaders: false));
             }
 
             // Give TTL enough time to fire and messages to land on DLQ.
