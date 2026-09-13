@@ -32,6 +32,8 @@
         <div style="width:26px;"> </div>
     </MudStack>
     <MudPaper Class="d-flex bg-transparent flex-nowrap gap-1 overflow-auto" Elevation="0">
+        @* The colour index wraps: the palette has nine entries and nothing caps the number
+           of connections, so Home threw IndexOutOfRangeException at the tenth address. *@
         @foreach (var p in _dataIndexToProviderLookup)
         {
             var provider = Connections.FirstOrDefault(x => x.Address.Equals(p.Value, StringComparison.OrdinalIgnoreCase));
@@ -39,7 +41,7 @@
             <IrisChip Icon=@($"icon-{provider?.Provider}")
                       OnClick="HandleConnectionClicked"
                       Active="@(p.Value.Equals(SelectedConnectionAddress, StringComparison.OrdinalIgnoreCase))"
-                      Color="@(IrisColors[p.Key!])"
+                      Color="@(IrisColors[p.Key % IrisColors.Length])"
                       Text="@p.Value" />
         }
     </MudPaper>
@@ -76,17 +78,11 @@
         _Pink,
 };
 
-    private string[] IrisBackgroundColors =
-{
-        Opacity(IrisColors[0], 0.8),
-        Opacity(IrisColors[1], 0.8),
-        Opacity(IrisColors[2], 0.8),
-        Opacity(IrisColors[3], 0.8),
-        Opacity(IrisColors[4], 0.8),
-        Opacity(IrisColors[5], 0.8),
-        Opacity(IrisColors[6], 0.8),
-        Opacity(IrisColors[7], 0.8),
-};
+    // Derived rather than listed, because the hand-written list had eight entries against
+    // the palette's nine and the chip and slice colours already disagreed at the ninth
+    // connection.
+    private static readonly string[] IrisBackgroundColors =
+        IrisColors.Select(c => Opacity(c, 0.8)).ToArray();
 
     private string[]? backgroundColors =
 {
