@@ -137,8 +137,7 @@ public class EndpointOffcanvasTests : TestContext
         var valueElements = cut.FindAll(".key-value-row-value");
         valueElements.Should().Contain(e => e.TextContent.Contains("1"));
 
-        var refreshButton = cut.FindAll("button")
-            .First(b => b.OuterHtml.Contains("M17.65 6.35"));
+        var refreshButton = cut.Find("button[aria-label=\"Refresh properties\"]");
         refreshButton.Click();
 
         cut.WaitForState(() => cut.FindAll(".key-value-row-value").Any(e => e.TextContent.Contains("5678")));
