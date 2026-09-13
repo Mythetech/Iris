@@ -74,6 +74,7 @@
 
     private async Task ExportTemplate(Template template)
     {
+        // TODO: file download
         await JsApi.CopyToClipboardAsync(template.FormattedJson);
     }
 
