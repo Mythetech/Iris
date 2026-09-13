@@ -28,18 +28,44 @@ namespace Iris.Desktop.Infrastructure
             catch (LiteException ex) when (ex.Message.Contains("encrypted", StringComparison.OrdinalIgnoreCase)
                                            || ex.ErrorCode == LiteException.INVALID_DATABASE)
             {
-                _logger.LogWarning(ex, "LiteDB database at {Path} is encrypted or corrupted. Recreating database.", dbPath);
                 _database?.Dispose();
 
-                try { File.Delete(dbPath); }
-                catch (IOException deleteEx)
-                {
-                    _logger.LogError(deleteEx, "Failed to delete encrypted database at {Path}", dbPath);
-                    throw;
-                }
+                var quarantinePath = Quarantine(dbPath);
+
+                _logger.LogError(ex,
+                    "LiteDB database at {Path} could not be opened and has been moved to {QuarantinePath}. " +
+                    "A new empty database was created. The previous connections, history, templates and packages " +
+                    "remain in the quarantined file and are not lost.",
+                    dbPath, quarantinePath);
 
                 _database = new LiteDatabase(connectionString);
             }
+        }
+
+        /// <summary>
+        /// Moves an unreadable database aside rather than deleting it. The file holds the
+        /// user's connections, history, templates and package manifests, so a transient
+        /// read failure must never be able to destroy it. The log file moves with it,
+        /// otherwise a stale write-ahead log would be picked up by the replacement database.
+        /// </summary>
+        private static string Quarantine(string dbPath)
+        {
+            var directory = Path.GetDirectoryName(dbPath)!;
+            var stem = Path.GetFileNameWithoutExtension(dbPath);
+            var extension = Path.GetExtension(dbPath);
+            var stamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss");
+
+            var quarantinePath = Path.Combine(directory, $"{stem}.corrupt-{stamp}{extension}");
+
+            File.Move(dbPath, quarantinePath);
+
+            var logPath = Path.Combine(directory, $"{stem}-log{extension}");
+            if (File.Exists(logPath))
+            {
+                File.Move(logPath, Path.Combine(directory, $"{stem}-log.corrupt-{stamp}{extension}"));
+            }
+
+            return quarantinePath;
         }
 
         private static string GetDatabasePath()
