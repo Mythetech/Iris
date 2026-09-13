@@ -54,7 +54,20 @@
                         }
                     </EditTemplate>
                 </TemplateColumn>
-                <PropertyColumn Property="x => x!.Key" Title="Property" />
+                <PropertyColumn Property="x => x!.Key" Title="Property">
+                    <EditTemplate>
+                        @* A framework input is looked up by this exact key, so renaming one would
+                           drop it silently. Only rows the user added by hand are renameable. *@
+                        @if (context.Item.Immutable)
+                        {
+                            <span>@context.Item.Key</span>
+                        }
+                        else
+                        {
+                            <MudTextField T="string" @bind-Value="context.Item.Key" Margin="Margin.Dense" />
+                        }
+                    </EditTemplate>
+                </PropertyColumn>
                 <PropertyColumn Property="x => x!.Value" Title="Value">
                     <EditTemplate>
                         @if (context.Item.AllowedValues is { Count: > 0 } allowed)
@@ -77,12 +90,12 @@
                 <TemplateColumn CellClass="grid-icon-col">
                     <CellTemplate>
                         <span style="width:30px;float:right;">
-                            <IconButton Class="icon-btn-danger" Style="background-color:transparent;" Name="@IrisIcons.Delete" Title="Delete Property" ButtonClicked="@(() => MessageState.RemoveAdditionalProperty(context.Item))" />
+                            <IconButton Class="icon-btn-danger" Style="background-color:transparent;" Name="@IrisIcons.Delete" Title="Delete Property" Disabled="@context.Item.Immutable" ButtonClicked="@(() => MessageState.RemoveAdditionalProperty(context.Item))" />
                         </span>
                     </CellTemplate>
                     <EditTemplate>
                         <span style="width:30px;float:right;">
-                            <IconButton Class="icon-btn-danger" Style="background-color:transparent;" Name="@IrisIcons.Delete" Title="Delete Property" ButtonClicked="@(() => MessageState.RemoveAdditionalProperty(context.Item))" />
+                            <IconButton Class="icon-btn-danger" Style="background-color:transparent;" Name="@IrisIcons.Delete" Title="Delete Property" Disabled="@context.Item.Immutable" ButtonClicked="@(() => MessageState.RemoveAdditionalProperty(context.Item))" />
                         </span>
                     </EditTemplate>
                 </TemplateColumn>

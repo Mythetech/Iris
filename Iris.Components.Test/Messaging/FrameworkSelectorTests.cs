@@ -93,4 +93,26 @@ public class FrameworkSelectorTests : IrisTestContext
 
         cut.Markup.Should().Contain("gone");
     }
+    [Fact(DisplayName = "Framework-declared property keys render as text; hand-added keys stay editable")]
+    public void PropertyKeys_LockedForFrameworkRows()
+    {
+        var easyNetQ = new FrameworkDescriptor("EasyNetQ",
+        [
+            new FrameworkInput("TypeName", "Type name", "the fully qualified type"),
+        ]);
+        _state.SetAvailableFrameworks([easyNetQ]);
+        _state.SetFramework(easyNetQ);
+        _state.AddAdditionalProperty(new DictionaryViewModel { Key = "mine", Value = "1" });
+
+        var cut = RenderComponent<FrameworkSelector>();
+
+        cut.FindAll("tbody tr").Count.Should().Be(2);
+
+        // The declared row shows its key as text, so only its value is an input.
+        cut.FindAll("tbody tr")[0].TextContent.Should().Contain("TypeName");
+        cut.FindAll("tbody tr")[0].QuerySelectorAll("input").Length.Should().Be(1);
+
+        // The hand-added row keeps an editable key alongside its value.
+        cut.FindAll("tbody tr")[1].QuerySelectorAll("input").Length.Should().Be(2);
+    }
 }
