@@ -38,7 +38,9 @@ namespace Iris.Brokers.Amazon
         {
             var queueResponse = await _client.ListQueuesAsync("");
 
-            var endpoints = queueResponse.QueueUrls.Select(x => new EndpointDetails()
+            // The SDK leaves the collection null rather than empty when the response carries no
+            // entries, so an account with no queues is a null here, not an empty list.
+            var endpoints = (queueResponse.QueueUrls ?? []).Select(x => new EndpointDetails()
             {
                 Address = x.LastIndexOf('/') > 0 ? x[..x.LastIndexOf('/')] : x,
                 Name = x.LastIndexOf('/') > 0 ? x[(x.LastIndexOf('/')+1)..] : x,
@@ -104,7 +106,10 @@ namespace Iris.Brokers.Amazon
             var attrs = await _client.GetQueueAttributesAsync(
                 mainUrl, new List<string> { "RedrivePolicy" }, cancellationToken);
 
-            if (!attrs.Attributes.TryGetValue("RedrivePolicy", out var policyJson)
+            // Same null-for-empty behaviour as above: a queue with no redrive policy comes back
+            // with no attributes at all, so Attributes itself is null.
+            if (attrs.Attributes is null
+                || !attrs.Attributes.TryGetValue("RedrivePolicy", out var policyJson)
                 || string.IsNullOrWhiteSpace(policyJson))
             {
                 // No DLQ configured for this queue — the honest answer to
