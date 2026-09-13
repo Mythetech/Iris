@@ -1,5 +1,5 @@
 <MudSelect @ref="select" 
-           bind-Value="@Value"
+           Value="@Value"
            ValueChanged="@ValueChanged"
            T="Provider" Placeholder="Select Connection" Required="true" Margin="Margin.Dense" Variant="Variant.Text" Clearable="true">
     @if (Providers != null)
@@ -25,15 +25,6 @@
     [Parameter] public Provider Value { get; set; } = default!;
 
     [Parameter] public EventCallback<Provider> ValueChanged { get; set; } = default!;
-
-    public async Task SelectOption(Provider option)
-    {
-        await select.SelectOption(option);
-
-        await select.SelectAsync();
-        
-        StateHasChanged();
-    }
 
     public async Task<bool> Validate()
     {

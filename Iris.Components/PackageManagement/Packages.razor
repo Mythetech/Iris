@@ -99,7 +99,14 @@
         if (result.Value != null)
         {
             Snackbar.AddIrisNotification("Uploaded package successfully", Severity.Success);
-            Assemblies.Add(result.Value);
+
+            // Both lists are only assigned in OnInitializedAsync, so an upload that
+            // finished before the initial load threw on a null Assemblies. The types
+            // table reads its own list, so it has to grow with the assembly or the new
+            // package's types stay invisible until the page is revisited.
+            (Assemblies ??= []).Add(result.Value);
+            (Types ??= []).AddRange(result.Value.ExportedTypes ?? []);
+
             StateHasChanged();
         }
         else
