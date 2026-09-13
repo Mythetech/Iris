@@ -1,48 +1,66 @@
 @implements Iris.Components.Brokers.ConnectionDetails.IConnectionReadView
 @using Iris.Contracts.Brokers.Models
+@using Iris.Components.Messaging
+@inject IBrokerService BrokerService
 
+@* Reading needs an endpoint and this view is only given the connection, which is why
+   its Peek and Receive buttons shipped with no handler behind them. The endpoint is
+   picked here the same way the Send tab picks one, and the controls themselves are the
+   same MessageReaderPanel the Endpoints page opens in a dialog. *@
 <MudStack Spacing="3">
-    <MudStack Row="true" Spacing="2">
-        @if (Capabilities.CanPeek)
-        {
-            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Visibility">
-                Peek
-            </MudButton>
-        }
-        @if (Capabilities.CanReceive)
-        {
-            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Inbox">
-                Receive
-            </MudButton>
-        }
-    </MudStack>
+    <MudToolBar Class="darkmorphic gap-4 flex-grow-0">
+        <EndpointSelector Endpoints="@_endpoints"
+                          Value="@(_selectedEndpoint!)"
+                          ValueChanged="@OnEndpointChanged"
+                          SelectedProviderAddress="@Provider.Address" />
+    </MudToolBar>
 
-    @if (Capabilities.CanPeekDeadLetter || Capabilities.CanReceiveDeadLetter)
+    @if (_loadingEndpoints)
     {
-        <MudDivider />
-        <MudText Typo="Typo.subtitle2">Dead Letter</MudText>
-        <MudStack Row="true" Spacing="2">
-            @if (Capabilities.CanPeekDeadLetter)
-            {
-                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Visibility">
-                    Peek Dead Letter
-                </MudButton>
-            }
-            @if (Capabilities.CanReceiveDeadLetter)
-            {
-                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Inbox">
-                    Receive Dead Letter
-                </MudButton>
-            }
-        </MudStack>
+        <MudProgressCircular Indeterminate="true" Size="Size.Small" />
     }
-
-    <MudText Typo="Typo.caption" Class="mt-2">
-        Read results panel coming with the read-side wiring task.
-    </MudText>
+    else if (_endpoints.Count == 0)
+    {
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+            No endpoints found for this connection.
+        </MudText>
+    }
+    else if (_selectedEndpoint is null)
+    {
+        <MudText Typo="Typo.body2" Class="mud-text-secondary">
+            Pick an endpoint to peek or receive from.
+        </MudText>
+    }
+    else
+    {
+        <MessageReaderPanel Endpoint="@_selectedEndpoint" Capabilities="@Capabilities" />
+    }
 </MudStack>
 
 @code {
     [Parameter] public required Provider Provider { get; set; }
     [Parameter] public required ReaderCapabilitiesDto Capabilities { get; set; }
+
+    private List<EndpointDetails> _endpoints = new();
+    private EndpointDetails? _selectedEndpoint;
+    private bool _loadingEndpoints = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loadingEndpoints = true;
+
+        try
+        {
+            var all = await BrokerService.GetEndpointsAsync();
+            _endpoints = all
+                .Where(e => string.Equals(e.Address, Provider.Address, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+        finally
+        {
+            _loadingEndpoints = false;
+        }
+    }
+
+    private void OnEndpointChanged(EndpointDetails endpoint) => _selectedEndpoint = endpoint;
 }

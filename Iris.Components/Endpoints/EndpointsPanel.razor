@@ -1,5 +1,6 @@
 @using Iris.Components.Theme
 @using Iris.Components.Brokers
+@using Iris.Components.Messaging
 
 <ContextPanelLayout Title="Endpoints" PageHref="/Endpoints">
     @if (_loading)
@@ -88,17 +89,48 @@
             _capsCache[endpoint.Address] = caps;
         }
 
+        // Captured so the Read handler can dismiss the details dialog before the reader
+        // opens on top of it. Assigned below, after the parameters that close over it.
+        IDialogReference? details = null;
+
         var parameters = new DialogParameters
         {
             { nameof(EndpointDetailsDialog.Endpoint), endpoint },
             { nameof(EndpointDetailsDialog.CanRead), EndpointReadPolicy.CanRead(endpoint, caps) },
             { nameof(EndpointDetailsDialog.ReadDisabledReason), EndpointReadPolicy.DisabledReason(endpoint) },
+            // The dialog has always rendered a Read button and never been given anything
+            // to invoke, so the panel's read path did nothing at all. The Endpoints page
+            // wires the same callback.
+            { nameof(EndpointDetailsDialog.OnReadClicked), EventCallback.Factory.Create<EndpointDetails>(
+                this,
+                async e =>
+                {
+                    details?.Close();
+                    await ShowReaderAsync(e, caps);
+                }) },
         };
 
-        await DialogService.ShowAsync<EndpointDetailsDialog>(
+        details = await DialogService.ShowAsync<EndpointDetailsDialog>(
             endpoint.Name,
             parameters,
             new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true, NoHeader = true });
+    }
+
+    private async Task ShowReaderAsync(EndpointDetails endpoint, ReaderCapabilitiesDto? caps)
+    {
+        if (caps is null)
+            return;
+
+        var parameters = new DialogParameters
+        {
+            ["Endpoint"] = endpoint,
+            ["Capabilities"] = caps,
+        };
+
+        await DialogService.ShowAsync<MessageReaderDialog>(
+            $"Read {endpoint.Name}",
+            parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
     }
 
     private void OpenEndpointsPage() => NavigationManager.NavigateTo("/Endpoints");

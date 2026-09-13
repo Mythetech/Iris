@@ -160,13 +160,6 @@
             if (p != null)
             {
                 await OnProviderChangedAsync(p);
-
-                var index = _providers?.IndexOf(p);
-
-                if (index > -1)
-                {
-                    await _providerSelect.SelectOption(_providers?[index ?? 0]!);
-                }
             }
         }
 
@@ -178,11 +171,7 @@
                 _selectedEndpoint = e;
                 StateHasChanged();
 
-                var index = _endpoints?.IndexOf(e);
-                if (index > 0)
-                {
-                    await TrySetMessageStructure(e.Name);
-                }
+                await TrySetMessageStructure(e.Name);
             }
         }
 

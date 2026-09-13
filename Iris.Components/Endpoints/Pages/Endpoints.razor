@@ -122,8 +122,19 @@
 
     private string? _searchString;
 
+    /// <summary>
+    /// A broker address, so the connection details page can hand off to the endpoints
+    /// this connection actually owns. The quick filter already matches on Address, so
+    /// seeding the search box is enough and the user can clear it.
+    /// </summary>
+    [SupplyParameterFromQuery]
+    public string? Provider { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
+        if (!string.IsNullOrWhiteSpace(Provider))
+            _searchString = Provider;
+
         if (_endpoints is null || _endpoints.Count == 0)
             await LoadAsync();
 

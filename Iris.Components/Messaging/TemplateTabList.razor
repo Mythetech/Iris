@@ -66,12 +66,32 @@
    
     protected override void OnInitialized()
     {
-        TemplatesState.TemplateStateChanged += async () => await OnInitializedAsync();
+        TemplatesState.TemplateStateChanged += OnTemplatesChanged;
     }
 
     public void Dispose()
     {
-        TemplatesState.TemplateStateChanged -= async () => await OnInitializedAsync();
+        TemplatesState.TemplateStateChanged -= OnTemplatesChanged;
+    }
+
+    /// <summary>
+    /// A named handler because the previous subscription used an async lambda and
+    /// unsubscribed with a second, syntactically identical but distinct one, so the -=
+    /// matched nothing. TemplatesState is scoped, which in Blazor Hybrid means application
+    /// lifetime, so every activation of the Templates tab left another handler behind.
+    ///
+    /// Synchronous because there is nothing to await. TemplatesState refreshes its cache
+    /// before it notifies, so re-running OnInitializedAsync only re-read a list already in
+    /// memory, and an async lambda on an Action is async void either way.
+    /// </summary>
+    private void OnTemplatesChanged()
+    {
+        _templateCount = TemplatesState.Templates?.Count ?? 0;
+
+        Instance.BadgeCount = _templateCount;
+        LayoutState.UpdateTab(Instance);
+
+        StateHasChanged();
     }
 
     private async Task DeleteTemplate(Template t)
