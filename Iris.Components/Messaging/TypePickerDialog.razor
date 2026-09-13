@@ -53,5 +53,12 @@
 
     private void Cancel() => MudDialog.Cancel();
 
-    private void Submit() => MudDialog.Close(DialogResult.Ok(_selected));
+    private void Submit()
+    {
+        var owner = _assemblies.FirstOrDefault(a => a.ExportedTypes?.Contains(_selected) == true);
+        if (_selected is null || owner is null)
+            return;
+
+        MudDialog.Close(DialogResult.Ok(new PickedType(_selected, owner.Name)));
+    }
 }

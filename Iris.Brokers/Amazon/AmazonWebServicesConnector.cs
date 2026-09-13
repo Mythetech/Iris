@@ -13,7 +13,7 @@ namespace Iris.Brokers.Amazon
         {
         }
 
-        public string Provider => "Amazon";
+        public string Provider => ConnectorProviders.Amazon;
 
         public Task<IConnection?> ConnectAsync(ConnectionData data, bool discoverEndpoints = true)
             => ConnectAsync(data, CancellationToken.None, discoverEndpoints);

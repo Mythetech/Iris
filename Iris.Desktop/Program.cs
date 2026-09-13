@@ -8,6 +8,7 @@ using Iris.Brokers;
 using Iris.Brokers.Extensions;
 using Iris.Brokers.Models;
 using Iris.Components;
+using Iris.Contracts.Messaging.Frameworks;
 using Iris.Desktop.Admin;
 using Iris.Desktop.Brokers;
 using Iris.Desktop.History;
@@ -66,6 +67,7 @@ public class Program
         builder.Services.AddIrisComponentServices<LocalConnectionManager, LocalConnectionManager, LocalTemplateService, LocalPackageService, LocalHistoryService, AdminClient, MessageLayoutRepository>();
         builder.Services.AddSingleton<IBrokerConnectionManager, BrokerConnectionManager>();
         builder.Services.AddFrameworkProvider();
+        builder.Services.AddScoped<IFrameworkCatalog, LocalFrameworkCatalog>();
 
         foreach (var implementationType in Assembly.GetAssembly(typeof(IConnector))!.GetTypes()
                      .Where(t => typeof(IConnector).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract))

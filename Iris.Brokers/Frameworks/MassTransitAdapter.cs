@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using Iris.Contracts.Messaging.Frameworks;
 using MassTransit;
 
 namespace Iris.Brokers.Frameworks
@@ -8,6 +9,25 @@ namespace Iris.Brokers.Frameworks
     public class MassTransitAdapter : IFramework
     {
         public string Name => "MassTransit";
+
+        public IReadOnlyList<FrameworkKey> Keys { get; } =
+        [
+            FrameworkKey.Body("messageType", required: true),
+            FrameworkKey.Body("messageId"),
+            FrameworkKey.Body("correlationId"),
+            FrameworkKey.Body("conversationId"),
+            FrameworkKey.Body("sourceAddress"),
+            FrameworkKey.Body("sentTime"),
+            FrameworkKey.Body("host"),
+        ];
+
+        public IReadOnlySet<string> VerifiedProviders { get; } =
+            new HashSet<string>(ConnectorProviders.All, StringComparer.OrdinalIgnoreCase);
+
+        public FrameworkDescriptor Descriptor { get; } = new("MassTransit",
+        [
+            CommonInputs.TypeName("the urn:message type"),
+        ]);
 
         public string CreateWrappedMessage(IMessageRequest request)
         {

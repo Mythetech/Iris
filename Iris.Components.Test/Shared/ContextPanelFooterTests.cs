@@ -4,8 +4,10 @@ using Iris.Components.Brokers;
 using Iris.Components.Endpoints;
 using Iris.Components.Messaging;
 using Iris.Contracts.Brokers.Models;
+using Iris.Contracts.Messaging.Frameworks;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
+using Mythetech.Framework.Infrastructure.MessageBus;
 using NSubstitute;
 
 namespace Iris.Components.Test.Shared;
@@ -24,6 +26,14 @@ public class ContextPanelFooterTests : IrisTestContext
         broker.GetEndpointsAsync().Returns(Task.FromResult(new List<EndpointDetails>()));
         Services.AddSingleton(broker);
         Services.AddSingleton(Substitute.For<IMessageSendOrchestrator>());
+
+        var catalog = Substitute.For<IFrameworkCatalog>();
+        catalog.GetFrameworksAsync(Arg.Any<string?>(), Arg.Any<int>())
+            .Returns(new List<FrameworkDescriptor>());
+        Services.AddSingleton(catalog);
+        Services.AddSingleton(Substitute.For<IMessageBus>());
+        Services.AddSingleton<MessagingSettings>();
+        Services.AddScoped<MessageState>();
 
         // MessagingPanel's selectors are MudSelect, which registers a popover on
         // init and throws if none is mounted.

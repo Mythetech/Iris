@@ -1,5 +1,7 @@
 using Iris.Components.Messaging;
+using Iris.Contracts.Assemblies.Models;
 using Iris.Contracts.Brokers.Models;
+using Iris.Contracts.Messaging.Frameworks;
 using Mythetech.Framework.Infrastructure.MessageBus;
 using Mythetech.Framework.Infrastructure.Settings.Events;
 
@@ -36,7 +38,14 @@ public class MessageState : IDisposable
     public int Repeat { get; set; }
     public string RepeatText { get; private set; } = string.Empty;
 
-    public string? SelectedFramework { get; private set; }
+    public FrameworkDescriptor? SelectedFrameworkDescriptor { get; private set; }
+
+    public string? SelectedFramework => SelectedFrameworkDescriptor?.Name;
+
+    public IReadOnlyList<FrameworkDescriptor> AvailableFrameworks { get; private set; } = [];
+
+    /// <summary>Why the last selection was cleared, shown under the selector until the next change.</summary>
+    public string? FrameworkNotice { get; private set; }
 
     /// <summary>
     /// Read straight off the settings model rather than mirrored into a field, so the
@@ -44,27 +53,24 @@ public class MessageState : IDisposable
     /// </summary>
     public bool SendIrisHeader => _settings.SendIrisHeader;
 
-    public List<DictionaryViewModel> AdditionalProperties { get; private set; } = new()
-    {
-        new DictionaryViewModel
-        {
-            Key = "MessageType",
-            Value = "",
-            Description = "Explicitly overrides the message type. Required for some frameworks."
-        }
-    };
+    public List<DictionaryViewModel> AdditionalProperties { get; private set; } = new();
 
     public Dictionary<string, string> GetFrameworkProperties()
     {
-        return AdditionalProperties.ToDictionary(p => p.Key, p => p.Value);
+        var properties = new Dictionary<string, string>();
+        foreach (var row in AdditionalProperties)
+        {
+            if (string.IsNullOrWhiteSpace(row.Key))
+                continue;
+            properties[row.Key] = row.Value ?? string.Empty;
+        }
+        return properties;
     }
 
     public List<DictionaryViewModel> HeaderMap { get; set; } = new();
 
     private void NotifyStateChanged()
         => StateChanged?.Invoke();
-
-    public Dictionary<string, string> Headers { get; private set; } = new();
 
     public event Action? StateChanged;
 
@@ -98,12 +104,85 @@ public class MessageState : IDisposable
         StateChanged?.Invoke();
     }
 
-    public void SetFramework(string? framework)
+    public void SetAvailableFrameworks(IReadOnlyList<FrameworkDescriptor> frameworks)
     {
-        SelectedFramework = framework;
-        StateChanged?.Invoke();
+        AvailableFrameworks = frameworks;
+
+        var current = SelectedFramework is null
+            ? null
+            : frameworks.FirstOrDefault(f => f.Name == SelectedFramework);
+
+        if (SelectedFramework is not null && current is not { Supported: true })
+        {
+            FrameworkNotice = current?.UnsupportedReason ?? $"{SelectedFramework} is not available for this connection.";
+            SetFramework(null);
+            return;
+        }
+
+        NotifyStateChanged();
     }
-    
+
+    public void SetFramework(FrameworkDescriptor? descriptor)
+    {
+        var previousKeys = SelectedFrameworkDescriptor?.Inputs.Select(i => i.Key).ToHashSet() ?? new HashSet<string>();
+        var nextInputs = descriptor?.Inputs ?? [];
+        var nextKeys = nextInputs.Select(i => i.Key).ToHashSet();
+
+        AdditionalProperties.RemoveAll(row =>
+            row.Key is not null && previousKeys.Contains(row.Key) && !nextKeys.Contains(row.Key));
+
+        foreach (var input in nextInputs)
+        {
+            var row = AdditionalProperties.FirstOrDefault(r => r.Key == input.Key);
+            if (row is null)
+            {
+                AdditionalProperties.Add(new DictionaryViewModel
+                {
+                    Key = input.Key,
+                    Value = input.DefaultValue ?? string.Empty,
+                    Description = input.Description,
+                    AllowedValues = input.AllowedValues,
+                    Required = input.Required,
+                    Immutable = true,
+                });
+            }
+            else
+            {
+                row.Description = input.Description;
+                row.AllowedValues = input.AllowedValues;
+                row.Required = input.Required;
+                row.Immutable = true;
+            }
+        }
+
+        SelectedFrameworkDescriptor = descriptor;
+        if (descriptor is not null)
+            FrameworkNotice = null;
+
+        NotifyStateChanged();
+    }
+
+    /// <summary>
+    /// Fills the type-related rows the selected framework declares from a picked type.
+    /// Rows the framework does not declare are never added, and a blank assembly name
+    /// leaves the row for the send path to resolve from loaded packages.
+    /// </summary>
+    public void SeedTypeInputs(TypeData type, string? assemblyName)
+    {
+        SetRowValue(FrameworkInputs.TypeName, type.FullyQualifiedName);
+        if (!string.IsNullOrWhiteSpace(assemblyName))
+            SetRowValue(FrameworkInputs.AssemblyName, assemblyName);
+
+        NotifyStateChanged();
+    }
+
+    private void SetRowValue(string key, string value)
+    {
+        var row = AdditionalProperties.FirstOrDefault(r => r.Key == key);
+        if (row is not null)
+            row.Value = value;
+    }
+
     public void AddHeader(DictionaryViewModel newHeader)
     {
         HeaderMap.Add(newHeader);
@@ -128,33 +207,16 @@ public class MessageState : IDisposable
         StateChanged?.Invoke();
     }
 
-    public Dictionary<string, string> GetAdditionalProps()
-    {
-        return AdditionalProperties.ToDictionary(x => x.Key ?? "", y => y.Value ?? "");
-    }
-
     public Dictionary<string, string> GetHeaders()
     {
-        return HeaderMap.ToDictionary(x => x.Key ?? "", y => y.Value ?? "");
-    }
-
-    public void KeyChanged(string key, string newKey)
-    {
-        if (Headers.ContainsKey(key))
+        var headers = new Dictionary<string, string>();
+        foreach (var row in HeaderMap)
         {
-            Headers[newKey] = Headers[key];
-            Headers.Remove(key);
-            StateChanged?.Invoke();
+            if (string.IsNullOrWhiteSpace(row.Key))
+                continue;
+            headers[row.Key] = row.Value ?? string.Empty;
         }
-    }
-
-    public void ValueChanged(string key, string newValue)
-    {
-        if (Headers.ContainsKey(key))
-        {
-            Headers[key] = newValue;
-            StateChanged?.Invoke();
-        }
+        return headers;
     }
 
     public void RegenerateIrisKey()

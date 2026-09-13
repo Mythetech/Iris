@@ -4,6 +4,7 @@
 @using Iris.Components.Theme
 @using Iris.Contracts.Assemblies
 @using Iris.Contracts.Assemblies.Models
+@using Iris.Contracts.Messaging.Frameworks
 @using Iris.Components.PackageManagement
 @inherits IrisPageBase
 @implements IDisposable
@@ -14,7 +15,8 @@
             <ProviderSelector
                 @ref="_providerSelect"
                 Providers="@_providers"
-                @bind-Value="@_selectedProvider" />
+                Value="@_selectedProvider"
+                ValueChanged="@OnProviderChangedAsync" />
 
             <EndpointSelector
                 Endpoints="@_endpoints"
@@ -63,6 +65,9 @@
     
     [Inject]
     public MessageState MessageState { get; set; } = default!;
+
+    [Inject]
+    public IFrameworkCatalog FrameworkCatalog { get; set; } = default!;
 
     [Inject]
     public IMessageSendOrchestrator SendOrchestrator { get; set; } = default!;
@@ -154,7 +159,7 @@
             var p = _providers?.FirstOrDefault(x => x.Address == Provider);
             if (p != null)
             {
-                _selectedProvider = p;
+                await OnProviderChangedAsync(p);
 
                 var index = _providers?.IndexOf(p);
 
@@ -182,8 +187,28 @@
         }
 
         _templates = await TemplatesState.GetTemplatesAsync();
-        
+
+        await LoadFrameworksAsync();
+
         StateHasChanged();
+    }
+
+    private async Task LoadFrameworksAsync()
+    {
+        var frameworks = await FrameworkCatalog.GetFrameworksAsync(_selectedProvider?.Address, MessageState.HeaderMap.Count);
+        MessageState.SetAvailableFrameworks(frameworks);
+    }
+
+    /// <summary>
+    /// Shared by the ProviderSelector's ValueChanged and the query-string driven
+    /// initialization path, so a runtime provider change always reloads the framework
+    /// list the same way the initial load does. Does not clear the selected endpoint,
+    /// matching the query-string path's existing behavior.
+    /// </summary>
+    private async Task OnProviderChangedAsync(Provider provider)
+    {
+        _selectedProvider = provider;
+        await LoadFrameworksAsync();
     }
 
     private async Task TrySetMessageStructure(string name)
@@ -286,9 +311,10 @@
 
         var result = await dialogRef.Result;
 
-        if (result is { Canceled: false, Data: TypeData typeData })
+        if (result is { Canceled: false, Data: PickedType picked })
         {
-            await GenerateSampleForType(typeData);
+            MessageState.SeedTypeInputs(picked.Type, picked.AssemblyName);
+            await GenerateSampleForType(picked.Type);
         }
     }
 

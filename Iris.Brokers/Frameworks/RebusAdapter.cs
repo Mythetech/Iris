@@ -1,3 +1,4 @@
+using Iris.Contracts.Messaging.Frameworks;
 using RebusHeaders = Rebus.Messages.Headers;
 
 namespace Iris.Brokers.Frameworks;
@@ -13,6 +14,28 @@ namespace Iris.Brokers.Frameworks;
 public class RebusAdapter : IFramework
 {
     public string Name => "Rebus";
+
+    public IReadOnlyList<FrameworkKey> Keys { get; } =
+    [
+        FrameworkKey.Header(RebusHeaders.MessageId, required: true),
+        FrameworkKey.Header(RebusHeaders.Type, required: true),
+        FrameworkKey.Header(RebusHeaders.ContentType, required: true),
+        FrameworkKey.Header(RebusHeaders.CorrelationId),
+        FrameworkKey.Header(RebusHeaders.CorrelationSequence),
+        FrameworkKey.Header(RebusHeaders.SentTime),
+        FrameworkKey.Header(RebusHeaders.ReturnAddress),
+        FrameworkKey.Header(RebusHeaders.SenderAddress),
+        FrameworkKey.Header(RebusHeaders.Intent),
+    ];
+
+    public IReadOnlySet<string> VerifiedProviders { get; } =
+        new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ConnectorProviders.RabbitMq };
+
+    public FrameworkDescriptor Descriptor { get; } = new("Rebus",
+    [
+        CommonInputs.TypeName("the rbs2-msg-type header"),
+        CommonInputs.AssemblyName("the assembly part of rbs2-msg-type; Rebus resolves it with Type.GetType"),
+    ]);
 
     public string CreateWrappedMessage(IMessageRequest request)
     {

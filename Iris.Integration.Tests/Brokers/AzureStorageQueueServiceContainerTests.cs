@@ -69,7 +69,8 @@ namespace Iris.Integration.Tests.Brokers
             );
 
             // Act
-            Func<Task> send = () => connection.SendAsync(new() { Name = QueueName, Address = ConnectionString, Provider = "Azure", Type = "Queue" }, messageText);
+            Func<Task> send = () => connection.SendAsync(new() { Name = QueueName, Address = ConnectionString, Provider = "Azure", Type = "Queue" },
+                MessageRequest.Create(messageType: QueueName, json: messageText, generateIrisHeaders: false));
 
             // Assert
             await send.Should().NotThrowAsync();
@@ -95,7 +96,7 @@ namespace Iris.Integration.Tests.Brokers
             {
                 await connection.SendAsync(
                     new EndpointDetails { Name = queueName, Address = ConnectionString, Provider = "Azure", Type = "Queue" },
-                    $"{{\"index\":{i}}}");
+                    MessageRequest.Create(messageType: queueName, json: $"{{\"index\":{i}}}", generateIrisHeaders: false));
             }
 
             return connection;
@@ -166,6 +167,24 @@ namespace Iris.Integration.Tests.Brokers
             m.Native.Should().NotBeNull();
             m.Native!.PopReceipt.Should().NotBeNullOrWhiteSpace();
             m.DeliveryCount.Should().NotBeNull();
+        }
+
+        [Fact(DisplayName = "Headers on a request are ignored by Queue Storage and the body still enqueues")]
+        public async Task Send_with_headers_still_enqueues_body()
+        {
+            var queueClient = new QueueClient(ConnectionString, QueueName);
+            await queueClient.CreateIfNotExistsAsync();
+            await queueClient.ClearMessagesAsync();
+
+            var connection = new AzureQueueStorageConnection(
+                new ConnectionMetadata { Connector = new AzureConnector(new LoggerFactory()), Address = ConnectionString },
+                new QueueServiceClient(ConnectionString), _logger);
+
+            var request = MessageRequest.Create(QueueName, "{\"Red\":1}", generateIrisHeaders: true);
+            await connection.SendAsync(new EndpointDetails { Provider = "AzureQueueStorage", Address = ConnectionString, Name = QueueName, Type = "Queue" }, request);
+
+            var peeked = await queueClient.PeekMessageAsync();
+            peeked.Value.Body.ToString().Should().Be("{\"Red\":1}");
         }
     }
 }

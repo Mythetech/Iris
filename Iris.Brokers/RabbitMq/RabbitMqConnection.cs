@@ -8,7 +8,7 @@ using Iris.Brokers.Models;
 
 namespace Iris.Brokers.RabbitMQ
 {
-    public class RabbitMqConnection : IConnection, IMessagePeeker, IMessageReceiver, IDeadLetterPeeker, IDeadLetterReceiver, IEndpointInspector
+    public class RabbitMqConnection : IConnection, IHeaderCarrier, ITransportPropertyCarrier, IMessagePeeker, IMessageReceiver, IDeadLetterPeeker, IDeadLetterReceiver, IEndpointInspector
     {
         // The RabbitMQ HTTP management API's GET-messages endpoint accepts
         // arbitrary counts; 100 is a sane UI cap.
@@ -75,27 +75,52 @@ namespace Iris.Brokers.RabbitMQ
             return endpoints;
         }
 
+        public int MaxHeaderCount => int.MaxValue;
+
+        public bool IsValidHeaderKey(string key) => !string.IsNullOrWhiteSpace(key);
+
+        public IReadOnlySet<HeaderDataType> SupportedDataTypes { get; } =
+            new HashSet<HeaderDataType>(Enum.GetValues<HeaderDataType>());
+
+        public IReadOnlySet<TransportProperty> SupportedProperties { get; } =
+            new HashSet<TransportProperty>(Enum.GetValues<TransportProperty>());
+
         public async Task SendAsync(EndpointDetails endpoint, MessageRequest message)
         {
-            // RabbitMQ's HTTP management API only honors a fixed set of standard AMQP basic-property
-            // names at the top level of `properties` (message_id, correlation_id, content_type, ...)
-            // - anything else is silently dropped. Custom headers (e.g. Rebus's rbs2-* keys, the
-            // iris-key tracker, MassTransit-set headers) must be nested under `properties.headers`
-            // so they reach the consumer as AMQP application headers.
+            // The management API honours only the standard AMQP basic-property names at the
+            // top level of `properties`; anything else there is silently dropped. Application
+            // headers therefore go under `properties.headers`, and the typed transport
+            // properties are lifted to the top level where consumers such as EasyNetQ and
+            // Wolverine read them.
+            var headers = message.Headers.ToDictionary(
+                kvp => kvp.Key,
+                kvp => EncodeForManagementApi(kvp.Value, message.HeaderTypeOf(kvp.Key)));
+
             var properties = new Dictionary<string, object?>
             {
-                ["headers"] = message.Headers.ToDictionary(kvp => kvp.Key, kvp => (object?)kvp.Value),
+                ["headers"] = headers,
             };
 
-            var result = await _client.PublishAsync($"{Rabbit.VHost}",
-                    endpoint?.Type?.Equals("queue", StringComparison.OrdinalIgnoreCase) ?? true ? "amq.default" : endpoint.Name,
-                    new PublishInfo(endpoint?.Name ?? "/", message.Json, Properties: properties));
+            var transport = message.TransportProperties;
+            if (transport.MessageId is not null) properties["message_id"] = transport.MessageId;
+            if (transport.CorrelationId is not null) properties["correlation_id"] = transport.CorrelationId;
+            if (transport.ContentType is not null) properties["content_type"] = transport.ContentType;
+            if (transport.Type is not null) properties["type"] = transport.Type;
+            if (transport.Timestamp is not null) properties["timestamp"] = transport.Timestamp.Value.ToUnixTimeSeconds();
+            if (transport.Persistent is not null) properties["delivery_mode"] = transport.Persistent.Value ? 2 : 1;
+
+            var exchange = endpoint?.Type?.Equals("queue", StringComparison.OrdinalIgnoreCase) ?? true
+                ? "amq.default"
+                : endpoint!.Name;
+
+            await _client.PublishAsync($"{Rabbit.VHost}", exchange,
+                new PublishInfo(endpoint?.Name ?? "/", message.Json, Properties: properties));
         }
 
-        public async Task SendAsync(EndpointDetails endpoint, string json)
-        {
-            var result = await _client.PublishAsync($"{Rabbit.VHost}", endpoint?.Type?.Equals("queue", StringComparison.OrdinalIgnoreCase) ?? true ? "amq.default" : endpoint.Name, new PublishInfo(endpoint?.Name ?? "/", json));
-        }
+        // AMQP has no timestamp header type the management API will accept from JSON, so
+        // timestamps stay ISO 8601 strings; numbers and booleans become native JSON values.
+        private static object? EncodeForManagementApi(string value, HeaderDataType type)
+            => type == HeaderDataType.Timestamp ? value : HeaderValueEncoder.Encode(value, type);
 
         public Task<IReadOnlyList<ReceivedMessage>> PeekAsync(
             EndpointDetails endpoint, int count, CancellationToken cancellationToken = default)

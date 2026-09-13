@@ -12,6 +12,7 @@ using Iris.Contracts.Brokers.Endpoints;
 using Iris.Contracts.Brokers.Models;
 using Iris.Contracts.Brokers.Events;
 using Iris.Contracts.Messaging.Events;
+using Iris.Contracts.Messaging.Frameworks;
 using Iris.Contracts.Messaging.Models;
 using Iris.Contracts.Results;
 using Iris.Desktop.PackageManagement;
@@ -226,20 +227,49 @@ public class LocalConnectionManager : IBrokerService, IMessageService
     public async Task<Result<bool>> SendMessageAsync(Message message)
     {
         var connection = await _connectionManager.GetConnectionAsync(message.Address);
+        if (connection is null)
+            return new Failure<bool>("Connection not found.");
 
-        var assemblyName = ResolveMessageAssemblyName(message.MessageType);
+        var properties = message.Properties ?? new Dictionary<string, string>();
+
+        var typeName = properties.TryGetValue(FrameworkInputs.TypeName, out var explicitType) && !string.IsNullOrWhiteSpace(explicitType)
+            ? explicitType
+            : message.MessageType;
+
+        var assemblyName = properties.TryGetValue(FrameworkInputs.AssemblyName, out var explicitAssembly) && !string.IsNullOrWhiteSpace(explicitAssembly)
+            ? explicitAssembly
+            : ResolveMessageAssemblyName(typeName);
 
         var request = MessageRequest.Create(message.MessageType,
-            message.Data,
+            message.Data ?? string.Empty,
             _state.SendIrisHeader,
-            message.MessageType,
+            typeName,
             message.Framework,
             message.Headers,
-            message.Properties,
+            properties,
             assemblyName);
 
         if (!string.IsNullOrWhiteSpace(request.Framework))
-            request.WrapMessage(_frameworks);
+        {
+            var framework = _frameworks.GetFramework(request.Framework);
+            if (framework is null)
+                return new Failure<bool>($"Unknown framework '{request.Framework}'.");
+
+            var compatibility = FrameworkCompatibility.Check(framework, connection, request.Headers.Keys);
+            if (!compatibility.Supported)
+                return new Failure<bool>(compatibility.Reason!);
+
+            try
+            {
+                request.WrapMessage(framework);
+            }
+            catch (ArgumentException ex)
+            {
+                return new Failure<bool>(ex.Message);
+            }
+
+            FrameworkCompatibility.RemoveDropped(request, compatibility);
+        }
 
         request.Properties.TryGetValue("EndpointType", out string? endpointType);
 
@@ -248,14 +278,25 @@ public class LocalConnectionManager : IBrokerService, IMessageService
             request.Properties.Remove("EndpointType");
         }
 
-        await connection.SendAsync(new Iris.Brokers.EndpointDetails()
-            {
-                Address = message.Address,
-                Name = message.MessageType,
-                Provider = connection.Connector.Provider,
-                Type = endpointType ?? "Queue"
-            },
-            request);
+        try
+        {
+            await connection.SendAsync(new Iris.Brokers.EndpointDetails()
+                {
+                    Address = message.Address,
+                    Name = message.MessageType,
+                    Provider = connection.Connector.Provider,
+                    Type = endpointType ?? "Queue"
+                },
+                request);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            return new Failure<bool>($"send failed: {ex.Message}");
+        }
 
         var evt = new MessageSent
         {
@@ -263,7 +304,7 @@ public class LocalConnectionManager : IBrokerService, IMessageService
             Provider = connection.Connector.Provider,
             Message = request.Json,
             Endpoint = message.MessageType,
-            Headers = message.Headers,
+            Headers = request.Headers,
             Properties = request.Properties,
         };
 

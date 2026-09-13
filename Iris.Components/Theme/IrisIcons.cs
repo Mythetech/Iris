@@ -4,24 +4,24 @@ public static partial class IrisIcons
 {
 
     public static string Rounded => "material-symbols-rounded/";
-        
+
     public static string Round(string icon) => Rounded + icon;
-    
+
     public static string Filled => "material-symbols-filled/";
-    
+
     public static string Fill(string icon) => Filled + icon;
-    
+
     public static string Key => Round("key");
 
     public static string Account => Round("account_circle");
 
     public static string Connection => Round("power");
-    
+
     public static string Connections => Round("link");
 
 
     public static string AddConnection => Round("power");
-    
+
     //Custom FontAwesome Plug with Slash
     public static string NoConnections => $"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 640 512\"><path d=\"M5.1 9.2C13.3-1.2 28.4-3.1 38.8 5.1L216 144l216 0 48 0 8 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-8 0 0 64c0 28.6-7.5 55.5-20.7 78.7L630.8 469.1c10.4 8.2 12.3 23.3 4.1 33.7s-23.3 12.3-33.7 4.1L9.2 42.9C-1.2 34.7-3.1 19.6 5.1 9.2zM160 222.1l48.1 37.9C210.1 320 259.4 368 320 368c7.7 0 15.2-.8 22.4-2.2l44.9 35.4c-13.5 6.3-28.1 10.7-43.3 13l0 73.8c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-73.8c-77-11.6-136-78-136-158.2l0-33.9zM208 24c0-13.3 10.7-24 24-24s24 10.7 24 24l0 88-48 0 0-88zm69.3 168L420.9 304.6C428 289.9 432 273.4 432 256l0-64-154.7 0zM384 24c0-13.3 10.7-24 24-24s24 10.7 24 24l0 88-48 0 0-88z\"/></svg>";
 
@@ -73,24 +73,24 @@ public static partial class IrisIcons
     public static string Format => Round("format_indent_increase");
 
     public static string AddTemplate => Round("file_export");
-    
+
     public static string Success => Round("check_circle");
 
     public static string Error => Round("circle_x");
 
     public static string Warning => Round("warning");
 
-    public static string Info => Round("circle_info");
+    public static string Info => Round("info");
 
     public static string Add => Round("add");
 
     public static string RepeatSend => Round("repeat");
 
     public static string Delay => Round("schedule");
-    
+
     public static string Templates => Round("files");
 
-    public static string Duplicate => Round("content_copy_all");
+    public static string Duplicate => Round("tab_duplicate");
 
     public static string Export => Round("download");
 
@@ -99,7 +99,7 @@ public static partial class IrisIcons
     public static string Support => Round("contact_support");
 
     public static string Bug => Round("bug_report");
-    
+
     public static string Delete => Round("delete_forever");
 
     public static string Expand => Round("keyboard_double_arrow_right");

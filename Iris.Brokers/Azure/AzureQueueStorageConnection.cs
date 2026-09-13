@@ -48,20 +48,19 @@ namespace Iris.Brokers.Azure
             }).ToList();
         }
 
-        public async Task SendAsync(EndpointDetails endpoint, string json)
+        public async Task SendAsync(EndpointDetails endpoint, MessageRequest message)
         {
             var sender = _queueClient.GetQueueClient(endpoint.Name);
 
             try
             {
-                var response = await sender.SendMessageAsync(json);
+                var response = await sender.SendMessageAsync(message.Json);
                 _logger.LogInformation("{MessageId} message sent successfully to {Endpoint}", response.Value.MessageId, endpoint.Name);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error sending message to Azure Queue Storage {Endpoint}", endpoint.Name);
             }
-
         }
 
         public async Task<IReadOnlyList<ReceivedMessage>> PeekAsync(
