@@ -1,0 +1,6 @@
+/* Monospace so JSON lines up in a narrow column. */
+.messaging-panel-json ::deep textarea {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+}

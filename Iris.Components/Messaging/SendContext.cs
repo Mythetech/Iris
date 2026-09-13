@@ -21,4 +21,17 @@ public sealed class SendContext
     /// type automatically.
     /// </summary>
     public string? MessageTypeOverride { get; init; }
+
+    /// <summary>
+    /// Framework for this send. When null the orchestrator falls back to the
+    /// ambient <see cref="MessageState.SelectedFramework"/>. Callers that compose
+    /// outside the Messaging page supply this so they never mutate shared state.
+    /// </summary>
+    public string? Framework { get; init; }
+
+    /// <summary>
+    /// Headers for this send. When null the orchestrator falls back to the ambient
+    /// <see cref="MessageState.Headers"/>.
+    /// </summary>
+    public Dictionary<string, string>? Headers { get; init; }
 }

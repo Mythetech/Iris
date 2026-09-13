@@ -17,9 +17,9 @@ public class MessageState
     public int MaxDelay { get; set; } = 60;
     public bool Sending { get; set; }
     public int Delay { get; set; }
-    public string DelayText { get; set; } = string.Empty;
+    public string DelayText { get; private set; } = string.Empty;
     public int Repeat { get; set; }
-    public string RepeatText { get; set; } = string.Empty;
+    public string RepeatText { get; private set; } = string.Empty;
 
     public string? SelectedFramework { get; private set; }
 
@@ -45,7 +45,7 @@ public class MessageState
         IrisKey
     };
 
-    public void NotifyStateChanged()
+    private void NotifyStateChanged()
         => StateChanged?.Invoke();
 
     public Dictionary<string, string> Headers { get; private set; } = new();
@@ -62,6 +62,18 @@ public class MessageState
     {
         Repeat = repeat;
         StateChanged?.Invoke();
+    }
+
+    public void SetRepeatText(string text)
+    {
+        RepeatText = text;
+        NotifyStateChanged();
+    }
+
+    public void SetDelayText(string text)
+    {
+        DelayText = text;
+        NotifyStateChanged();
     }
 
     public void SetSending(bool sending)
