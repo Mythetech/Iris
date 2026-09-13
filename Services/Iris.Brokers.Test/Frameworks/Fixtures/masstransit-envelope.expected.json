@@ -1,0 +1,31 @@
+{
+  "MessageId": "<guid>",
+  "RequestId": null,
+  "CorrelationId": "<guid>",
+  "ConversationId": "<guid>",
+  "InitiatorId": null,
+  "SourceAddress": "loopback://localhost/iris",
+  "DestinationAddress": null,
+  "ResponseAddress": null,
+  "FaultAddress": null,
+  "MessageType": [
+    "urn:message:MyApp.Messages:Greeting"
+  ],
+  "Message": {
+    "id": 1,
+    "name": "hello"
+  },
+  "ExpirationTime": null,
+  "SentTime": "<timestamp>",
+  "Headers": {},
+  "Host": {
+    "MachineName": "<host>",
+    "ProcessName": "<host>",
+    "ProcessId": "<host>",
+    "Assembly": "<host>",
+    "AssemblyVersion": "<host>",
+    "FrameworkVersion": "<host>",
+    "MassTransitVersion": "<host>",
+    "OperatingSystemVersion": "<host>"
+  }
+}
