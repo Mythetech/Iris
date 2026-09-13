@@ -1,0 +1,43 @@
+.template-card {
+    container-type: inline-size;
+    container-name: template-card;
+}
+
+.template-card-inline {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: 0 0 auto;
+}
+
+/* Narrowest tier: Preview, Edit, overflow only. */
+.template-card-inline ::deep .tier-copy,
+.template-card-inline ::deep .tier-wide {
+    display: none;
+}
+
+@container template-card (min-width: 260px) {
+    .template-card-inline ::deep .tier-copy {
+        display: inline-flex;
+    }
+}
+
+/*
+ * MudMenu renders its MudMenuItem children through MudPopover into the single global
+ * MudPopoverProvider (registered once in MainLayout), so the items are portaled out of
+ * this component's own DOM subtree at render time and are never descendants of
+ * .template-card-overflow. No ::deep rule scoped to the card can reach them, so the
+ * menu deliberately always carries its full secondary action set (Copy JSON, Duplicate,
+ * Export, Rename, Delete) whenever it is open, at every tier. Between 260px and 340px
+ * this means Copy JSON is reachable both inline and from the menu; that overlap is
+ * accepted rather than treated as a defect.
+ */
+@container template-card (min-width: 340px) {
+    .template-card-inline ::deep .tier-wide {
+        display: inline-flex;
+    }
+
+    .template-card-overflow {
+        display: none;
+    }
+}
