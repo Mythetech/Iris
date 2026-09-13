@@ -3,6 +3,7 @@ using System.Text.Json;
 using FluentAssertions;
 using Iris.Brokers.Frameworks;
 using Iris.Brokers.Models;
+using Iris.Brokers.Test.Frameworks;
 using NServiceBus.Transport;
 using Xunit;
 
@@ -31,6 +32,31 @@ namespace Iris.Brokers.Test
             var headers = doc.RootElement.GetProperty("Headers");
             headers.GetProperty("NServiceBus.Version").GetString()
                 .Should().Be(expectedVersion);
+        }
+
+        [Fact(DisplayName = "EnclosedMessageTypes is assembly qualified when an assembly name is supplied")]
+        public void CreateWrappedMessage_WithAssembly_QualifiesEnclosedMessageTypes()
+        {
+            var request = MessageRequest.Create(
+                messageType: "DoThing",
+                json: "{}",
+                generateIrisHeaders: false,
+                messageFullyQualifiedName: "MyApp.Commands.DoThing",
+                messageAssemblyName: "MyApp.Commands");
+
+            using var doc = JsonDocument.Parse(new NServiceBusAdapter().CreateWrappedMessage(request));
+
+            doc.RootElement.GetProperty("Headers").GetProperty("NServiceBus.EnclosedMessageTypes").GetString()
+                .Should().Be("MyApp.Commands.DoThing, MyApp.Commands");
+        }
+
+        [Fact(DisplayName = "Declares only body keys")]
+        public void Keys_AreBodyOnly()
+        {
+            var adapter = new NServiceBusAdapter();
+            adapter.Keys.Should().NotBeEmpty();
+            adapter.Keys.Should().OnlyContain(k => k.Location == KeyLocation.Body);
+            FrameworkKeyAssertions.AssertKeysMatchWrite(adapter, MessageRequest.Create("T", "{}", false, "N.T"));
         }
     }
 }

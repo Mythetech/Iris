@@ -33,6 +33,19 @@ public class RebusAdapterTests
         new RebusAdapter().Name.Should().Be("Rebus");
     }
 
+    [Fact(DisplayName = "Declared keys match what CreateWrappedMessage writes")]
+    public void Keys_MatchWrite()
+    {
+        FrameworkKeyAssertions.AssertKeysMatchWrite(new RebusAdapter(), BuildRequest());
+    }
+
+    [Fact(DisplayName = "Message id, type and content type are the required headers")]
+    public void Keys_RequiredHeaders()
+    {
+        new RebusAdapter().Keys.Where(k => k.IsRequired).Select(k => k.Name)
+            .Should().BeEquivalentTo(new[] { RebusHeaders.MessageId, RebusHeaders.Type, RebusHeaders.ContentType });
+    }
+
     [Fact(DisplayName = "Body is the user JSON unchanged")]
     public void Body_EqualsUserJson()
     {

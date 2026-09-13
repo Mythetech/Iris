@@ -25,6 +25,11 @@
     <PackageReference Include="Testcontainers.PostgreSql"  />
     <PackageReference Include="Testcontainers.Azurite" />
     <PackageReference Include="Docker.DotNet" />
+    <PackageReference Include="EasyNetQ" />
+    <PackageReference Include="WolverineFx.RabbitMQ" />
+    <PackageReference Include="Paramore.Brighter.MessagingGateway.RMQ.Async" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
 
   <ItemGroup>

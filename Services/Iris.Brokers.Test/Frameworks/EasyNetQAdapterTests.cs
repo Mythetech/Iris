@@ -25,11 +25,43 @@ public class EasyNetQAdapterTests
             Headers = headers ?? new Dictionary<string, string>(),
         };
 
+    [Fact(DisplayName = "Declared keys match what CreateWrappedMessage writes")]
+    public void Keys_MatchWrite()
+    {
+        FrameworkKeyAssertions.AssertKeysMatchWrite(new EasyNetQAdapter(), NewRequest(assemblyName: "MyApp.Messages"));
+    }
+
+    [Fact(DisplayName = "Type and content type are transport properties, not headers")]
+    public void CreateWrappedMessage_WritesTransportProperties_NotHeaders()
+    {
+        var request = NewRequest(assemblyName: "MyApp.Messages");
+
+        new EasyNetQAdapter().CreateWrappedMessage(request);
+
+        request.TransportProperties.Type.Should().Be("MyApp.Messages.OrderPlaced, MyApp.Messages");
+        request.TransportProperties.ContentType.Should().Be("application/json");
+        request.TransportProperties.MessageId.Should().MatchRegex(@"^[0-9a-fA-F-]{36}$");
+        request.TransportProperties.CorrelationId.Should().Be(request.TransportProperties.MessageId);
+        request.TransportProperties.Persistent.Should().BeTrue();
+        request.TransportProperties.Timestamp.Should().NotBeNull();
+        request.Headers.Should().BeEmpty();
+    }
+
+    [Fact(DisplayName = "A missing assembly name is an error, never a guessed ':Messages' suffix")]
+    public void CreateWrappedMessage_NoAssembly_Throws()
+    {
+        var request = NewRequest(fullyQualifiedName: "MyApp.Messages.OrderPlaced", assemblyName: null);
+
+        var act = () => new EasyNetQAdapter().CreateWrappedMessage(request);
+
+        act.Should().Throw<ArgumentException>().WithMessage("*assembly*");
+    }
+
     [Fact(DisplayName = "CreateWrappedMessage returns the POCO body unchanged")]
     public void CreateWrappedMessage_ReturnsBodyUnchanged()
     {
         var adapter = new EasyNetQAdapter();
-        var request = NewRequest();
+        var request = NewRequest(assemblyName: "MyApp.Messages");
 
         var result = adapter.CreateWrappedMessage(request);
 
@@ -46,21 +78,10 @@ public class EasyNetQAdapterTests
 
         adapter.CreateWrappedMessage(request);
 
-        request.Headers["type"].Should().Be("MyApp.Messages.OrderPlaced:MyApp.Messages");
+        request.TransportProperties.Type.Should().Be("MyApp.Messages.OrderPlaced, MyApp.Messages");
     }
 
-    [Fact(DisplayName = "Bare fully-qualified name with no assembly falls back to ':Messages'")]
-    public void CreateWrappedMessage_BareFullName_EmitsMessagesFallback()
-    {
-        var adapter = new EasyNetQAdapter();
-        var request = NewRequest(fullyQualifiedName: "MyApp.Messages.OrderPlaced");
-
-        adapter.CreateWrappedMessage(request);
-
-        request.Headers["type"].Should().Be("MyApp.Messages.OrderPlaced:Messages");
-    }
-
-    [Fact(DisplayName = "Assembly-qualified name is parsed into EasyNetQ 'FullName:Asm' form")]
+    [Fact(DisplayName = "Assembly-qualified name is parsed into EasyNetQ 'FullName, Asm' form")]
     public void CreateWrappedMessage_AssemblyQualifiedName_IsParsed()
     {
         var adapter = new EasyNetQAdapter();
@@ -69,58 +90,55 @@ public class EasyNetQAdapterTests
 
         adapter.CreateWrappedMessage(request);
 
-        request.Headers["type"].Should().Be("MyApp.Messages.OrderPlaced:MyApp.Messages");
+        request.TransportProperties.Type.Should().Be("MyApp.Messages.OrderPlaced, MyApp.Messages");
     }
 
-    [Fact(DisplayName = "Sets content_type and persistent delivery_mode")]
-    public void CreateWrappedMessage_SetsContentTypeAndDeliveryMode()
-    {
-        var adapter = new EasyNetQAdapter();
-        var request = NewRequest();
-
-        adapter.CreateWrappedMessage(request);
-
-        request.Headers["content_type"].Should().Be("application/json");
-        request.Headers["delivery_mode"].Should().Be("2");
-    }
-
-    [Fact(DisplayName = "Generates a GUID message_id and mirrors it as correlation_id when none supplied")]
+    [Fact(DisplayName = "Generates a GUID message id and mirrors it as correlation id when none supplied")]
     public void CreateWrappedMessage_GeneratesMessageIdAndCorrelationId()
     {
         var adapter = new EasyNetQAdapter();
-        var request = NewRequest();
+        var request = NewRequest(assemblyName: "MyApp.Messages");
 
         adapter.CreateWrappedMessage(request);
 
-        request.Headers.Should().ContainKey("message_id");
-        request.Headers["message_id"].Should().MatchRegex(@"^[0-9a-fA-F-]{36}$");
-        request.Headers["correlation_id"].Should().Be(request.Headers["message_id"]);
+        request.TransportProperties.MessageId.Should().MatchRegex(@"^[0-9a-fA-F-]{36}$");
+        request.TransportProperties.CorrelationId.Should().Be(request.TransportProperties.MessageId);
     }
 
-    [Fact(DisplayName = "Preserves a caller-supplied correlation_id")]
+    [Fact(DisplayName = "Preserves a caller-supplied correlation id")]
     public void CreateWrappedMessage_PreservesCallerCorrelationId()
     {
         var adapter = new EasyNetQAdapter();
-        var request = NewRequest(headers: new Dictionary<string, string>
-        {
-            ["correlation_id"] = "caller-correlation-123",
-        });
+        var request = NewRequest(assemblyName: "MyApp.Messages");
+        request.TransportProperties.CorrelationId = "caller-correlation-123";
 
         adapter.CreateWrappedMessage(request);
 
-        request.Headers["correlation_id"].Should().Be("caller-correlation-123");
-        request.Headers["message_id"].Should().NotBe("caller-correlation-123");
+        request.TransportProperties.CorrelationId.Should().Be("caller-correlation-123");
+        request.TransportProperties.MessageId.Should().NotBe("caller-correlation-123");
     }
 
     [Fact(DisplayName = "Falls back to MessageType when MessageFullyQualifiedName is null")]
     public void CreateWrappedMessage_FallsBackToMessageType()
     {
         var adapter = new EasyNetQAdapter();
-        var request = NewRequest(fullyQualifiedName: null);
+        var request = NewRequest(fullyQualifiedName: null, assemblyName: "MyApp.Messages");
 
         adapter.CreateWrappedMessage(request);
 
-        request.Headers["type"].Should().Be("OrderPlaced:Messages");
+        request.TransportProperties.Type.Should().Be("OrderPlaced, MyApp.Messages");
+    }
+
+    [Fact(DisplayName = "Properties[TypeNameFormatKey] = 'Legacy' uses the colon-separated LegacyTypeNameSerializer form")]
+    public void CreateWrappedMessage_LegacyFormat_UsesColon()
+    {
+        var adapter = new EasyNetQAdapter();
+        var request = NewRequest(assemblyName: "MyApp.Messages");
+        request.Properties[EasyNetQAdapter.TypeNameFormatKey] = "Legacy";
+
+        adapter.CreateWrappedMessage(request);
+
+        request.TransportProperties.Type.Should().Be("MyApp.Messages.OrderPlaced:MyApp.Messages");
     }
 
     [Fact(DisplayName = "Throws when Json is empty")]
