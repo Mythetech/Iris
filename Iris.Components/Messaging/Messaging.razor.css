@@ -5,3 +5,11 @@
     height: 100%;
     padding: 16px;
 }
+
+/* Takes the height the header leaves behind. Replaces the MudGrid that used to
+   wrap both, whose own item spacing made this page's header gap differ from
+   every other page's. */
+.messaging-body {
+    flex: 1 1 auto;
+    min-height: 0;
+}
