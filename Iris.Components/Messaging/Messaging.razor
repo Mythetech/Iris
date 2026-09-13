@@ -11,29 +11,28 @@
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex gap-4 mud-height-full" Style="flex-direction:column;height: 82dvh;">
     <MudGrid class="mud-height-full">
         <MudItem xs="12">
-            <MudToolBar Class="darkmorphic gap-4">
-                <ProviderSelector
-                    @ref="_providerSelect"
-                    Providers="@_providers"
-                    @bind-Value="@_selectedProvider"
-                />
-                
-                <EndpointSelector
-                    Endpoints="@_endpoints"
-                    @bind-Value="@_selectedEndpoint"
-                    SelectedProviderAddress="@_selectedProvider?.Address"
-                    SelectedEndpointChanged="@TrySetMessageStructure" 
-                    />
+            <IrisPageHeader Icon="@IrisIcons.Send" Title="Messaging">
+                <Status>
+                    <ProviderSelector
+                        @ref="_providerSelect"
+                        Providers="@_providers"
+                        @bind-Value="@_selectedProvider" />
 
-                <FlexSpacer />
-                
-                <IrisLoadingButton
-                    Loading="@_loading"
-                    OnClick="@SendClicked"
-                    Icon="@IrisIcons.Send"
-                    Text="Send"
-                    LoadingText="Sending" />
-            </MudToolBar>
+                    <EndpointSelector
+                        Endpoints="@_endpoints"
+                        @bind-Value="@_selectedEndpoint"
+                        SelectedProviderAddress="@_selectedProvider?.Address"
+                        SelectedEndpointChanged="@TrySetMessageStructure" />
+                </Status>
+                <Actions>
+                    <IrisLoadingButton
+                        Loading="@_loading"
+                        OnClick="@SendClicked"
+                        Icon="@IrisIcons.Send"
+                        Text="Send"
+                        LoadingText="Sending" />
+                </Actions>
+            </IrisPageHeader>
         </MudItem>
 
         <MudItem xs="12" Class="mud-height-full">

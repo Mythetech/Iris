@@ -9,84 +9,85 @@
     var definitions = Definitions.Definitions;
 }
 
-<IrisCard HeaderIcon="@IrisIcons.Sagas" Title="Sagas" Height="90vh">
-    <ToolbarContent>
+<IrisPageHeader Icon="@IrisIcons.Sagas" Title="Sagas">
+    <Status>
         <ReceiverStatusChip />
-    </ToolbarContent>
-    <ChildContent>
-        @if (definitions.Count == 0)
-        {
-            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 h-100 py-10">
-                <MudIcon Icon="@IrisIcons.NoSagas" Size="Size.Large" Class="mud-text-secondary mb-2" />
-                <MudText Typo="Typo.h6">No state machines found</MudText>
-                <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary">
-                    Load an assembly that contains a MassTransitStateMachine on the Packages page and it will appear here.
-                </MudText>
-                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="OpenPackagesPage">Open Packages</MudButton>
-            </MudStack>
-        }
-        else
-        {
-            <div class="sagas-body">
-                <IrisSplitter BarSize="4">
-                    <Panel1>
-                        <div class="saga-definition-list">
-                            @foreach (var definition in definitions)
+    </Status>
+</IrisPageHeader>
+
+<IrisCard Height="calc(100dvh - 190px)">
+    @if (definitions.Count == 0)
+    {
+        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 h-100 py-10">
+            <MudIcon Icon="@IrisIcons.NoSagas" Size="Size.Large" Class="mud-text-secondary mb-2" />
+            <MudText Typo="Typo.h6">No state machines found</MudText>
+            <MudText Typo="Typo.body2" Align="MudBlazor.Align.Center" Class="mud-text-secondary">
+                Load an assembly that contains a MassTransitStateMachine on the Packages page and it will appear here.
+            </MudText>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="OpenPackagesPage">Open Packages</MudButton>
+        </MudStack>
+    }
+    else
+    {
+        <div class="sagas-body">
+            <IrisSplitter BarSize="4">
+                <Panel1>
+                    <div class="saga-definition-list">
+                        @foreach (var definition in definitions)
+                        {
+                            if (definition.Graph is { } graph)
                             {
-                                if (definition.Graph is { } graph)
-                                {
-                                    <div class="@DefinitionClass(definition.TypeName == _selectedTypeName)"
-                                         role="button" tabindex="0"
-                                         aria-current="@(definition.TypeName == _selectedTypeName ? "true" : null)"
-                                         @onclick="@(() => SelectDefinition(definition.TypeName))"
-                                         @onkeydown="@(args => SelectOnActivationKey(args, definition.TypeName))">
-                                        <MudIcon Icon="@IrisIcons.Sagas" Size="Size.Small" />
+                                <div class="@DefinitionClass(definition.TypeName == _selectedTypeName)"
+                                     role="button" tabindex="0"
+                                     aria-current="@(definition.TypeName == _selectedTypeName ? "true" : null)"
+                                     @onclick="@(() => SelectDefinition(definition.TypeName))"
+                                     @onkeydown="@(args => SelectOnActivationKey(args, definition.TypeName))">
+                                    <MudIcon Icon="@IrisIcons.Sagas" Size="Size.Small" />
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.body2">@graph.DisplayName</MudText>
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@graph.Framework, @graph.States.Count states</MudText>
+                                    </MudStack>
+                                </div>
+                            }
+                            else
+                            {
+                                <MudTooltip Text="@definition.Error">
+                                    <div class="saga-definition-item saga-definition-error" role="note">
+                                        <MudIcon Icon="@IrisIcons.Warning" Size="Size.Small" Color="Color.Warning" />
                                         <MudStack Spacing="0">
-                                            <MudText Typo="Typo.body2">@graph.DisplayName</MudText>
-                                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@graph.Framework, @graph.States.Count states</MudText>
+                                            <MudText Typo="Typo.body2">@SimpleName(definition.TypeName)</MudText>
+                                            <MudText Typo="Typo.caption" Class="mud-text-secondary saga-definition-reason">@definition.Error</MudText>
                                         </MudStack>
                                     </div>
-                                }
-                                else
-                                {
-                                    <MudTooltip Text="@definition.Error">
-                                        <div class="saga-definition-item saga-definition-error" role="note">
-                                            <MudIcon Icon="@IrisIcons.Warning" Size="Size.Small" Color="Color.Warning" />
-                                            <MudStack Spacing="0">
-                                                <MudText Typo="Typo.body2">@SimpleName(definition.TypeName)</MudText>
-                                                <MudText Typo="Typo.caption" Class="mud-text-secondary saga-definition-reason">@definition.Error</MudText>
-                                            </MudStack>
-                                        </div>
-                                    </MudTooltip>
-                                }
+                                </MudTooltip>
                             }
-                        </div>
-                    </Panel1>
-                    <Panel2>
-                        @if (SelectedGraph is { } selectedGraph)
-                        {
-                            <IrisSplitter BarSize="4" SplitterOrientation="Microsoft.Fast.Components.FluentUI.Orientation.Horizontal">
-                                <Panel1>
-                                    <SagaGraphView Graph="selectedGraph" SelectedInstance="SelectedInstance" />
-                                </Panel1>
-                                <Panel2>
-                                    <SagaInstancePanel Instances="Instances.GetInstances(selectedGraph.TypeName)"
-                                                       Selected="SelectedInstance"
-                                                       SelectedChanged="OnInstanceSelected" />
-                                </Panel2>
-                            </IrisSplitter>
                         }
-                        else
-                        {
-                            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 h-100">
-                                <MudText Typo="Typo.body2" Class="mud-text-secondary">Select a state machine to see its graph.</MudText>
-                            </MudStack>
-                        }
-                    </Panel2>
-                </IrisSplitter>
-            </div>
-        }
-    </ChildContent>
+                    </div>
+                </Panel1>
+                <Panel2>
+                    @if (SelectedGraph is { } selectedGraph)
+                    {
+                        <IrisSplitter BarSize="4" SplitterOrientation="Microsoft.Fast.Components.FluentUI.Orientation.Horizontal">
+                            <Panel1>
+                                <SagaGraphView Graph="selectedGraph" SelectedInstance="SelectedInstance" />
+                            </Panel1>
+                            <Panel2>
+                                <SagaInstancePanel Instances="Instances.GetInstances(selectedGraph.TypeName)"
+                                                   Selected="SelectedInstance"
+                                                   SelectedChanged="OnInstanceSelected" />
+                            </Panel2>
+                        </IrisSplitter>
+                    }
+                    else
+                    {
+                        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 h-100">
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">Select a state machine to see its graph.</MudText>
+                        </MudStack>
+                    }
+                </Panel2>
+            </IrisSplitter>
+        </div>
+    }
 </IrisCard>
 
 @code {

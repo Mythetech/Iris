@@ -4,24 +4,25 @@
 @inherits IrisPageBase
 @implements IDisposable
 
-<IrisCard HeaderIcon="@IrisIcons.Templates" Title="Templates" Height="90vh">
-    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex gap-4 mt-2 overflow-auto" Style="flex-direction:column;">
-        <MudToolBar>
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@IrisIcons.Add"
-                       OnClick="@(() => NavigationManager.NavigateTo("/Templates/new"))">
-                New Template
-            </MudButton>
-            <MudSpacer />
-            <MudTextField @bind-Value="_searchString"
-                          Placeholder="Search"
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@IrisIcons.Search"
-                          Immediate="true"
-                          Style="max-width:300px;" />
-        </MudToolBar>
+<IrisPageHeader Icon="@IrisIcons.Templates" Title="Templates">
+    <Actions>
+        <MudTextField @bind-Value="_searchString"
+                      Placeholder="Search"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@IrisIcons.Search"
+                      Immediate="true"
+                      Class="mt-0" />
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@IrisIcons.Add"
+                   OnClick="@(() => NavigationManager.NavigateTo("/Templates/new"))">
+            New Template
+        </MudButton>
+    </Actions>
+</IrisPageHeader>
 
+<IrisCard Height="calc(100dvh - 190px)">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex gap-4 mt-2 overflow-auto" Style="flex-direction:column;">
         @if (_loading)
         {
             <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100" Style="height:300px;">

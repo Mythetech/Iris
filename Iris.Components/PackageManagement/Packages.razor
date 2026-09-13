@@ -1,20 +1,20 @@
 ﻿@using Contracts.Assemblies.Models
 @using Iris.Components.Shared.Snackbar
 @using Iris.Components.Theme
-@using Iris.Components.Shared.Toolbar
 @using Mythetech.Framework.Infrastructure.Files
 @page "/Packages"
 @inherits IrisPageBase
 
-<IrisToolBar Class="mb-4">
-    <MudSpacer/>
-    <IrisLoadingButton
-        Text="Upload Package"
-        Loading="@Uploading"
-        LoadingText="Uploading"
-        Icon="@IrisIcons.UploadPackage"
-        OnClick="OpenFileAndUpload"/>
-</IrisToolBar>
+<IrisPageHeader Icon="@IrisIcons.Packages" Title="Packages" Class="mb-4">
+    <Actions>
+        <IrisLoadingButton
+            Text="Upload Package"
+            Loading="@Uploading"
+            LoadingText="Uploading"
+            Icon="@IrisIcons.UploadPackage"
+            OnClick="OpenFileAndUpload"/>
+    </Actions>
+</IrisPageHeader>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="overflow-y-auto" Style="max-height:80dvh;">
 <PackageTreeView 
