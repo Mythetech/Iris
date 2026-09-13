@@ -14,11 +14,10 @@ using Iris.Integration.Tests.Fixtures;
 namespace Iris.Integration.Tests.Brokers
 {
     /// <summary>
-    /// Emulator-backed tests for <see cref="AzureServiceBusConnection"/>.
-    /// Uses Microsoft's Azure Service Bus emulator image with a SQL Edge sidecar,
-    /// managed via <see cref="AzureServiceBusContainerFixture"/>.
+    /// Emulator-backed tests for <see cref="AzureServiceBusConnection"/>, run against the
+    /// OpenServiceBus emulator managed by <see cref="AzureServiceBusContainerFixture"/>.
     ///
-    /// Pre-declared queues (see Resources/Config.json):
+    /// Queues the fixture seeds:
     /// - <c>iris-main-test</c>: MaxDeliveryCount=10. Used for peek/receive tests.
     /// - <c>iris-dlq-test</c>:  MaxDeliveryCount=1. Used for DLQ tests.
     /// </summary>
@@ -26,10 +25,18 @@ namespace Iris.Integration.Tests.Brokers
     [Collection("AzureServiceBus")]
     public class AzureServiceBusContainerTests
     {
-        private const string MainQueue = "iris-main-test";
-        private const string DlqQueue = "iris-dlq-test";
+        private const string MainQueue = AzureServiceBusContainerFixture.MainQueue;
+        private const string DlqQueue = AzureServiceBusContainerFixture.DlqQueue;
 
-        private static string ConnectionString => AzureServiceBusContainerFixture.ConnectionString;
+        private readonly AzureServiceBusContainerFixture _emulator;
+
+        public AzureServiceBusContainerTests(AzureServiceBusContainerFixture emulator)
+        {
+            _emulator = emulator;
+        }
+
+        // The emulator's port is assigned by Docker, so this is only known once it is running.
+        private string ConnectionString => _emulator.ConnectionString;
 
         private AzureServiceBusConnection CreateConnection()
         {
