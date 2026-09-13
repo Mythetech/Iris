@@ -7,7 +7,9 @@
         <MudIcon Icon="@Icon" Size="Size.Small" Class="iris-page-header-icon" />
     }
 
-    <MudText Typo="Typo.h6" Class="iris-page-header-title">@Title</MudText>
+    <div class="iris-page-header-title">
+        <MudText Typo="Typo.h6">@Title</MudText>
+    </div>
 
     @if (Status is not null)
     {

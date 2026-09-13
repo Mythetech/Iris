@@ -33,15 +33,16 @@
             </MudTooltip>
         </MudStack>
 
-        <MudTextField T="string"
-                      Value="@_json"
-                      ValueChanged="@OnJsonChangedAsync"
-                      Lines="10"
-                      Immediate="true"
-                      Variant="Variant.Outlined"
-                      Class="messaging-panel-json"
-                      Error="@(_jsonError is not null)"
-                      ErrorText="@_jsonError" />
+        <div class="messaging-panel-json">
+            <MudTextField T="string"
+                          Value="@_json"
+                          ValueChanged="@OnJsonChangedAsync"
+                          Lines="10"
+                          Immediate="true"
+                          Variant="Variant.Outlined"
+                          Error="@(_jsonError is not null)"
+                          ErrorText="@_jsonError" />
+        </div>
 
         <IrisLoadingButton Loading="@_sending"
                            OnClick="@SendAsync"
