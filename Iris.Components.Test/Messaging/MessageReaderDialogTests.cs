@@ -41,7 +41,7 @@ public class MessageReaderDialogTests : IrisTestContext
     {
         AddPopoverProvider();
 
-        var provider = RenderComponent<MudDialogProvider>();
+        var provider = Render<MudDialogProvider>();
         var dialogs = Services.GetRequiredService<IDialogService>();
 
         var parameters = new DialogParameters

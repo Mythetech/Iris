@@ -38,7 +38,7 @@ public class ContextPanelFooterTests : IrisTestContext
         // MessagingPanel's selectors are MudSelect, which registers a popover on
         // init and throws if none is mounted.
         JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true);
-        RenderComponent<MudPopoverProvider>();
+        Render<MudPopoverProvider>();
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public class ContextPanelFooterTests : IrisTestContext
     {
         RegisterMessagingPanelDependencies();
 
-        var cut = RenderComponent<MessagingPanel>();
+        var cut = Render<MessagingPanel>();
 
         cut.Markup.Should().Contain("Open Messaging Page");
     }
@@ -58,7 +58,7 @@ public class ContextPanelFooterTests : IrisTestContext
         broker.GetEndpointsAsync().Returns(Task.FromResult(new List<EndpointDetails>()));
         Services.AddSingleton(broker);
 
-        var cut = RenderComponent<EndpointsPanel>();
+        var cut = Render<EndpointsPanel>();
 
         cut.Markup.Should().Contain("Open Endpoints Page");
     }
@@ -68,7 +68,7 @@ public class ContextPanelFooterTests : IrisTestContext
     {
         RegisterMessagingPanelDependencies();
 
-        var cut = RenderComponent<MessagingPanel>();
+        var cut = Render<MessagingPanel>();
 
         cut.FindAll("div.context-panel-layout").Should().ContainSingle();
         cut.FindAll("div.context-panel-body").Should().ContainSingle();

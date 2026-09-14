@@ -47,7 +47,7 @@ public class AzureServiceBusContainerFixture : IAsyncLifetime
 
     public string ManagementUrl { get; private set; } = string.Empty;
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
 
@@ -94,7 +94,7 @@ public class AzureServiceBusContainerFixture : IAsyncLifetime
         await CreateQueue(DlqQueue, maxDeliveryCount: 1, lockDuration: "00:05:00", cts.Token);
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (_containerId is not null)
         {

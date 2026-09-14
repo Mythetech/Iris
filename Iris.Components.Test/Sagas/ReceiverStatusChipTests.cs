@@ -32,7 +32,7 @@ public class ReceiverStatusChipTests : IrisTestContext
         Services.AddSingleton<SagaDefinitionState>();
         Services.AddSingleton<SagaInstanceState>();
 
-        RenderComponent<MudPopoverProvider>();
+        Render<MudPopoverProvider>();
     }
 
     [Fact(DisplayName = "Shows Stopped when the receiver is not listening")]
@@ -40,7 +40,7 @@ public class ReceiverStatusChipTests : IrisTestContext
     {
         _receiver.Status.Returns(OtlpReceiverStatus.Stopped);
 
-        var cut = RenderComponent<ReceiverStatusChip>();
+        var cut = Render<ReceiverStatusChip>();
 
         cut.Markup.Should().Contain("Stopped");
     }
@@ -51,7 +51,7 @@ public class ReceiverStatusChipTests : IrisTestContext
         _receiver.Status.Returns(OtlpReceiverStatus.Listening);
         _receiver.Endpoint.Returns("http://127.0.0.1:4318");
 
-        var cut = RenderComponent<ReceiverStatusChip>();
+        var cut = Render<ReceiverStatusChip>();
 
         cut.Markup.Should().Contain("http://127.0.0.1:4318");
         cut.Markup.Should().Contain("OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4318");
@@ -63,7 +63,7 @@ public class ReceiverStatusChipTests : IrisTestContext
     {
         _receiver.Status.Returns(OtlpReceiverStatus.Starting);
 
-        var cut = RenderComponent<ReceiverStatusChip>();
+        var cut = Render<ReceiverStatusChip>();
 
         cut.Markup.Should().Contain("Starting");
     }
@@ -80,7 +80,7 @@ public class ReceiverStatusChipTests : IrisTestContext
             .ToList());
         instances.Unmatched.Count.Should().Be(SagaInstanceState.MaxUnmatched, "the sample is bounded, so the two numbers differ here");
 
-        var cut = RenderComponent<ReceiverStatusChip>();
+        var cut = Render<ReceiverStatusChip>();
 
         cut.Markup.Should().Contain($"{overflow} unmatched");
         cut.Markup.Should().NotContain($"{SagaInstanceState.MaxUnmatched} unmatched");
@@ -93,7 +93,7 @@ public class ReceiverStatusChipTests : IrisTestContext
         _settings.ReceiverEnabled = true;
         _settings.ReceiverPort = 80;
 
-        var cut = RenderComponent<ReceiverStatusChip>();
+        var cut = Render<ReceiverStatusChip>();
 
         cut.Markup.Should().Contain("Receiver port must be between 1024 and 65535");
     }
@@ -105,7 +105,7 @@ public class ReceiverStatusChipTests : IrisTestContext
         _settings.ReceiverEnabled = true;
         _settings.ReceiverPort = SagaTelemetrySettings.DefaultPort;
 
-        var cut = RenderComponent<ReceiverStatusChip>();
+        var cut = Render<ReceiverStatusChip>();
 
         cut.Markup.Should().NotContain("must be between");
     }
@@ -116,11 +116,11 @@ public class ReceiverStatusChipTests : IrisTestContext
         _receiver.Status.Returns(OtlpReceiverStatus.Stopped);
         var instances = Services.GetRequiredService<SagaInstanceState>();
 
-        var before = RenderComponent<ReceiverStatusChip>();
+        var before = Render<ReceiverStatusChip>();
         before.FindAll("button.receiver-unmatched").Should().BeEmpty();
 
         await instances.IngestAsync([StubSpanMapper.Span(Guid.NewGuid(), "Nowhere", "Elsewhere")]);
-        var after = RenderComponent<ReceiverStatusChip>();
+        var after = Render<ReceiverStatusChip>();
 
         after.FindAll("button.receiver-unmatched").Should().ContainSingle();
     }
@@ -131,7 +131,7 @@ public class ReceiverStatusChipTests : IrisTestContext
         _receiver.Status.Returns(OtlpReceiverStatus.Stopped);
         var instances = Services.GetRequiredService<SagaInstanceState>();
         await instances.IngestAsync([StubSpanMapper.Span(Guid.NewGuid(), "Nowhere", "Elsewhere")]);
-        var cut = RenderComponent<ReceiverStatusChip>();
+        var cut = Render<ReceiverStatusChip>();
 
         await cut.Find("button.receiver-unmatched").ClickAsync(new MouseEventArgs());
 
@@ -147,7 +147,7 @@ public class ReceiverStatusChipTests : IrisTestContext
         _receiver.Status.Returns(OtlpReceiverStatus.Listening);
         _receiver.Endpoint.Returns("http://127.0.0.1:4318");
         var instances = Services.GetRequiredService<SagaInstanceState>();
-        var cut = RenderComponent<ReceiverStatusChip>();
+        var cut = Render<ReceiverStatusChip>();
         cut.Find(".receiver-counts").TextContent.Trim().Should().Be("0 spans, 0 mapped");
 
         await instances.IngestAsync([StubSpanMapper.Span(Guid.NewGuid(), "Nowhere", "Elsewhere")]);
@@ -160,7 +160,7 @@ public class ReceiverStatusChipTests : IrisTestContext
     public async Task Status_Follows_The_Receiver_Without_A_Fresh_Render()
     {
         _receiver.Status.Returns(OtlpReceiverStatus.Stopped);
-        var cut = RenderComponent<ReceiverStatusChip>();
+        var cut = Render<ReceiverStatusChip>();
         cut.Markup.Should().Contain("Stopped");
 
         _receiver.Status.Returns(OtlpReceiverStatus.Listening);
@@ -179,7 +179,7 @@ public class ReceiverStatusChipTests : IrisTestContext
         _receiver.Status.Returns(OtlpReceiverStatus.Listening);
         _receiver.Endpoint.Returns("http://127.0.0.1:4318");
 
-        var cut = RenderComponent<ReceiverStatusChip>();
+        var cut = Render<ReceiverStatusChip>();
 
         cut.FindAll(".mud-tooltip-root").Should().ContainSingle(
             "MtCopyButton brings its own tooltip, which also swaps to Copied on success, so wrapping it in another one renders both at once");
@@ -189,7 +189,7 @@ public class ReceiverStatusChipTests : IrisTestContext
     public async Task Counts_Open_The_Received_Spans_View()
     {
         _receiver.Status.Returns(OtlpReceiverStatus.Stopped);
-        var cut = RenderComponent<ReceiverStatusChip>();
+        var cut = Render<ReceiverStatusChip>();
 
         await cut.Find("button.receiver-counts").ClickAsync(new MouseEventArgs());
 
@@ -205,7 +205,7 @@ public class ReceiverStatusChipTests : IrisTestContext
         _receiver.Status.Returns(OtlpReceiverStatus.Listening);
         _receiver.Endpoint.Returns("http://127.0.0.1:4318");
 
-        var cut = RenderComponent<ReceiverStatusChip>();
+        var cut = Render<ReceiverStatusChip>();
 
         cut.FindAll("button.receiver-counts").Should().ContainSingle(
             "an empty feed is exactly what tells you the traces are not arriving");
@@ -217,7 +217,7 @@ public class ReceiverStatusChipTests : IrisTestContext
         _receiver.Status.Returns(OtlpReceiverStatus.Failed);
         _receiver.LastError.Returns("address in use");
 
-        var cut = RenderComponent<ReceiverStatusChip>();
+        var cut = Render<ReceiverStatusChip>();
 
         cut.Markup.Should().Contain("Failed").And.Contain("address in use");
     }
@@ -226,7 +226,7 @@ public class ReceiverStatusChipTests : IrisTestContext
     public async Task Toggle_Updates_Setting()
     {
         _receiver.Status.Returns(OtlpReceiverStatus.Stopped);
-        var cut = RenderComponent<ReceiverStatusChip>();
+        var cut = Render<ReceiverStatusChip>();
 
         await cut.Find("input[type=checkbox]").ChangeAsync(new ChangeEventArgs { Value = true });
 

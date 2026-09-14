@@ -8,7 +8,7 @@ namespace Iris.Components.Test
     /// <summary>
     /// Iris BUnit test context to make common component initialization easier for test setup
     /// </summary>
-    public class IrisTestContext : TestContext
+    public class IrisTestContext : BunitContext
     {
         public IrisTestContext()
         {
@@ -25,7 +25,7 @@ namespace Iris.Components.Test
         protected IRenderedComponent<MudPopoverProvider> AddPopoverProvider()
         {
             JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true);
-            return RenderComponent<MudPopoverProvider>();
+            return Render<MudPopoverProvider>();
         }
     }
 }

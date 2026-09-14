@@ -13,11 +13,11 @@ public class JsonTreeViewTests : IrisTestContext
         // The tree parsed only in OnInitialized. Blazor reuses a component instance when
         // the same position in the render tree gets new parameters, so the message list in
         // MessageReaderDialog showed the first batch's bodies after every later read.
-        var cut = RenderComponent<JsonTreeView>(p => p.Add(x => x.Json, """{"orderId":"first"}"""));
+        var cut = Render<JsonTreeView>(p => p.Add(x => x.Json, """{"orderId":"first"}"""));
 
         cut.Markup.Should().Contain("first");
 
-        cut.SetParametersAndRender(p => p.Add(x => x.Json, """{"orderId":"second"}"""));
+        cut.Render(p => p.Add(x => x.Json, """{"orderId":"second"}"""));
 
         cut.Markup.Should().Contain("second").And.NotContain("first");
     }

@@ -13,7 +13,7 @@ public class SagaInstancePanelTests : IrisTestContext
 
     public SagaInstancePanelTests()
     {
-        RenderComponent<MudPopoverProvider>();
+        Render<MudPopoverProvider>();
     }
 
     private static SagaTransition Transition(string from, string to, int second, bool withSpan = true)
@@ -29,15 +29,15 @@ public class SagaInstancePanelTests : IrisTestContext
         => new(SagaId, "Sample.OrderStateMachine", transitions[^1].EndState,
             transitions[0].Timestamp, transitions[^1].Timestamp, transitions);
 
-    private IRenderedComponent<SagaInstancePanel> Render(SagaInstance instance)
-        => RenderComponent<SagaInstancePanel>(p => p
+    private IRenderedComponent<SagaInstancePanel> RenderPanel(SagaInstance instance)
+        => Render<SagaInstancePanel>(p => p
             .Add(x => x.Instances, [instance])
             .Add(x => x.Selected, instance));
 
     [Fact(DisplayName = "Timeline rows start collapsed so the timeline stays scannable")]
     public void Rows_Start_Collapsed()
     {
-        var cut = Render(Instance(Transition("Initial", "Submitted", 1), Transition("Submitted", "Accepted", 2)));
+        var cut = RenderPanel(Instance(Transition("Initial", "Submitted", 1), Transition("Submitted", "Accepted", 2)));
 
         cut.FindAll("button.span-toggle").Should().HaveCount(2);
         cut.FindAll(".span-detail").Should().BeEmpty();
@@ -46,7 +46,7 @@ public class SagaInstancePanelTests : IrisTestContext
     [Fact(DisplayName = "Expanding a row shows the span that transition was read from")]
     public async Task Expanding_Shows_The_Span()
     {
-        var cut = Render(Instance(Transition("Initial", "Submitted", 1)));
+        var cut = RenderPanel(Instance(Transition("Initial", "Submitted", 1)));
 
         await cut.Find("button.span-toggle").ClickAsync(new MouseEventArgs());
 
@@ -57,7 +57,7 @@ public class SagaInstancePanelTests : IrisTestContext
     [Fact(DisplayName = "Expanding a second row closes the first, so the panel never fills with detail")]
     public async Task Only_One_Row_Is_Open()
     {
-        var cut = Render(Instance(Transition("Initial", "Submitted", 1), Transition("Submitted", "Accepted", 2)));
+        var cut = RenderPanel(Instance(Transition("Initial", "Submitted", 1), Transition("Submitted", "Accepted", 2)));
 
         await cut.FindAll("button.span-toggle")[0].ClickAsync(new MouseEventArgs());
         await cut.FindAll("button.span-toggle")[1].ClickAsync(new MouseEventArgs());
@@ -68,7 +68,7 @@ public class SagaInstancePanelTests : IrisTestContext
     [Fact(DisplayName = "Clicking an open row closes it again")]
     public async Task Toggling_Closes()
     {
-        var cut = Render(Instance(Transition("Initial", "Submitted", 1)));
+        var cut = RenderPanel(Instance(Transition("Initial", "Submitted", 1)));
 
         await cut.Find("button.span-toggle").ClickAsync(new MouseEventArgs());
         await cut.Find("button.span-toggle").ClickAsync(new MouseEventArgs());
@@ -79,7 +79,7 @@ public class SagaInstancePanelTests : IrisTestContext
     [Fact(DisplayName = "A transition whose span was dropped says so rather than offering nothing")]
     public async Task Explains_A_Dropped_Span()
     {
-        var cut = Render(Instance(Transition("Initial", "Submitted", 1, withSpan: false)));
+        var cut = RenderPanel(Instance(Transition("Initial", "Submitted", 1, withSpan: false)));
 
         await cut.Find("button.span-toggle").ClickAsync(new MouseEventArgs());
 
@@ -92,10 +92,10 @@ public class SagaInstancePanelTests : IrisTestContext
     {
         var first = Instance(Transition("Initial", "Submitted", 1));
         var second = Instance(Transition("Initial", "Cancelled", 5));
-        var cut = Render(first);
+        var cut = RenderPanel(first);
         await cut.Find("button.span-toggle").ClickAsync(new MouseEventArgs());
 
-        await cut.InvokeAsync(() => cut.SetParametersAndRender(p => p
+        await cut.InvokeAsync(() => cut.Render(p => p
             .Add(x => x.Instances, [second])
             .Add(x => x.Selected, second)));
 

@@ -34,7 +34,7 @@ public class SagaGraphViewTests : IrisTestContext
     [Fact(DisplayName = "Edge labels paint after the nodes so a node's fill can never hide one")]
     public void Labels_Paint_Above_Nodes()
     {
-        var cut = RenderComponent<SagaGraphView>(p => p.Add(x => x.Graph, OrderGraph()));
+        var cut = Render<SagaGraphView>(p => p.Add(x => x.Graph, OrderGraph()));
 
         var painted = cut.Find("svg.saga-graph").QuerySelectorAll("g.node, text.edge-label").ToList();
         var lastNode = painted.FindLastIndex(e => e.ClassList.Contains("node"));
@@ -47,7 +47,7 @@ public class SagaGraphViewTests : IrisTestContext
     [Fact(DisplayName = "Renders one node per state and one edge per transition")]
     public void Renders_Nodes_And_Edges()
     {
-        var cut = RenderComponent<SagaGraphView>(p => p.Add(x => x.Graph, OrderGraph()));
+        var cut = Render<SagaGraphView>(p => p.Add(x => x.Graph, OrderGraph()));
 
         cut.FindAll("g.node").Should().HaveCount(4);
         cut.FindAll("path.edge").Should().HaveCount(3);
@@ -59,7 +59,7 @@ public class SagaGraphViewTests : IrisTestContext
     [Fact(DisplayName = "Selected instance highlights visited edges, visited states and the current state")]
     public void Highlights_Selected_Instance()
     {
-        var cut = RenderComponent<SagaGraphView>(p => p
+        var cut = Render<SagaGraphView>(p => p
             .Add(x => x.Graph, OrderGraph())
             .Add(x => x.SelectedInstance, InstanceAtAccepted()));
 
@@ -74,11 +74,11 @@ public class SagaGraphViewTests : IrisTestContext
     [Fact(DisplayName = "Clearing the selection removes highlights")]
     public void Clearing_Selection_Removes_Highlights()
     {
-        var cut = RenderComponent<SagaGraphView>(p => p
+        var cut = Render<SagaGraphView>(p => p
             .Add(x => x.Graph, OrderGraph())
             .Add(x => x.SelectedInstance, InstanceAtAccepted()));
 
-        cut.SetParametersAndRender(p => p.Add(x => x.SelectedInstance, null));
+        cut.Render(p => p.Add(x => x.SelectedInstance, null));
 
         cut.FindAll("g.node-current").Should().BeEmpty();
         cut.FindAll("path.edge-visited").Should().BeEmpty();
@@ -112,7 +112,7 @@ public class SagaGraphViewTests : IrisTestContext
             new SagaTransition("OrderStateMachine", id, "Submitted", "Accepted", "AcceptOrder", "t", "s2", t0.AddSeconds(1)),
         ]);
 
-        var cut = RenderComponent<SagaGraphView>(p => p
+        var cut = Render<SagaGraphView>(p => p
             .Add(x => x.Graph, graph)
             .Add(x => x.SelectedInstance, instance));
 

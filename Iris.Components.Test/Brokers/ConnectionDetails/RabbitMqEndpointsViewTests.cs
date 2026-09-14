@@ -4,20 +4,13 @@ using Iris.Components.Brokers;
 using Iris.Components.Brokers.ConnectionDetails;
 using Iris.Contracts.Brokers.Models;
 using Microsoft.Extensions.DependencyInjection;
-using MudBlazor.Services;
 using NSubstitute;
 using Xunit;
 
 namespace Iris.Components.Test.Brokers.ConnectionDetails;
 
-public class RabbitMqEndpointsViewTests : TestContext
+public class RabbitMqEndpointsViewTests : IrisTestContext
 {
-    public RabbitMqEndpointsViewTests()
-    {
-        Services.AddMudServices();
-        JSInterop.Mode = JSRuntimeMode.Loose;
-    }
-
     [Fact(DisplayName = "RabbitMqEndpointsView shows Queues and Exchanges sections with the right items")]
     public void Shows_queues_and_exchanges()
     {
@@ -31,7 +24,7 @@ public class RabbitMqEndpointsViewTests : TestContext
         });
         Services.AddSingleton(brokerService);
 
-        var cut = RenderComponent<RabbitMqEndpointsView>(p => p.Add(x => x.Provider, provider));
+        var cut = Render<RabbitMqEndpointsView>(p => p.Add(x => x.Provider, provider));
 
         cut.Markup.Should().Contain("Queues");
         cut.Markup.Should().Contain("Exchanges");

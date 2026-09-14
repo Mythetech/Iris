@@ -6,20 +6,18 @@ using Iris.Components.Messaging;
 using Iris.Contracts.Brokers.Models;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
-using MudBlazor.Services;
 using NSubstitute;
 using Xunit;
 
 namespace Iris.Components.Test.Brokers.ConnectionDetails;
 
-public class ConnectionDetailsPageTests : TestContext
+public class ConnectionDetailsPageTests : IrisTestContext
 {
     private readonly IBrokerService _brokerService = Substitute.For<IBrokerService>();
     private readonly IMessageService _messageService = Substitute.For<IMessageService>();
 
     public ConnectionDetailsPageTests()
     {
-        Services.AddMudServices();
         Services.AddSingleton(_brokerService);
         Services.AddSingleton(_messageService);
         Services.AddSingleton(new EndpointsViewRegistry
@@ -29,8 +27,7 @@ public class ConnectionDetailsPageTests : TestContext
         });
         Services.AddSingleton(new ReadViewRegistry());
         Services.AddSingleton(new SendViewRegistry());
-        JSInterop.Mode = JSRuntimeMode.Loose;
-        RenderComponent<MudPopoverProvider>();
+        AddPopoverProvider();
     }
 
     private static ReaderCapabilitiesDto Caps(
@@ -50,7 +47,7 @@ public class ConnectionDetailsPageTests : TestContext
         var id = Guid.NewGuid();
         _brokerService.GetConnectionByIdAsync(id).Returns((Provider?)null);
 
-        var cut = RenderComponent<ConnectionDetailsPage>(p => p.Add(x => x.Id, id));
+        var cut = Render<ConnectionDetailsPage>(p => p.Add(x => x.Id, id));
 
         cut.Markup.Should().Contain("Connection not found");
     }
@@ -64,7 +61,7 @@ public class ConnectionDetailsPageTests : TestContext
         _brokerService.GetReaderCapabilitiesAsync(provider.Address).Returns(Caps());
         _brokerService.GetEndpointsAsync().Returns(new List<EndpointDetails>());
 
-        var cut = RenderComponent<ConnectionDetailsPage>(p => p.Add(x => x.Id, id));
+        var cut = Render<ConnectionDetailsPage>(p => p.Add(x => x.Id, id));
 
         cut.Markup.Should().Contain("RabbitMq");
         cut.Markup.Should().Contain("amqp://x");
@@ -79,7 +76,7 @@ public class ConnectionDetailsPageTests : TestContext
         _brokerService.GetReaderCapabilitiesAsync(provider.Address).Returns(Caps(peek: false, receive: false));
         _brokerService.GetEndpointsAsync().Returns(new List<EndpointDetails>());
 
-        var cut = RenderComponent<ConnectionDetailsPage>(p => p.Add(x => x.Id, id));
+        var cut = Render<ConnectionDetailsPage>(p => p.Add(x => x.Id, id));
 
         // Tab labels render in markup. Look for ">Read<" rather than just "Read" to avoid
         // false matches from "Reader", "Read message", etc.
@@ -101,7 +98,7 @@ public class ConnectionDetailsPageTests : TestContext
             new() { Name = "orders", Address = "amqp://x", Provider = "RabbitMq", Type = "Queue" },
         });
 
-        var cut = RenderComponent<ConnectionDetailsPage>(p => p.Add(x => x.Id, id));
+        var cut = Render<ConnectionDetailsPage>(p => p.Add(x => x.Id, id));
 
         cut.FindComponent<RabbitMqEndpointsView>().Should().NotBeNull();
     }
@@ -117,7 +114,7 @@ public class ConnectionDetailsPageTests : TestContext
         _brokerService.GetReaderCapabilitiesAsync(provider.Address).Returns(Caps());
         _brokerService.GetEndpointsAsync().Returns(new List<EndpointDetails>());
 
-        var cut = RenderComponent<ConnectionDetailsPage>(p => p.Add(x => x.Id, id));
+        var cut = Render<ConnectionDetailsPage>(p => p.Add(x => x.Id, id));
 
         cut.FindComponent<AzureServiceBusEndpointsView>().Should().NotBeNull();
     }
@@ -131,7 +128,7 @@ public class ConnectionDetailsPageTests : TestContext
         _brokerService.GetReaderCapabilitiesAsync(provider.Address).Returns(Caps());
         _brokerService.GetEndpointsAsync().Returns(new List<EndpointDetails>());
 
-        var cut = RenderComponent<ConnectionDetailsPage>(p => p.Add(x => x.Id, id));
+        var cut = Render<ConnectionDetailsPage>(p => p.Add(x => x.Id, id));
 
         cut.FindComponent<DefaultEndpointsView>().Should().NotBeNull();
     }

@@ -34,7 +34,7 @@ public class SagasPageTests : IrisTestContext
         Services.AddSingleton(new SagaTelemetrySettings());
         _receiver.Status.Returns(OtlpReceiverStatus.Stopped);
 
-        RenderComponent<MudPopoverProvider>();
+        Render<MudPopoverProvider>();
     }
 
     private async Task<LoadedAssembly> LoadOrderGraphAsync(bool includeBroken = false)
@@ -75,7 +75,7 @@ public class SagasPageTests : IrisTestContext
     [Fact(DisplayName = "Empty state explains that a loaded assembly with a state machine is needed")]
     public void Empty_State()
     {
-        var cut = RenderComponent<SagasPage>();
+        var cut = Render<SagasPage>();
 
         cut.Markup.Should().Contain("No state machines found");
         cut.Markup.Should().Contain("MassTransitStateMachine");
@@ -86,7 +86,7 @@ public class SagasPageTests : IrisTestContext
     {
         await LoadOrderGraphAsync(includeBroken: true);
 
-        var cut = RenderComponent<SagasPage>();
+        var cut = Render<SagasPage>();
 
         cut.Markup.Should().Contain("OrderStateMachine");
         cut.Markup.Should().Contain("BrokenMachine");
@@ -98,7 +98,7 @@ public class SagasPageTests : IrisTestContext
     public async Task Select_Definition_Renders_Graph()
     {
         await LoadOrderGraphAsync();
-        var cut = RenderComponent<SagasPage>();
+        var cut = Render<SagasPage>();
 
         await cut.Find(".saga-definition-item").ClickAsync(new MouseEventArgs());
 
@@ -116,7 +116,7 @@ public class SagasPageTests : IrisTestContext
     {
         var orderAssembly = await LoadOrderGraphAsync();
         await LoadShipGraphAsync();
-        var cut = RenderComponent<SagasPage>();
+        var cut = Render<SagasPage>();
         await DefinitionRow(cut, "OrderStateMachine").ClickAsync(new MouseEventArgs());
         await Services.GetRequiredService<SagaInstanceState>().IngestAsync([StubSpanMapper.Span(Guid.NewGuid(), "Initial", "Submitted")]);
         cut.WaitForAssertion(() => cut.FindAll(".saga-instance-item").Should().HaveCount(1));
@@ -139,7 +139,7 @@ public class SagasPageTests : IrisTestContext
     public async Task Enter_Selects_Definition()
     {
         await LoadOrderGraphAsync();
-        var cut = RenderComponent<SagasPage>();
+        var cut = Render<SagasPage>();
 
         await DefinitionRow(cut, "OrderStateMachine").KeyDownAsync(new KeyboardEventArgs { Key = "Enter" });
 
@@ -151,7 +151,7 @@ public class SagasPageTests : IrisTestContext
     public async Task Timeline_Lists_Newest_First()
     {
         await LoadOrderGraphAsync();
-        var cut = RenderComponent<SagasPage>();
+        var cut = Render<SagasPage>();
         await DefinitionRow(cut, "OrderStateMachine").ClickAsync(new MouseEventArgs());
         var sagaId = Guid.NewGuid();
         var start = DateTimeOffset.UtcNow;
@@ -174,7 +174,7 @@ public class SagasPageTests : IrisTestContext
     public async Task Instances_Appear_And_Highlight()
     {
         await LoadOrderGraphAsync();
-        var cut = RenderComponent<SagasPage>();
+        var cut = Render<SagasPage>();
         await cut.Find(".saga-definition-item").ClickAsync(new MouseEventArgs());
         var sagaId = Guid.NewGuid();
 

@@ -21,14 +21,14 @@ namespace Iris.Components.Test.Messaging
             Services.AddScoped<MessageState>();
 
             JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true);
-            RenderComponent<MudPopoverProvider>();
+            Render<MudPopoverProvider>();
         }
 
         [Fact(DisplayName = "Can add to the list with the button")]
         public async Task CanAddToListWithButton()
         {
             // Arrange
-            var cut = RenderComponent<MessageHeaders>();
+            var cut = Render<MessageHeaders>();
 
             // Act
             var btn = cut.FindComponent<MudButton>();
@@ -45,7 +45,7 @@ namespace Iris.Components.Test.Messaging
         public void ListMapsBackToDictionary()
         {
             // Arrange
-            var cut = RenderComponent<MessageHeaders>();
+            var cut = Render<MessageHeaders>();
 
             cut.Instance.MessageState.HeaderMap.Add(new DictionaryViewModel { Key = "Key1", Value = "Value1" });
             cut.Instance.MessageState.HeaderMap.Add(new DictionaryViewModel { Key = "Key2", Value = "Value2" });
@@ -63,7 +63,7 @@ namespace Iris.Components.Test.Messaging
         public async Task QuickFilter_Filters_Dictionary()
         {
             // Arrange
-            var cut = RenderComponent<MessageHeaders>();
+            var cut = Render<MessageHeaders>();
 
             cut.Instance.MessageState.HeaderMap.Add(new DictionaryViewModel { Key = "Key1", Value = "Value1" });
             cut.Instance.MessageState.HeaderMap.Add(new DictionaryViewModel { Key = "Key2", Value = "Value2" });
@@ -84,7 +84,7 @@ namespace Iris.Components.Test.Messaging
         public void Can_Not_DeleteImmutableRecords()
         {
             // Arrange
-            var cut = RenderComponent<MessageHeaders>();
+            var cut = Render<MessageHeaders>();
 
             cut.Instance.MessageState.HeaderMap.Add(new DictionaryViewModel { Key = "Key1", Value = "Value1", Immutable = true });
             

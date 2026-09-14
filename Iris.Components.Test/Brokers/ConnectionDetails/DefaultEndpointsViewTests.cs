@@ -4,20 +4,13 @@ using Iris.Components.Brokers;
 using Iris.Components.Brokers.ConnectionDetails;
 using Iris.Contracts.Brokers.Models;
 using Microsoft.Extensions.DependencyInjection;
-using MudBlazor.Services;
 using NSubstitute;
 using Xunit;
 
 namespace Iris.Components.Test.Brokers.ConnectionDetails;
 
-public class DefaultEndpointsViewTests : TestContext
+public class DefaultEndpointsViewTests : IrisTestContext
 {
-    public DefaultEndpointsViewTests()
-    {
-        Services.AddMudServices();
-        JSInterop.Mode = JSRuntimeMode.Loose;
-    }
-
     [Fact(DisplayName = "DefaultEndpointsView lists endpoints for the supplied provider")]
     public void DefaultEndpointsView_renders_provider_endpoints()
     {
@@ -31,7 +24,7 @@ public class DefaultEndpointsViewTests : TestContext
         });
         Services.AddSingleton(brokerService);
 
-        var cut = RenderComponent<DefaultEndpointsView>(p => p.Add(x => x.Provider, provider));
+        var cut = Render<DefaultEndpointsView>(p => p.Add(x => x.Provider, provider));
 
         cut.Markup.Should().Contain("orders");
         cut.Markup.Should().Contain("events");
@@ -46,7 +39,7 @@ public class DefaultEndpointsViewTests : TestContext
         brokerService.GetEndpointsAsync().Returns(new List<EndpointDetails>());
         Services.AddSingleton(brokerService);
 
-        var cut = RenderComponent<DefaultEndpointsView>(p => p.Add(x => x.Provider, provider));
+        var cut = Render<DefaultEndpointsView>(p => p.Add(x => x.Provider, provider));
 
         cut.Markup.Should().Contain("No endpoints");
     }
