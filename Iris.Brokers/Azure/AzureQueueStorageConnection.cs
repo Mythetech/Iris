@@ -29,7 +29,7 @@ namespace Iris.Brokers.Azure
 
         public Guid Id { get; } = Guid.NewGuid();
 
-        public string Name => "AzureQueueStorage";
+        public string Name => ConnectorTransports.AzureQueueStorage;
 
         public string Address => _queueClient.Uri.GetLeftPart(UriPartial.Authority);
 
