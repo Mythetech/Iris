@@ -1,4 +1,4 @@
-
+﻿
 using System.Text.Json;
 using Iris.Contracts.Audit.Models;
 
@@ -20,16 +20,31 @@ public class HistoryState
     
     private void NotifyHistoryStateChanged() => OnHistoryStateChange?.Invoke();
 
+    /// <summary>
+    /// How much history the cached window holds. The History grid pages client-side over
+    /// whatever is cached here, so this is the ceiling on what it can show, not a page
+    /// size in the storage sense.
+    /// </summary>
+    public const int DefaultPageSize = 1000;
+
     public void Refresh()
     {
         History = null;
+        _auditRecords = null;
+
+        // Notified, because dropping the cache is a visible change. Clearing history from
+        // the settings panel left both the grid and the Recent tab showing records that
+        // were already deleted until something else happened to trigger a render.
+        NotifyHistoryStateChanged();
     }
-    
-    public async Task<List<AuditRecord>> GetUserHistoryAsync(int page = 1, int pageSize = 100)
+
+    public async Task<List<AuditRecord>> GetUserHistoryAsync(int page = 1, int pageSize = DefaultPageSize)
     {
         if (History == null || History?.Count < 1)
         {
-            _auditRecords = await _service.GetUserHistoryAsync(page, 1000);
+            // pageSize used to be discarded here in favour of a hardcoded 1000, so a
+            // caller asking for ten rows loaded a thousand.
+            _auditRecords = await _service.GetUserHistoryAsync(page, pageSize);
             History = _auditRecords
                 .Select(x => new HistoryRecord()
                 {
@@ -46,7 +61,7 @@ public class HistoryState
         
         NotifyHistoryStateChanged();
         
-        return _auditRecords;
+        return _auditRecords ?? [];
     }
 
     public async Task AddHistoryRecord(HistoryRecord record)

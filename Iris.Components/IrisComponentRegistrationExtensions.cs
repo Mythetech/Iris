@@ -1,4 +1,4 @@
-using Iris.Components.Admin;
+﻿using Iris.Components.Admin;
 using Iris.Components.Breadcrumbs;
 using Iris.Components.Brokers;
 using Iris.Components.CommandPalette;
@@ -12,6 +12,7 @@ using Iris.Components.Shared.Time;
 using Iris.Components.Templates;
 using Iris.Sagas;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using MudBlazor.Services;
 using Toolbelt.Blazor.Extensions.DependencyInjection;
 
@@ -29,9 +30,19 @@ namespace Iris.Components
             where TAdminService : class, IAdminService
             where TMessageLayoutService : class, IMessagingLayoutService
         {
-            // Register broker, messaging, templates, packages, history, and admin services
-            services.AddScoped<IBrokerService, TBrokerService>();
-            services.AddScoped<IMessageService, TMessageService>();
+            // Register broker, messaging, templates, packages, history, and admin services.
+            //
+            // The two interfaces are mapped onto the concrete registrations rather than
+            // registered separately, the same way ITemplatesState is below. Both are
+            // LocalConnectionManager on the desktop host, and two AddScoped calls built it
+            // twice per scope, each copy taking its own ConnectionRepository and, through
+            // it, its own database handle. Open connections survived that because they
+            // live in the singleton IBrokerConnectionManager, which is why it went
+            // unnoticed. A host that supplies two different types still gets two.
+            services.TryAddScoped<TBrokerService>();
+            services.TryAddScoped<TMessageService>();
+            services.AddScoped<IBrokerService>(provider => provider.GetRequiredService<TBrokerService>());
+            services.AddScoped<IMessageService>(provider => provider.GetRequiredService<TMessageService>());
             services.AddScoped<MessageState>();
             services.AddScoped<IMessageSendOrchestrator, MessageSendOrchestrator>();
             services.AddScoped<IMessagingLayoutService, TMessageLayoutService>();

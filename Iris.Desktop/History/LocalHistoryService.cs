@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Iris.Components.History;
 using Iris.Contracts.Audit;
 using Iris.Contracts.Audit.Models;
@@ -20,11 +20,14 @@ public class LocalHistoryService : IHistoryService
         _logger = logger;
     }
 
-    private List<HistoryRecord> History { get; } = new();
-    
+    /// <summary>
+    /// Both arguments used to be accepted and ignored: the repository returned everything
+    /// and this sorted it in memory. HistoryPanel asks for ten rows and was handed the
+    /// entire history on every render.
+    /// </summary>
     public Task<List<AuditRecord>> GetUserHistoryAsync(int page = 1, int pageSize = 100)
     {
-        var history = _db.GetHistoryRecords();
+        var history = _db.GetHistoryRecords(page, pageSize);
 
         return Task.FromResult(history.Select(x =>
         {
@@ -45,7 +48,8 @@ public class LocalHistoryService : IHistoryService
                 return null;
             }
         
-        }).Where(r => r != null).OrderByDescending(x => x?.When).ToList());
+        // Already ordered newest first by the query, so there is nothing to re-sort here.
+        }).Where(r => r != null).ToList());
     }
     
 }
