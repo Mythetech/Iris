@@ -21,7 +21,7 @@ namespace Iris.Integration.Tests.Brokers
             _rabbitMqContainer = fixture.Container;
         }
 
-        [Fact(DisplayName = "Can connect to docker RabbitMq")]
+        [Fact(DisplayName = "Can connect to docker RabbitMq", Timeout = 120000)]
         public async Task Can_Connect_ToRabbit()
         {
 
@@ -37,7 +37,7 @@ namespace Iris.Integration.Tests.Brokers
 
 
             // Act
-            var connection = await provider.ConnectAsync(connectionData, false);
+            var connection = await provider.ConnectAsync(connectionData, TestContext.Current.CancellationToken, discoverEndpoints: false);
 
             // Assert
             connection.Should().NotBeNull();
@@ -45,7 +45,7 @@ namespace Iris.Integration.Tests.Brokers
         }
 
 
-        [Fact(DisplayName = "Can send message to docker RabbitMq")]
+        [Fact(DisplayName = "Can send message to docker RabbitMq", Timeout = 120000)]
         public async Task Can_SendMessageTo_DockerRabbitMQ()
         {
             // Arrange
@@ -61,7 +61,7 @@ namespace Iris.Integration.Tests.Brokers
             var connector = new RabbitMqConnector();
 
             // Act
-            var connection = await connector!.ConnectAsync(data, false);
+            var connection = await connector!.ConnectAsync(data, TestContext.Current.CancellationToken, discoverEndpoints: false);
 
             Func<Task> act = async () =>
             {
@@ -80,7 +80,7 @@ namespace Iris.Integration.Tests.Brokers
             await act.Should().NotThrowAsync();
         }
 
-        private async Task<IConnection> CreateAndSeedAsync(string queueName, int count)
+        private async Task<IConnection> CreateAndSeedAsync(string queueName, int count, CancellationToken cancellationToken)
         {
             var port = _rabbitMqContainer.GetMappedPublicPort(15672);
             var data = new ConnectionData
@@ -90,7 +90,7 @@ namespace Iris.Integration.Tests.Brokers
                 Password = "guest"
             };
             var connector = new RabbitMqConnector();
-            var connection = await connector.ConnectAsync(data, false);
+            var connection = await connector.ConnectAsync(data, TestContext.Current.CancellationToken, discoverEndpoints: false);
 
             // Ensure queue exists by declaring via management client used under the hood.
             // Easiest path: publish a message — the RabbitMQ management publish-to-default-exchange
@@ -119,10 +119,10 @@ namespace Iris.Integration.Tests.Brokers
             return connection!;
         }
 
-        [Fact(DisplayName = "RabbitMqConnection implements all four read interfaces")]
+        [Fact(DisplayName = "RabbitMqConnection implements all four read interfaces", Timeout = 120000)]
         public async Task RabbitMqConnection_implements_reader_interfaces()
         {
-            var connection = await CreateAndSeedAsync("iris-iface-probe", 0);
+            var connection = await CreateAndSeedAsync("iris-iface-probe", 0, TestContext.Current.CancellationToken);
 
             connection.Should().BeAssignableTo<IMessagePeeker>();
             connection.Should().BeAssignableTo<IMessageReceiver>();
@@ -138,7 +138,8 @@ namespace Iris.Integration.Tests.Brokers
         /// messages to the source and waits for the TTL to flush them into the DLQ.
         /// </summary>
         private async Task<IConnection> CreateDlxTopologyAndSeedAsync(
-            string sourceQueue, string dlxExchange, string dlqQueue, int count, int ttlMs = 100)
+            string sourceQueue, string dlxExchange, string dlqQueue, int count,
+            CancellationToken cancellationToken, int ttlMs = 100)
         {
             var port = _rabbitMqContainer.GetMappedPublicPort(15672);
             var data = new ConnectionData
@@ -148,7 +149,7 @@ namespace Iris.Integration.Tests.Brokers
                 Password = "guest"
             };
             var connector = new RabbitMqConnector();
-            var connection = await connector.ConnectAsync(data, false);
+            var connection = await connector.ConnectAsync(data, TestContext.Current.CancellationToken, discoverEndpoints: false);
 
             var mgmt = new EasyNetQ.Management.Client.ManagementClient(
                 new Uri($"http://localhost:{port}"), "guest", "guest");
@@ -194,18 +195,25 @@ namespace Iris.Integration.Tests.Brokers
                 }, MessageRequest.Create(messageType: sourceQueue, json: $"{{\"dlq-index\":{i}}}", generateIrisHeaders: false));
             }
 
-            // Give TTL enough time to fire and messages to land on DLQ.
-            await Task.Delay(ttlMs * 5);
+            // Polled on the DLQ's own depth rather than sleeping for a multiple of the TTL.
+            // GetQueueAsync is non-destructive, so this neither consumes what the caller is
+            // about to read nor guesses how long the broker takes to expire and reroute.
+            await Eventually.Async(
+                ct => mgmt.GetQueueAsync(vhost, dlqQueue, cancellationToken: ct),
+                queue => queue.Messages >= count,
+                $"all {count} messages have expired and landed on {dlqQueue}",
+                TestContext.Current.CancellationToken);
+
             return connection!;
         }
 
-        [Fact(DisplayName = "PeekDeadLetter returns dead-lettered messages non-destructively")]
+        [Fact(DisplayName = "PeekDeadLetter returns dead-lettered messages non-destructively", Timeout = 120000)]
         public async Task PeekDeadLetter_returns_dead_lettered_messages()
         {
             const string source = "iris-dlq-peek-source";
             const string dlx = "iris-dlq-peek-dlx";
             const string dlq = "iris-dlq-peek-target";
-            var connection = await CreateDlxTopologyAndSeedAsync(source, dlx, dlq, count: 3);
+            var connection = await CreateDlxTopologyAndSeedAsync(source, dlx, dlq, count: 3, TestContext.Current.CancellationToken);
             var peeker = (IDeadLetterPeeker)connection;
 
             var endpoint = new EndpointDetails
@@ -216,8 +224,8 @@ namespace Iris.Integration.Tests.Brokers
                 Name = source
             };
 
-            var first = await peeker.PeekDeadLetterAsync(endpoint, 10);
-            var second = await peeker.PeekDeadLetterAsync(endpoint, 10);
+            var first = await peeker.PeekDeadLetterAsync(endpoint, 10, TestContext.Current.CancellationToken);
+            var second = await peeker.PeekDeadLetterAsync(endpoint, 10, TestContext.Current.CancellationToken);
 
             first.Should().HaveCount(3);
             second.Should().HaveCount(3);
@@ -225,13 +233,13 @@ namespace Iris.Integration.Tests.Brokers
             first.Should().OnlyContain(m => m.Source == ReadSource.DeadLetter);
         }
 
-        [Fact(DisplayName = "ReceiveDeadLetter removes dead-lettered messages from the DLQ")]
+        [Fact(DisplayName = "ReceiveDeadLetter removes dead-lettered messages from the DLQ", Timeout = 120000)]
         public async Task ReceiveDeadLetter_removes_dead_lettered_messages()
         {
             const string source = "iris-dlq-receive-source";
             const string dlx = "iris-dlq-receive-dlx";
             const string dlq = "iris-dlq-receive-target";
-            var connection = await CreateDlxTopologyAndSeedAsync(source, dlx, dlq, count: 3);
+            var connection = await CreateDlxTopologyAndSeedAsync(source, dlx, dlq, count: 3, TestContext.Current.CancellationToken);
             var peeker = (IDeadLetterPeeker)connection;
             var receiver = (IDeadLetterReceiver)connection;
 
@@ -243,22 +251,22 @@ namespace Iris.Integration.Tests.Brokers
                 Name = source
             };
 
-            var received = await receiver.ReceiveDeadLetterAsync(endpoint, 10);
-            var afterReceive = await peeker.PeekDeadLetterAsync(endpoint, 10);
+            var received = await receiver.ReceiveDeadLetterAsync(endpoint, 10, TestContext.Current.CancellationToken);
+            var afterReceive = await peeker.PeekDeadLetterAsync(endpoint, 10, TestContext.Current.CancellationToken);
 
             received.Should().HaveCount(3);
             received.Should().OnlyContain(m => m.Source == ReadSource.DeadLetter);
             afterReceive.Should().BeEmpty();
         }
 
-        [Fact(DisplayName = "ReceiveDeadLetter returns empty when no DLX configured")]
+        [Fact(DisplayName = "ReceiveDeadLetter returns empty when no DLX configured", Timeout = 120000)]
         public async Task ReceiveDeadLetter_returns_empty_when_no_DLX_configured()
         {
             // CreateAndSeedAsync declares a plain queue with null Arguments — no
             // x-dead-letter-exchange. The honest answer to "what's in the DLQ?" is
             // "nothing, because there isn't one." No exception.
             const string queue = "iris-dlq-none";
-            var connection = await CreateAndSeedAsync(queue, 2);
+            var connection = await CreateAndSeedAsync(queue, 2, TestContext.Current.CancellationToken);
             var receiver = (IDeadLetterReceiver)connection;
 
             var endpoint = new EndpointDetails
@@ -269,16 +277,16 @@ namespace Iris.Integration.Tests.Brokers
                 Name = queue
             };
 
-            var received = await receiver.ReceiveDeadLetterAsync(endpoint, 10);
+            var received = await receiver.ReceiveDeadLetterAsync(endpoint, 10, TestContext.Current.CancellationToken);
 
             received.Should().BeEmpty();
         }
 
-        [Fact(DisplayName = "Peek returns sent messages without removing them")]
+        [Fact(DisplayName = "Peek returns sent messages without removing them", Timeout = 120000)]
         public async Task Peek_is_non_destructive()
         {
             const string queue = "iris-peek-test";
-            var connection = await CreateAndSeedAsync(queue, 3);
+            var connection = await CreateAndSeedAsync(queue, 3, TestContext.Current.CancellationToken);
             var peeker = (IMessagePeeker)connection;
 
             var endpoint = new EndpointDetails
@@ -289,19 +297,19 @@ namespace Iris.Integration.Tests.Brokers
                 Name = queue
             };
 
-            var first = await peeker.PeekAsync(endpoint, 3);
-            var second = await peeker.PeekAsync(endpoint, 3);
+            var first = await peeker.PeekAsync(endpoint, 3, TestContext.Current.CancellationToken);
+            var second = await peeker.PeekAsync(endpoint, 3, TestContext.Current.CancellationToken);
 
             first.Should().HaveCount(3);
             second.Should().HaveCount(3);
             first.Select(m => m.Body).Should().BeEquivalentTo(second.Select(m => m.Body));
         }
 
-        [Fact(DisplayName = "Receive removes messages from the queue")]
+        [Fact(DisplayName = "Receive removes messages from the queue", Timeout = 120000)]
         public async Task Receive_is_destructive()
         {
             const string queue = "iris-receive-test";
-            var connection = await CreateAndSeedAsync(queue, 3);
+            var connection = await CreateAndSeedAsync(queue, 3, TestContext.Current.CancellationToken);
             var peeker = (IMessagePeeker)connection;
             var receiver = (IMessageReceiver)connection;
 
@@ -313,18 +321,18 @@ namespace Iris.Integration.Tests.Brokers
                 Name = queue
             };
 
-            var received = await receiver.ReceiveAsync(endpoint, 3);
-            var afterPeek = await peeker.PeekAsync(endpoint, 3);
+            var received = await receiver.ReceiveAsync(endpoint, 3, TestContext.Current.CancellationToken);
+            var afterPeek = await peeker.PeekAsync(endpoint, 3, TestContext.Current.CancellationToken);
 
             received.Should().HaveCount(3);
             afterPeek.Should().BeEmpty();
         }
 
-        [Fact(DisplayName = "Peeked messages carry provider and native metadata")]
+        [Fact(DisplayName = "Peeked messages carry provider and native metadata", Timeout = 120000)]
         public async Task Peek_maps_metadata()
         {
             const string queue = "iris-metadata-test";
-            var connection = await CreateAndSeedAsync(queue, 1);
+            var connection = await CreateAndSeedAsync(queue, 1, TestContext.Current.CancellationToken);
             var peeker = (IMessagePeeker)connection;
 
             var endpoint = new EndpointDetails
@@ -335,7 +343,7 @@ namespace Iris.Integration.Tests.Brokers
                 Name = queue
             };
 
-            var msgs = await peeker.PeekAsync(endpoint, 1);
+            var msgs = await peeker.PeekAsync(endpoint, 1, TestContext.Current.CancellationToken);
 
             msgs.Should().HaveCount(1);
             var msg = msgs[0];

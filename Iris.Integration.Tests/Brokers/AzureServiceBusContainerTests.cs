@@ -58,7 +58,8 @@ namespace Iris.Integration.Tests.Brokers
             Name = queueName,
         };
 
-        [Fact(DisplayName = "Can connect to Azure Service Bus emulator", Timeout = 300000)]
+        // No Timeout: this test awaits nothing, so there is nothing for one to interrupt.
+        [Fact(DisplayName = "Can connect to Azure Service Bus emulator")]
         public async Task Can_Construct_Connection_From_Emulator()
         {
             var connection = CreateConnection();
@@ -77,15 +78,15 @@ namespace Iris.Integration.Tests.Brokers
 
             // Drain in case previous tests left residue.
             var drainer = (IMessageReceiver)connection;
-            await drainer.ReceiveAsync(Endpoint(MainQueue, ConnectionString), 50);
+            await drainer.ReceiveAsync(Endpoint(MainQueue, ConnectionString), 50, TestContext.Current.CancellationToken);
 
-            await sender.SendMessageAsync(new ServiceBusMessage("{\"i\":1}"));
-            await sender.SendMessageAsync(new ServiceBusMessage("{\"i\":2}"));
-            await sender.SendMessageAsync(new ServiceBusMessage("{\"i\":3}"));
+            await sender.SendMessageAsync(new ServiceBusMessage("{\"i\":1}"), TestContext.Current.CancellationToken);
+            await sender.SendMessageAsync(new ServiceBusMessage("{\"i\":2}"), TestContext.Current.CancellationToken);
+            await sender.SendMessageAsync(new ServiceBusMessage("{\"i\":3}"), TestContext.Current.CancellationToken);
 
             var peeker = (IMessagePeeker)connection;
-            var first = await peeker.PeekAsync(Endpoint(MainQueue, ConnectionString), 10);
-            var second = await peeker.PeekAsync(Endpoint(MainQueue, ConnectionString), 10);
+            var first = await peeker.PeekAsync(Endpoint(MainQueue, ConnectionString), 10, TestContext.Current.CancellationToken);
+            var second = await peeker.PeekAsync(Endpoint(MainQueue, ConnectionString), 10, TestContext.Current.CancellationToken);
 
             first.Should().HaveCountGreaterThanOrEqualTo(3);
             second.Select(m => m.Body).Should().Contain(first.Select(m => m.Body));
@@ -100,20 +101,30 @@ namespace Iris.Integration.Tests.Brokers
 
             // Drain first.
             var receiver = (IMessageReceiver)connection;
-            await receiver.ReceiveAsync(Endpoint(MainQueue, ConnectionString), 50);
+            await receiver.ReceiveAsync(Endpoint(MainQueue, ConnectionString), 50, TestContext.Current.CancellationToken);
 
-            await sender.SendMessageAsync(new ServiceBusMessage("{\"i\":1}"));
-            await sender.SendMessageAsync(new ServiceBusMessage("{\"i\":2}"));
-            await sender.SendMessageAsync(new ServiceBusMessage("{\"i\":3}"));
+            await sender.SendMessageAsync(new ServiceBusMessage("{\"i\":1}"), TestContext.Current.CancellationToken);
+            await sender.SendMessageAsync(new ServiceBusMessage("{\"i\":2}"), TestContext.Current.CancellationToken);
+            await sender.SendMessageAsync(new ServiceBusMessage("{\"i\":3}"), TestContext.Current.CancellationToken);
 
-            // Give the broker a moment to make them visible.
-            await Task.Delay(500);
+            // Accumulated across attempts rather than slept on, because receive is
+            // destructive: a partial batch is gone whether or not the test counted it, so a
+            // single read after a fixed pause is the one shape that can lose messages.
+            var received = new List<ReceivedMessage>();
+            await Eventually.Async(
+                async _ =>
+                {
+                    received.AddRange(await receiver.ReceiveAsync(Endpoint(MainQueue, ConnectionString), 10));
+                    return received;
+                },
+                batch => batch.Count >= 3,
+                "all three sent messages have been received",
+                TestContext.Current.CancellationToken);
 
-            var received = await receiver.ReceiveAsync(Endpoint(MainQueue, ConnectionString), 10);
             received.Count.Should().BeGreaterThanOrEqualTo(3);
 
             var peeker = (IMessagePeeker)connection;
-            var afterPeek = await peeker.PeekAsync(Endpoint(MainQueue, ConnectionString), 10);
+            var afterPeek = await peeker.PeekAsync(Endpoint(MainQueue, ConnectionString), 10, TestContext.Current.CancellationToken);
             afterPeek.Should().BeEmpty();
         }
 
@@ -124,26 +135,43 @@ namespace Iris.Integration.Tests.Brokers
             var dlqReceiver = (IDeadLetterReceiver)connection;
 
             // Drain the DLQ first in case prior tests left residue.
-            await dlqReceiver.ReceiveDeadLetterAsync(Endpoint(DlqQueue, ConnectionString), 50);
+            await dlqReceiver.ReceiveDeadLetterAsync(Endpoint(DlqQueue, ConnectionString), 50, TestContext.Current.CancellationToken);
 
             await using var seeder = new ServiceBusClient(ConnectionString);
             await using var sender = seeder.CreateSender(DlqQueue);
-            await sender.SendMessageAsync(new ServiceBusMessage("{\"will\":\"dead-letter\"}"));
+            await sender.SendMessageAsync(new ServiceBusMessage("{\"will\":\"dead-letter\"}"), TestContext.Current.CancellationToken);
 
             await using var peekLock = seeder.CreateReceiver(DlqQueue, new ServiceBusReceiverOptions
             {
                 ReceiveMode = ServiceBusReceiveMode.PeekLock,
             });
 
-            var attempt = await peekLock.ReceiveMessageAsync(TimeSpan.FromSeconds(10));
+            var attempt = await peekLock.ReceiveMessageAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
             attempt.Should().NotBeNull();
-            await peekLock.AbandonMessageAsync(attempt!);
+            await peekLock.AbandonMessageAsync(attempt!, cancellationToken: TestContext.Current.CancellationToken);
 
-            await Task.Delay(TimeSpan.FromSeconds(2));
-            var secondAttempt = await peekLock.ReceiveMessageAsync(TimeSpan.FromSeconds(3));
+            // Abandoning is what increments the delivery count, so each attempt that still
+            // finds the message has to abandon it again to make progress. The poll ends when
+            // the main queue stops offering it, which is the observable fact the assertion
+            // below depends on. The old fixed two second wait was sized to the emulator's
+            // lock duration and to nothing else.
+            var secondAttempt = await Eventually.Async(
+                async _ =>
+                {
+                    var message = await peekLock.ReceiveMessageAsync(TimeSpan.FromSeconds(3));
+
+                    if (message is not null)
+                        await peekLock.AbandonMessageAsync(message);
+
+                    return message;
+                },
+                message => message is null,
+                "the abandoned message stops being delivered from the main queue",
+                TestContext.Current.CancellationToken);
+
             secondAttempt.Should().BeNull("the message should have moved to the DLQ sub-queue");
 
-            var dlqMessages = await dlqReceiver.ReceiveDeadLetterAsync(Endpoint(DlqQueue, ConnectionString), 10);
+            var dlqMessages = await dlqReceiver.ReceiveDeadLetterAsync(Endpoint(DlqQueue, ConnectionString), 10, TestContext.Current.CancellationToken);
 
             dlqMessages.Should().NotBeEmpty("the abandoned message should have been dead-lettered");
             dlqMessages.Should().AllSatisfy(m =>
@@ -160,7 +188,7 @@ namespace Iris.Integration.Tests.Brokers
 
             // Drain first so the SDK peek below is guaranteed to see only this test's message.
             var drainer = (IMessageReceiver)connection;
-            await drainer.ReceiveAsync(Endpoint(MainQueue, ConnectionString), 50);
+            await drainer.ReceiveAsync(Endpoint(MainQueue, ConnectionString), 50, TestContext.Current.CancellationToken);
 
             // Brighter rather than EasyNetQ: Service Bus has no AMQP type property (Subject is
             // the subject field, which no consumer reading type ever sees), so EasyNetQ's
@@ -183,7 +211,7 @@ namespace Iris.Integration.Tests.Brokers
             // the SDK to verify what actually landed on the wire.
             await using var client = new ServiceBusClient(ConnectionString);
             await using var receiver = client.CreateReceiver(MainQueue);
-            var peeked = await receiver.PeekMessageAsync();
+            var peeked = await receiver.PeekMessageAsync(cancellationToken: TestContext.Current.CancellationToken);
 
             peeked.Should().NotBeNull();
             peeked!.ContentType.Should().Be("application/json");
