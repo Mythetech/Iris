@@ -17,9 +17,11 @@
         Nav.LocationChanged += OnLocationChanged;
     }
 
+    // StateHasChanged directly, the way NavLink2 does it: LocationChanged is raised on the
+    // renderer's dispatcher, so there is nothing to dispatch to and nothing to await.
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        InvokeAsync(StateHasChanged);
+        StateHasChanged();
     }
 
     private void HandleClick()

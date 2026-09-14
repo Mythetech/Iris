@@ -1,4 +1,4 @@
-﻿@implements IDisposable
+﻿@implements IAsyncDisposable
 
 <MudContainer Class="d-flex" Style="justify-content:center;align-items:center;flex-direction:column;text-align:center;min-height:75vh;" MaxWidth="MaxWidth.Small">
     <MudStack Class="mud-width-full" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="1" Row="true">
@@ -23,7 +23,8 @@
 
 @code {
     private int counter = 0;
-    private CancellationTokenSource cts = default!;
+    private readonly CancellationTokenSource cts = new();
+    private Task? _animation;
 
     private List<MudBlazor.Animation> Animations = [
     MudBlazor.Animation.False,
@@ -34,50 +35,53 @@
     MudBlazor.Animation.False
     ];
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        cts = new CancellationTokenSource();
-        LoopAnimations(cts.Token);
-        await Task.CompletedTask;
+        _animation = LoopAnimationsAsync(cts.Token);
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        await cts.CancelAsync();
+
+        if (_animation is not null)
+            await _animation;
+
+        cts.Dispose();
     }
 
-    protected virtual void Dispose(bool disposing)
+    /// <summary>
+    /// Started from OnInitialized and kept, rather than left to run unobserved. It was
+    /// <c>async void</c>, so its exceptions went nowhere and disposal only asked it to stop:
+    /// the delay carried no token, so the loop went on calling StateHasChanged on a component
+    /// that had already gone away.
+    /// </summary>
+    private async Task LoopAnimationsAsync(CancellationToken token)
     {
-        if (disposing)
+        try
         {
-            cts.Cancel();
-        }
-    }
-
-    private async void LoopAnimations(CancellationToken token)
-    {
-        while (true)
-        {
-            if (token.IsCancellationRequested)
+            while (!token.IsCancellationRequested)
             {
-                break;
-            }
-            if (counter >= 6)
-            {
-                counter = 0;
+                if (counter >= 6)
+                {
+                    counter = 0;
+                    StateHasChanged();
+                }
                 StateHasChanged();
+                Animations[counter] = MudBlazor.Animation.Pulse;
+                StateHasChanged();
+                await Task.Delay(2850, token);
+                Animations[counter >= 5 ? 0 : counter + 1] = MudBlazor.Animation.Pulse;
+                StateHasChanged();
+                await Task.Delay(75, token);
+                Animations[counter] = MudBlazor.Animation.False;
+                StateHasChanged();
+                counter += 1;
             }
-            StateHasChanged();
-            Animations[counter] = MudBlazor.Animation.Pulse;
-            StateHasChanged();
-            await Task.Delay(2850);
-            Animations[counter >= 5 ? 0 : counter + 1] = MudBlazor.Animation.Pulse;
-            StateHasChanged();
-            await Task.Delay(75);
-            Animations[counter] = MudBlazor.Animation.False;
-            StateHasChanged();
-            counter += 1;
+        }
+        catch (OperationCanceledException)
+        {
+            // Disposal asked it to stop. Nothing to report.
         }
     }
 }

@@ -215,17 +215,51 @@ public class TemplatesStateTests
         state.Templates!.Should().Contain(copy);
     }
 
-    [Fact(DisplayName = "Loading a template into the editor is announced with the template itself")]
-    public void Load_template_announces_the_template()
+    [Fact(DisplayName = "Loading a template into the editor is announced, and the handler is awaited")]
+    public async Task Load_template_announces_the_template()
     {
         var (state, _) = Create();
         var template = Template("First");
         Template? announced = null;
-        state.TemplateLoaded += t => announced = t;
+        var finished = false;
 
-        state.LoadTemplate(template);
+        // The real subscriber resolves expressions and writes into Monaco, both async. The
+        // yield here stands in for that: a handler on an Action would have been async void,
+        // and the assertion below would run while it was still going.
+        state.TemplateLoaded += async t =>
+        {
+            announced = t;
+            await Task.Yield();
+            finished = true;
+        };
+
+        await state.LoadTemplateAsync(template);
 
         announced.Should().BeSameAs(template);
+        finished.Should().BeTrue("the handler's Task has to be awaited, not abandoned");
+    }
+
+    [Fact(DisplayName = "Every subscriber's work is awaited, not just the last one registered")]
+    public async Task Every_load_handler_is_awaited()
+    {
+        // Invoking a multicast Func returns only the last subscriber's Task. Awaiting the
+        // delegate itself would start the others and abandon them.
+        var (state, _) = Create();
+        var finished = new List<int>();
+
+        for (var i = 0; i < 3; i++)
+        {
+            var index = i;
+            state.TemplateLoaded += async _ =>
+            {
+                await Task.Yield();
+                finished.Add(index);
+            };
+        }
+
+        await state.LoadTemplateAsync(Template("First"));
+
+        finished.Should().BeEquivalentTo(new[] { 0, 1, 2 });
     }
 
     [Fact(DisplayName = "Every subscriber is notified, and unsubscribing stops delivery")]
@@ -267,6 +301,6 @@ public class TemplatesStateTests
         // concrete class to reach TemplateLoaded, which silently no-ops if the registration
         // ever hands out anything else.
         typeof(ITemplatesState).GetProperty(nameof(ITemplatesState.Templates)).Should().NotBeNull();
-        typeof(ITemplatesState).GetMethod(nameof(ITemplatesState.LoadTemplate)).Should().NotBeNull();
+        typeof(ITemplatesState).GetMethod(nameof(ITemplatesState.LoadTemplateAsync)).Should().NotBeNull();
     }
 }

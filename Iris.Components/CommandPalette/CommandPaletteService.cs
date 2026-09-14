@@ -42,7 +42,7 @@ public sealed class CommandPaletteService
         {
             try
             {
-                var commands = await provider.GetCommandsAsync(ct).ConfigureAwait(false);
+                var commands = await provider.GetCommandsAsync(ct);
                 all.AddRange(commands);
             }
             catch (Exception ex)

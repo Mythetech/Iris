@@ -40,7 +40,7 @@
                         </IrisCard>
                     </TooltipContent>
                 </MudTooltip>
-                <IconButton Name="@IrisIcons.LoadToEditor" Title="Load to editor" Class="icon-btn-sm" ButtonClicked="@(() => TemplatesState.LoadTemplate(template))" />
+                <IconButton Name="@IrisIcons.LoadToEditor" Title="Load to editor" Class="icon-btn-sm" ButtonClicked="@(async () => await TemplatesState.LoadTemplateAsync(template))" />
                 <MudSpacer />
                 <DeleteButton T="Template" Item="@template" Title="Delete Template" ItemDeleted="DeleteTemplate" />
             </MudStack>
