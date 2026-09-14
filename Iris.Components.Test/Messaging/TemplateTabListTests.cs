@@ -28,12 +28,28 @@ public class TemplateTabListTests : IrisTestContext
         Services.AddSingleton(new LayoutState(Substitute.For<IMessagingLayoutService>()));
     }
 
-    private IRenderedComponent<TemplateTabList> RenderTabList()
+    private TemplateTabList RenderTabList()
     {
         AddPopoverProvider();
 
         var instance = new TemplateTabList();
-        return Render<TemplateTabList>(p => p.Add(x => x.Instance, instance));
+        Render<TemplateTabList>(p => p.Add(x => x.Instance, instance));
+        return instance;
+    }
+
+    /// <summary>
+    /// TemplateStateChanged is an event, so a test cannot read its invocation list. Asking
+    /// whether a surviving handler still runs is the thing that actually matters anyway:
+    /// what the handler does is write the count back to its tab instance.
+    /// </summary>
+    private async Task<int> BadgeAfterAChange(TemplateTabList instance)
+    {
+        instance.BadgeCount = -1;
+
+        await _state.CreateTemplateAsync(
+            new Template { TemplateId = Guid.NewGuid(), Name = "Another", Json = "{}" });
+
+        return instance.BadgeCount ?? 0;
     }
 
     [Fact(DisplayName = "Disposing the tab leaves no handler behind on TemplatesState")]
@@ -44,26 +60,28 @@ public class TemplateTabListTests : IrisTestContext
         // nothing. TemplatesState is scoped, which in Blazor Hybrid means application
         // lifetime, so a handler survived every activation of the Templates tab and each
         // survivor re-ran the tab's whole initialization on the next change.
-        RenderTabList();
+        var instance = RenderTabList();
 
         // DisposeComponentsAsync, not cut.Dispose: only unmounting makes Blazor call
         // IDisposable.Dispose on the component.
         await DisposeComponentsAsync();
 
-        _state.TemplateStateChanged.Should().BeNull(
+        (await BadgeAfterAChange(instance)).Should().Be(-1,
             "the handler added in OnInitialized must be the one removed in Dispose");
     }
 
     [Fact(DisplayName = "Repeated activations do not accumulate handlers")]
     public async Task Does_not_accumulate_handlers_across_activations()
     {
+        var instances = new List<TemplateTabList>();
         for (var i = 0; i < 3; i++)
         {
-            RenderTabList();
+            instances.Add(RenderTabList());
             await DisposeComponentsAsync();
         }
 
-        _state.TemplateStateChanged.Should().BeNull();
+        foreach (var instance in instances)
+            (await BadgeAfterAChange(instance)).Should().Be(-1);
     }
 
     [Fact(DisplayName = "A template change refreshes the tab badge")]
