@@ -1,0 +1,216 @@
+{
+  "mapped": {
+    "Name": "OrderPlaced",
+    "FullyQualifiedName": "Iris.Api.Test.Assemblies.OrderPlaced",
+    "Properties": [
+      {
+        "Name": "OrderId",
+        "TypeName": "Guid",
+        "Kind": "Primitive",
+        "Children": null,
+        "EnumValues": null,
+        "GenericArguments": null,
+        "IsNullable": false
+      },
+      {
+        "Name": "CustomerName",
+        "TypeName": "String",
+        "Kind": "Primitive",
+        "Children": null,
+        "EnumValues": null,
+        "GenericArguments": null,
+        "IsNullable": false
+      },
+      {
+        "Name": "PlacedAt",
+        "TypeName": "DateTime",
+        "Kind": "Primitive",
+        "Children": null,
+        "EnumValues": null,
+        "GenericArguments": null,
+        "IsNullable": false
+      },
+      {
+        "Name": "IsPriority",
+        "TypeName": "Boolean",
+        "Kind": "Primitive",
+        "Children": null,
+        "EnumValues": null,
+        "GenericArguments": null,
+        "IsNullable": false
+      },
+      {
+        "Name": "DiscountPercent",
+        "TypeName": "Int32",
+        "Kind": "Primitive",
+        "Children": null,
+        "EnumValues": null,
+        "GenericArguments": null,
+        "IsNullable": true
+      },
+      {
+        "Name": "Channel",
+        "TypeName": "FulfilmentChannel",
+        "Kind": "Enum",
+        "Children": null,
+        "EnumValues": [
+          "Warehouse",
+          "DropShip",
+          "Digital"
+        ],
+        "GenericArguments": null,
+        "IsNullable": false
+      },
+      {
+        "Name": "ShipTo",
+        "TypeName": "ShippingAddress",
+        "Kind": "Complex",
+        "Children": [
+          {
+            "Name": "Street",
+            "TypeName": "String",
+            "Kind": "Primitive",
+            "Children": null,
+            "EnumValues": null,
+            "GenericArguments": null,
+            "IsNullable": false
+          },
+          {
+            "Name": "City",
+            "TypeName": "String",
+            "Kind": "Primitive",
+            "Children": null,
+            "EnumValues": null,
+            "GenericArguments": null,
+            "IsNullable": false
+          },
+          {
+            "Name": "PostCode",
+            "TypeName": "String",
+            "Kind": "Primitive",
+            "Children": null,
+            "EnumValues": null,
+            "GenericArguments": null,
+            "IsNullable": false
+          },
+          {
+            "Name": "CountryCode",
+            "TypeName": "String",
+            "Kind": "Primitive",
+            "Children": null,
+            "EnumValues": null,
+            "GenericArguments": null,
+            "IsNullable": false
+          }
+        ],
+        "EnumValues": null,
+        "GenericArguments": null,
+        "IsNullable": false
+      },
+      {
+        "Name": "Lines",
+        "TypeName": "List<LineItem>",
+        "Kind": "Collection",
+        "Children": [
+          {
+            "Name": "[element]",
+            "TypeName": "LineItem",
+            "Kind": "Complex",
+            "Children": [
+              {
+                "Name": "Sku",
+                "TypeName": "String",
+                "Kind": "Primitive",
+                "Children": null,
+                "EnumValues": null,
+                "GenericArguments": null,
+                "IsNullable": false
+              },
+              {
+                "Name": "Quantity",
+                "TypeName": "Int32",
+                "Kind": "Primitive",
+                "Children": null,
+                "EnumValues": null,
+                "GenericArguments": null,
+                "IsNullable": false
+              },
+              {
+                "Name": "UnitPrice",
+                "TypeName": "Decimal",
+                "Kind": "Primitive",
+                "Children": null,
+                "EnumValues": null,
+                "GenericArguments": null,
+                "IsNullable": false
+              }
+            ],
+            "EnumValues": null,
+            "GenericArguments": null,
+            "IsNullable": false
+          }
+        ],
+        "EnumValues": null,
+        "GenericArguments": [
+          "LineItem"
+        ],
+        "IsNullable": false
+      },
+      {
+        "Name": "Metadata",
+        "TypeName": "Dictionary<String, String>",
+        "Kind": "Dictionary",
+        "Children": [
+          {
+            "Name": "[key]",
+            "TypeName": "String",
+            "Kind": "Primitive",
+            "Children": null,
+            "EnumValues": null,
+            "GenericArguments": null,
+            "IsNullable": false
+          },
+          {
+            "Name": "[value]",
+            "TypeName": "String",
+            "Kind": "Primitive",
+            "Children": null,
+            "EnumValues": null,
+            "GenericArguments": null,
+            "IsNullable": false
+          }
+        ],
+        "EnumValues": null,
+        "GenericArguments": [
+          "String",
+          "String"
+        ],
+        "IsNullable": false
+      }
+    ]
+  },
+  "sample": {
+    "OrderId": "<guid>",
+    "CustomerName": "sample-string",
+    "PlacedAt": "<timestamp>",
+    "IsPriority": true,
+    "DiscountPercent": 1,
+    "Channel": "Warehouse",
+    "ShipTo": {
+      "Street": "sample-string",
+      "City": "sample-string",
+      "PostCode": "sample-string",
+      "CountryCode": "sample-string"
+    },
+    "Lines": [
+      {
+        "Sku": "sample-string",
+        "Quantity": 1,
+        "UnitPrice": 1
+      }
+    ],
+    "Metadata": {
+      "key": "sample-string"
+    }
+  }
+}

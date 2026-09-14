@@ -22,6 +22,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Update="Fixtures\*.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\Iris.Desktop\Iris.Desktop.csproj" />
     </ItemGroup>
 

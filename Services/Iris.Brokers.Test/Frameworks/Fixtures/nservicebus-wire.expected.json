@@ -1,0 +1,28 @@
+{
+  "headers": {},
+  "transportProperties": {},
+  "body": {
+    "IdForCorrelation": null,
+    "Id": "<guid>",
+    "MessageIntent": 1,
+    "ReplyToAddress": "MyApp.Messages.Greeting",
+    "TimeToBeReceived": "00:00:00",
+    "Headers": {
+      "NServiceBus.MessageId": "<guid>",
+      "NServiceBus.MessageIntent": "Send",
+      "NServiceBus.ConversationId": "<guid>",
+      "NServiceBus.CorrelationId": "<guid>",
+      "NServiceBus.ReplyToAddress": "MyApp.Messages.Greeting",
+      "NServiceBus.OriginatingMachine": "<machine>",
+      "NServiceBus.OriginatingEndpoint": "MyApp.Messages.Greeting",
+      "$.diagnostics.originating.hostid": "<guid>",
+      "NServiceBus.ContentType": "application/json",
+      "NServiceBus.EnclosedMessageTypes": "MyApp.Messages.Greeting, MyApp.Contracts",
+      "NServiceBus.Version": "<nsb-version>",
+      "NServiceBus.TimeSent": "<timestamp>"
+    },
+    "Body": "eyJpZCI6MSwibmFtZSI6ImhlbGxvIn0=",
+    "CorrelationId": "<guid>",
+    "Recoverable": false
+  }
+}
