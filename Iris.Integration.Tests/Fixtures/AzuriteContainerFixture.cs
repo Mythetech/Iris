@@ -11,13 +11,13 @@ public class AzuriteContainerFixture : IAsyncLifetime
 
     public string ConnectionString { get; private set; } = null!;
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await Container.StartAsync();
         ConnectionString = Container.GetConnectionString();
     }
 
-    public Task DisposeAsync() => Container.DisposeAsync().AsTask();
+    public ValueTask DisposeAsync() => Container.DisposeAsync();
 }
 
 [CollectionDefinition("Azurite")]

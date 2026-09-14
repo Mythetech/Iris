@@ -48,7 +48,7 @@ public class DefaultReadViewTests : IrisTestContext
         new(peek, receive, peekDlq, receiveDlq, MaxPeekBatchSize: 10, MaxReceiveBatchSize: 10);
 
     private IRenderedComponent<DefaultReadView> Render(ReaderCapabilitiesDto caps) =>
-        RenderComponent<DefaultReadView>(p => p
+        Render<DefaultReadView>(p => p
             .Add(x => x.Provider, AnyProvider())
             .Add(x => x.Capabilities, caps));
 

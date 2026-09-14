@@ -2,24 +2,17 @@
 using FluentAssertions;
 using Mythetech.Framework.Components.Input;
 using Microsoft.AspNetCore.Components;
-using MudBlazor.Services;
 
 namespace Iris.Components.Test
 {
-    public class ProtectedTextFieldTests : TestContext
+    public class ProtectedTextFieldTests : IrisTestContext
     {
-        public ProtectedTextFieldTests()
-        {
-            Services.AddMudServices();
-            JSInterop.Mode = JSRuntimeMode.Loose;
-        }
-
         [Fact(DisplayName = "ProtectedTextField can render and bind value")]
         public void ProtectedTextField_CanRenderAndBindValue()
         {
             // Arrange
             var value = "Test Value";
-            var cut = RenderComponent<ProtectedTextField>(parameters => parameters
+            var cut = Render<ProtectedTextField>(parameters => parameters
                 .Add(p => p.Value, value)
                 .Add(p => p.ValueChanged, EventCallback.Factory.Create(this, (string val) => value = val)));
 
@@ -35,7 +28,7 @@ namespace Iris.Components.Test
         public void Password_IsHidden_ByDefault()
         {
             // Arrange
-            var cut = RenderComponent<ProtectedTextField>(parameters => parameters
+            var cut = Render<ProtectedTextField>(parameters => parameters
                 .Add(p => p.Value, "Test Password"));
 
             // Assert
@@ -47,7 +40,7 @@ namespace Iris.Components.Test
         public void Clicking_VisibilityToggle_ShowsPassword()
         {
             // Arrange
-            var cut = RenderComponent<ProtectedTextField>(parameters => parameters
+            var cut = Render<ProtectedTextField>(parameters => parameters
                 .Add(p => p.Value, "Test Password"));
 
             // Act
@@ -62,7 +55,7 @@ namespace Iris.Components.Test
         public void Clicking_VisibilityToggle_Twice_HidesPassword()
         {
             // Arrange
-            var cut = RenderComponent<ProtectedTextField>(parameters => parameters
+            var cut = Render<ProtectedTextField>(parameters => parameters
                 .Add(p => p.Value, "Test Password"));
 
             // Act

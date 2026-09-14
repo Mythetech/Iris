@@ -38,7 +38,7 @@ namespace Iris.Integration.Tests
             _rabbitMqContainer = fixture.Container;
         }
 
-        public async Task InitializeAsync()
+        public async ValueTask InitializeAsync()
         {
             var amqpPort = _rabbitMqContainer.GetMappedPublicPort(5672);
             var amqpUri = $"amqp://guest:guest@localhost:{amqpPort}";
@@ -52,11 +52,11 @@ namespace Iris.Integration.Tests
                 .Start();
         }
 
-        public Task DisposeAsync()
+        public ValueTask DisposeAsync()
         {
             _bus?.Dispose();
             _activator?.Dispose();
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         }
 
         [Fact(DisplayName = "Iris Rebus-wrapped message round-trips to a real Rebus consumer on RabbitMQ")]

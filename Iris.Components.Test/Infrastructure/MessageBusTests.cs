@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Iris.Components.Test.Infrastructure;
 
-public class MessageBusTests : TestContext
+public class MessageBusTests : IrisTestContext
 {
  public MessageBusTests()
  {
@@ -19,7 +19,7 @@ public class MessageBusTests : TestContext
      // Arrange
      var message = new SetText("test");
      var messageBus = Services.GetService<IMessageBus>();
-     var cut = RenderComponent<SimpleConsumer>();
+     var cut = Render<SimpleConsumer>();
 
      // Act
      await messageBus.PublishAsync(message);
@@ -55,7 +55,7 @@ public class MessageBusTests : TestContext
 
      var message = new SetText("test2");
      var messageBus = Services.GetService<IMessageBus>();
-     var cut = RenderComponent<SimpleConsumer>();
+     var cut = Render<SimpleConsumer>();
 
      // Act
      await messageBus.PublishAsync(message);
@@ -69,7 +69,7 @@ public class MessageBusTests : TestContext
  [Fact(DisplayName = "No consumers should not throw exceptions")]
  public async Task No_Consumers_Should_Not_Throw()
  {
-     var ctx = new TestContext();
+     var ctx = new BunitContext();
      ctx.Services.AddMessageBus();
      ctx.Services.AddSingleton<TestDataStateService>();
      ctx.Services.UseMessageBus();

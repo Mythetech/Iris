@@ -29,9 +29,9 @@ public class LocalEmuContainerFixture : IAsyncLifetime
 
     public string ServiceUrl => $"http://localhost:{Container.GetMappedPublicPort(EdgePort)}";
 
-    public Task InitializeAsync() => Container.StartAsync();
+    public ValueTask InitializeAsync() => new(Container.StartAsync());
 
-    public Task DisposeAsync() => Container.DisposeAsync().AsTask();
+    public ValueTask DisposeAsync() => Container.DisposeAsync();
 }
 
 [CollectionDefinition("LocalEmu")]

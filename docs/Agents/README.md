@@ -151,7 +151,7 @@ public class MyTests : IrisTestContext
     {
         // IrisTestContext sets JSInterop.Mode = JSRuntimeMode.Loose
         // and registers MudBlazor services
-        var cut = RenderComponent<MyComponent>();
+        var cut = Render<MyComponent>();
         cut.MarkupMatches("<expected-markup />");
     }
 }
@@ -164,8 +164,9 @@ public class BrokerTests : IAsyncLifetime
 {
     private readonly RabbitMqContainer _container = new RabbitMqBuilder().Build();
 
-    public Task InitializeAsync() => _container.StartAsync();
-    public Task DisposeAsync() => _container.DisposeAsync().AsTask();
+    // ValueTask, not Task: xUnit v3 moved IAsyncLifetime into the core library.
+    public ValueTask InitializeAsync() => new(_container.StartAsync());
+    public ValueTask DisposeAsync() => _container.DisposeAsync();
 }
 ```
 

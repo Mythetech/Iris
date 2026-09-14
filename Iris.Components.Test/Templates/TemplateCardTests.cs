@@ -20,7 +20,7 @@ public class TemplateCardTests : IrisTestContext
         // MudMenu (the overflow action) and MudTooltip both render through the popover
         // service, which needs a provider in the tree. Captured so tests can inspect
         // where portaled content actually ends up, not just that this exists.
-        _popoverProvider = RenderComponent<MudPopoverProvider>();
+        _popoverProvider = Render<MudPopoverProvider>();
     }
 
     // Template.TemplateId is a Guid, not a string.
@@ -36,7 +36,7 @@ public class TemplateCardTests : IrisTestContext
     [Fact]
     public void Renders_ExactlySevenInlineActions_AndTheOverflowTrigger()
     {
-        var cut = RenderComponent<TemplateCard>(p => p
+        var cut = Render<TemplateCard>(p => p
             .Add(x => x.Template, BuildTemplate()));
 
         // Pins the design's core premise: every action is always in the DOM, at every
@@ -49,7 +49,7 @@ public class TemplateCardTests : IrisTestContext
     [Fact]
     public void Renders_PreviewAndEdit_AsTheFirstTwoInlineActions()
     {
-        var cut = RenderComponent<TemplateCard>(p => p
+        var cut = Render<TemplateCard>(p => p
             .Add(x => x.Template, BuildTemplate()));
 
         var inline = cut.FindAll(".template-card-inline button");
@@ -62,7 +62,7 @@ public class TemplateCardTests : IrisTestContext
     [Fact]
     public void InlineActions_CarryTheTierMarkerClasses_TheCssDependsOn()
     {
-        var cut = RenderComponent<TemplateCard>(p => p
+        var cut = Render<TemplateCard>(p => p
             .Add(x => x.Template, BuildTemplate()));
 
         var inline = cut.FindAll(".template-card-inline button");
@@ -84,12 +84,12 @@ public class TemplateCardTests : IrisTestContext
     {
         var template = BuildTemplate();
 
-        var cut = RenderComponent<TemplateCard>(p => p
+        var cut = Render<TemplateCard>(p => p
             .Add(x => x.Template, template));
 
         await cut.Find("button[aria-label=\"Edit\"]").ClickAsync(new());
 
-        var nav = Services.GetRequiredService<FakeNavigationManager>();
+        var nav = Services.GetRequiredService<BunitNavigationManager>();
         nav.Uri.Should().Be($"{nav.BaseUri}Templates/{template.TemplateId}");
     }
 
@@ -98,7 +98,7 @@ public class TemplateCardTests : IrisTestContext
     {
         Template? previewed = null;
 
-        var cut = RenderComponent<TemplateCard>(p => p
+        var cut = Render<TemplateCard>(p => p
             .Add(x => x.Template, BuildTemplate())
             .Add(x => x.OnPreview, t => previewed = t));
 
@@ -110,7 +110,7 @@ public class TemplateCardTests : IrisTestContext
     [Fact]
     public async Task OverflowMenu_PortalsItsFiveItems_OutsideTheCardsOwnMarkup()
     {
-        var cut = RenderComponent<TemplateCard>(p => p
+        var cut = Render<TemplateCard>(p => p
             .Add(x => x.Template, BuildTemplate()));
 
         await cut.Find(".template-card-overflow button").ClickAsync(new());

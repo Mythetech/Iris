@@ -23,7 +23,7 @@ public class ReceivedSpansDialogTests : IrisTestContext
         Services.AddSingleton<SagaInstanceState>();
         Services.AddSingleton<ReceivedSpanLog>();
         Services.UseMessageBus(typeof(ReceivedSpanLog).Assembly);
-        RenderComponent<MudPopoverProvider>();
+        Render<MudPopoverProvider>();
     }
 
     private ReceivedSpanLog Log => Services.GetRequiredService<ReceivedSpanLog>();
@@ -39,7 +39,7 @@ public class ReceivedSpansDialogTests : IrisTestContext
     // when it is shown the way the chip shows it.
     private async Task<IRenderedComponent<MudDialogProvider>> ShowDialogAsync()
     {
-        var provider = RenderComponent<MudDialogProvider>();
+        var provider = Render<MudDialogProvider>();
         var dialogs = Services.GetRequiredService<IDialogService>();
         await provider.InvokeAsync(() => dialogs.ShowAsync(typeof(ReceivedSpansDialog), "Received spans"));
         return provider;

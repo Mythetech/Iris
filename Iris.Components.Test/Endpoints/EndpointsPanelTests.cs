@@ -37,7 +37,7 @@ public class EndpointsPanelTests : IrisTestContext
     [Fact]
     public void Renders_EndpointRows_AsClickableItems()
     {
-        var cut = RenderComponent<EndpointsPanel>();
+        var cut = Render<EndpointsPanel>();
 
         cut.FindAll("button.endpoints-panel-row").Should().NotBeEmpty();
     }
@@ -48,7 +48,7 @@ public class EndpointsPanelTests : IrisTestContext
         var dialogService = Substitute.For<IDialogService>();
         Services.AddSingleton(dialogService);
 
-        var cut = RenderComponent<EndpointsPanel>();
+        var cut = Render<EndpointsPanel>();
 
         await cut.FindAll("button.endpoints-panel-row")[0].ClickAsync(new());
 
@@ -59,11 +59,11 @@ public class EndpointsPanelTests : IrisTestContext
     [Fact]
     public async Task MoreLink_NavigatesToTheEndpointsPage()
     {
-        var cut = RenderComponent<EndpointsPanel>();
+        var cut = Render<EndpointsPanel>();
 
         await cut.Find("button.endpoints-panel-more").ClickAsync(new());
 
-        var nav = Services.GetRequiredService<FakeNavigationManager>();
+        var nav = Services.GetRequiredService<BunitNavigationManager>();
         nav.Uri.Should().Be($"{nav.BaseUri}Endpoints");
     }
     [Fact(DisplayName = "The details dialog is given a Read handler that opens the reader")]
@@ -84,7 +84,7 @@ public class EndpointsPanelTests : IrisTestContext
             Arg.Do<DialogParameters>(p => captured = p),
             Arg.Any<DialogOptions>());
 
-        var cut = RenderComponent<EndpointsPanel>();
+        var cut = Render<EndpointsPanel>();
         await cut.FindAll("button.endpoints-panel-row")[0].ClickAsync(new());
 
         captured.Should().NotBeNull();

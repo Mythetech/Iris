@@ -10,7 +10,7 @@ public class IrisPageHeaderTests : IrisTestContext
     [Fact]
     public void Renders_Title()
     {
-        var cut = RenderComponent<IrisPageHeader>(p => p
+        var cut = Render<IrisPageHeader>(p => p
             .Add(x => x.Title, "Endpoints"));
 
         cut.Markup.Should().Contain("Endpoints");
@@ -19,7 +19,7 @@ public class IrisPageHeaderTests : IrisTestContext
     [Fact]
     public void Renders_Icon_WhenSupplied()
     {
-        var cut = RenderComponent<IrisPageHeader>(p => p
+        var cut = Render<IrisPageHeader>(p => p
             .Add(x => x.Title, "Endpoints")
             .Add(x => x.Icon, Iris.Components.Theme.IrisIcons.Endpoints));
 
@@ -29,7 +29,7 @@ public class IrisPageHeaderTests : IrisTestContext
     [Fact]
     public void Omits_Icon_WhenNotSupplied()
     {
-        var cut = RenderComponent<IrisPageHeader>(p => p
+        var cut = Render<IrisPageHeader>(p => p
             .Add(x => x.Title, "Endpoints"));
 
         cut.FindAll(".iris-page-header-icon").Should().BeEmpty();
@@ -38,7 +38,7 @@ public class IrisPageHeaderTests : IrisTestContext
     [Fact]
     public void Renders_StatusAndActions_InTheirOwnSlots()
     {
-        var cut = RenderComponent<IrisPageHeader>(p => p
+        var cut = Render<IrisPageHeader>(p => p
             .Add(x => x.Title, "Endpoints")
             .Add(x => x.Status, "<span>215 endpoints</span>")
             .Add(x => x.Actions, "<button>Refresh</button>"));
@@ -50,7 +50,7 @@ public class IrisPageHeaderTests : IrisTestContext
     [Fact]
     public void Renders_Actions_AfterStatus()
     {
-        var cut = RenderComponent<IrisPageHeader>(p => p
+        var cut = Render<IrisPageHeader>(p => p
             .Add(x => x.Title, "Endpoints")
             .Add(x => x.Status, "<span>status-slot</span>")
             .Add(x => x.Actions, "<span>actions-slot</span>"));

@@ -5,17 +5,14 @@ using Iris.Components.Brokers;
 using Iris.Contracts.Brokers.Models;
 using Iris.Contracts.Brokers.Models.Amazon;
 using MudBlazor;
-using MudBlazor.Services;
 
 namespace Iris.Components.Test.Brokers
 {
-    public class AmazonConnectionDataTests : TestContext
+    public class AmazonConnectionDataTests : IrisTestContext
     {
         public AmazonConnectionDataTests()
         {
-            Services.AddMudServices();
-            JSInterop.Mode = JSRuntimeMode.Loose;
-            RenderComponent<MudPopoverProvider>();
+            AddPopoverProvider();
         }
 
         [Fact(DisplayName = "Can render AmazonConnectionData")]
@@ -25,7 +22,7 @@ namespace Iris.Components.Test.Brokers
             var connectionData = new ConnectionData();
 
             // Act
-            var cut = RenderComponent<AmazonConnectionData>(parameters => parameters
+            var cut = Render<AmazonConnectionData>(parameters => parameters
                 .Add(p => p.Data, connectionData));
 
             // Assert
@@ -40,7 +37,7 @@ namespace Iris.Components.Test.Brokers
         {
             // Arrange
             var connectionData = new ConnectionData();
-            var cut = RenderComponent<AmazonConnectionData>(parameters => parameters
+            var cut = Render<AmazonConnectionData>(parameters => parameters
                 .Add(p => p.Data, connectionData));
 
             // Act
@@ -57,7 +54,7 @@ namespace Iris.Components.Test.Brokers
         {
             // Arrange
             var connectionData = new ConnectionData();
-            var cut = RenderComponent<AmazonConnectionData>(parameters => parameters
+            var cut = Render<AmazonConnectionData>(parameters => parameters
                 .Add(p => p.Data, connectionData));
 
             // Act

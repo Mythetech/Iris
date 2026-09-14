@@ -5,13 +5,12 @@ using Iris.Components.Brokers;
 using Iris.Contracts.Brokers.Models;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
-using MudBlazor.Services;
 using Mythetech.Framework.Infrastructure.Initialization;
 using NSubstitute;
 
 namespace Iris.Components.Test;
 
-public class HomePageTests : TestContext
+public class HomePageTests : IrisTestContext
 {
     private IBrokerService _mockBrokerService;
     private IAsyncInitializationHost _mockInitializationHost;
@@ -25,9 +24,7 @@ public class HomePageTests : TestContext
         _mockInitializationHost.InitializeAsync(Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
         Services.AddSingleton(_mockInitializationHost);
 
-        Services.AddMudServices();
-        JSInterop.Mode = JSRuntimeMode.Loose;
-        RenderComponent<MudPopoverProvider>();
+        AddPopoverProvider();
     }
 
     [Fact(DisplayName = "Can render Home Page")]
@@ -74,7 +71,7 @@ public class HomePageTests : TestContext
         });
 
         // Act
-        var component = RenderComponent<Iris.Components.Home.Home>();
+        var component = Render<Iris.Components.Home.Home>();
 
         // Assert
         component.Should().NotBeNull();
@@ -100,7 +97,7 @@ public class HomePageTests : TestContext
 
 
         // Act
-        var component = RenderComponent<Iris.Components.Home.Home>();
+        var component = Render<Iris.Components.Home.Home>();
 
         // Assert
         component.Should().NotBeNull();
@@ -154,7 +151,7 @@ public class HomePageTests : TestContext
         },
     });
 
-        var component = RenderComponent<Iris.Components.Home.Home>();
+        var component = Render<Iris.Components.Home.Home>();
         var original = component.FindComponent<ProviderEndpointCard>();
         original.FindAll(".mud-table-row").Count.Should().Be(4);
 

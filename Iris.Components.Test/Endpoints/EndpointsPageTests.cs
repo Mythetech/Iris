@@ -16,7 +16,7 @@ public class EndpointsPageTests : IrisTestContext
     public EndpointsPageTests()
     {
         Services.AddSingleton(_brokerService);
-        RenderComponent<MudPopoverProvider>();
+        Render<MudPopoverProvider>();
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public class EndpointsPageTests : IrisTestContext
             Task.FromResult(new List<EndpointDetails>()),
             Task.FromException<List<EndpointDetails>>(new InvalidOperationException("broker unavailable")));
 
-        var cut = RenderComponent<Iris.Components.Endpoints.Pages.Endpoints>();
+        var cut = Render<Iris.Components.Endpoints.Pages.Endpoints>();
 
         cut.Find("button.endpoints-refresh-button").HasAttribute("disabled").Should().BeFalse();
 
