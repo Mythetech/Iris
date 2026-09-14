@@ -16,7 +16,7 @@ namespace Iris.Integration.Tests.Brokers
     /// operation at a vhost that does not exist.
     /// </summary>
     [Collection("RabbitMQ")]
-    [Trait("Category", "Container")]
+    [Trait("Category", TestCategories.Container)]
     public class RabbitMqVHostTests
     {
         private const string VHostName = "iris-vhost";

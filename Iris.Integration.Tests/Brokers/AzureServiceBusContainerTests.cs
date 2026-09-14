@@ -21,7 +21,7 @@ namespace Iris.Integration.Tests.Brokers
     /// - <c>iris-main-test</c>: MaxDeliveryCount=10. Used for peek/receive tests.
     /// - <c>iris-dlq-test</c>:  MaxDeliveryCount=1. Used for DLQ tests.
     /// </summary>
-    [Trait("Category", "Container")]
+    [Trait("Category", TestCategories.Container)]
     [Collection("AzureServiceBus")]
     public class AzureServiceBusContainerTests
     {

@@ -26,7 +26,7 @@ namespace Iris.Integration.Tests
     }
 
     [Collection("RabbitMQ")]
-    [Trait("Category", "Container")]
+    [Trait("Category", TestCategories.Container)]
     public class WolverineTests : IAsyncLifetime
     {
         private const string QueueName = "iris-wolverine-test";
