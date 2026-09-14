@@ -45,16 +45,21 @@
 
     private bool _loading = true;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         TemplatesState.TemplateStateChanged += OnStateChanged;
+    }
 
+    protected override async Task OnInitializedAsync()
+    {
         _loading = true;
         await TemplatesState.GetTemplatesAsync();
         _loading = false;
     }
 
-    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+    // Nothing to await: the state refreshes its cache before it raises the event, and it
+    // raises it from a component call that is already on the renderer's dispatcher.
+    private void OnStateChanged() => StateHasChanged();
 
 
     private void NavigateToNewTemplate() => NavigationManager.NavigateTo("/Templates/new");

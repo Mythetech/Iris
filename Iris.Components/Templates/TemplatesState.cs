@@ -12,7 +12,7 @@ public class TemplatesState : ITemplatesState
 
     public event Action? TemplateStateChanged;
 
-    public event Action<Template>? TemplateLoaded;
+    public event Func<Template, Task>? TemplateLoaded;
 
     public TemplatesState(ITemplateService templatesService, ILogger<TemplatesState> logger)
     {
@@ -22,9 +22,26 @@ public class TemplatesState : ITemplatesState
 
     public List<Template>? Templates => _cachedTemplates;
 
-    public void LoadTemplate(Template template)
+    /// <summary>
+    /// Hands a template to whoever is listening, and waits for them.
+    ///
+    /// <para>
+    /// The subscriber is the messaging editor, which resolves the template's expressions and
+    /// writes the result into a Monaco instance, both of which are async. Delivered through a
+    /// <see cref="Func{T, TResult}"/> rather than an <see cref="Action"/> so that work is
+    /// awaited: an async handler on an Action is async void, which swallows its exceptions
+    /// and reports success to the button the user clicked.
+    /// </para>
+    /// </summary>
+    public async Task LoadTemplateAsync(Template template)
     {
-        TemplateLoaded?.Invoke(template);
+        if (TemplateLoaded is null)
+            return;
+
+        // One await per subscriber. Invoking a multicast Func returns only the last
+        // subscriber's Task, so awaiting the delegate itself would abandon the others.
+        foreach (var handler in TemplateLoaded.GetInvocationList().Cast<Func<Template, Task>>())
+            await handler(template);
     }
 
     /// <summary>
@@ -113,12 +130,12 @@ public interface ITemplatesState
     event Action? TemplateStateChanged;
 
     /// <summary>
-    /// Raised by <see cref="LoadTemplate"/>, carrying the template the messaging editor
-    /// should open.
+    /// Raised by <see cref="LoadTemplateAsync"/>, carrying the template the messaging editor
+    /// should open. Returns a Task so the handler's work is awaited rather than abandoned.
     /// </summary>
-    event Action<Template>? TemplateLoaded;
+    event Func<Template, Task>? TemplateLoaded;
 
-    void LoadTemplate(Template template);
+    Task LoadTemplateAsync(Template template);
 
     Task<List<Template>> GetTemplatesAsync();
 

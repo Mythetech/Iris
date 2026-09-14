@@ -256,7 +256,7 @@
         await TemplatesState.UpdateTemplateAsync(template);
     }
 
-    private async void LoadTemplateToEditor(Contracts.Templates.Models.Template template)
+    private async Task LoadTemplateToEditor(Contracts.Templates.Models.Template template)
     {
         var resolvedJson = await TemplateResolver.ResolveAsync(template.Json);
         await _editor.SetTextAsync(resolvedJson);

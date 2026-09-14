@@ -90,10 +90,13 @@
         _loading = false;
     }
 
-    private async void RefreshTemplates()
+    // Reads the cache rather than awaiting GetTemplatesAsync: the state fills the cache
+    // before it raises the event, so there was never anything to await, and an async lambda
+    // on an Action is async void either way.
+    private void RefreshTemplates()
     {
-        _templates = await TemplatesState.GetTemplatesAsync() ?? [];
-        await InvokeAsync(StateHasChanged);
+        _templates = TemplatesState.Templates ?? [];
+        StateHasChanged();
     }
 
     private async Task ShowPreview(Template template)
