@@ -3,6 +3,7 @@ using Iris.Components.Breadcrumbs;
 using Iris.Components.Brokers;
 using Iris.Components.CommandPalette;
 using Iris.Components.History;
+using Iris.Components.Infrastructure;
 using Iris.Components.Theme;
 using Mythetech.Framework.Infrastructure.MessageBus;
 using Iris.Components.Messaging;
@@ -61,21 +62,18 @@ namespace Iris.Components
             services.AddSingleton<ReceivedSpanLog>();
             services.AddScoped<IAdminService, TAdminService>();
 
-            // Dynamic connection data provider lookup (maps normalized provider names to custom connection UI components)
-            services.AddSingleton(new Dictionary<string, Type>
-            {
-                { "rabbitmq", typeof(Brokers.RabbitMqConnectionData) },
-                { "amazon", typeof(Brokers.AmazonConnectionData) },
-            });
+            // Per-broker UI slots. A broker with no entry falls back to the default view,
+            // so adding one needs no change to the components that dispatch on these.
+            services.AddSingleton(new ComponentRegistry<Brokers.IConnectionDataProvider>()
+                .Register<Brokers.RabbitMqConnectionData>("RabbitMq")
+                .Register<Brokers.AmazonConnectionData>("Amazon"));
 
-            // Connection details slot registries — defaults are filled in below per broker.
-            services.AddSingleton(new Brokers.ConnectionDetails.EndpointsViewRegistry
-            {
-                { "rabbitmq",        typeof(Brokers.ConnectionDetails.RabbitMqEndpointsView) },
-                { "azureservicebus", typeof(Brokers.ConnectionDetails.AzureServiceBusEndpointsView) },
-            });
-            services.AddSingleton(new Brokers.ConnectionDetails.ReadViewRegistry());
-            services.AddSingleton(new Brokers.ConnectionDetails.SendViewRegistry());
+            services.AddSingleton(new ComponentRegistry<Brokers.ConnectionDetails.IConnectionEndpointsView>()
+                .Register<Brokers.ConnectionDetails.RabbitMqEndpointsView>("RabbitMq")
+                .Register<Brokers.ConnectionDetails.AzureServiceBusEndpointsView>("AzureServiceBus"));
+
+            services.AddSingleton(new ComponentRegistry<Brokers.ConnectionDetails.IConnectionReadView>());
+            services.AddSingleton(new ComponentRegistry<Brokers.ConnectionDetails.IConnectionSendView>());
 
             // Add MudBlazor and other UI services
             services.AddMudServices(config =>
