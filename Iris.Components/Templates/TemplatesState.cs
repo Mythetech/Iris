@@ -1,5 +1,4 @@
 using Iris.Contracts.Templates.Models;
-using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
 
 namespace Iris.Components.Templates;
@@ -11,62 +10,76 @@ public class TemplatesState : ITemplatesState
 
     private List<Template>? _cachedTemplates;
 
-    public Action TemplateStateChanged { get; set; } = default!;
-    
-    public Action<Template> TemplateLoaded { get; set; } = default!;
+    public event Action? TemplateStateChanged;
+
+    public event Action<Template>? TemplateLoaded;
 
     public TemplatesState(ITemplateService templatesService, ILogger<TemplatesState> logger)
     {
         _templatesService = templatesService;
         _logger = logger;
     }
-    
+
     public List<Template>? Templates => _cachedTemplates;
 
     public void LoadTemplate(Template template)
     {
         TemplateLoaded?.Invoke(template);
     }
-    
+
+    /// <summary>
+    /// The cache, loaded on first use. Every write goes through this first, because three of
+    /// the four ways to reach one (the editor page, the rename field on the messaging tab,
+    /// and the native menu) can run without anything having listed the templates.
+    /// </summary>
+    private async Task<List<Template>> LoadedTemplatesAsync() =>
+        _cachedTemplates ??= await _templatesService.GetTemplatesAsync();
+
     public async Task<List<Template>> GetTemplatesAsync()
     {
-        if(_cachedTemplates != null)
+        if (_cachedTemplates != null)
             return _cachedTemplates;
-        
-        _cachedTemplates = await _templatesService.GetTemplatesAsync();
-        
+
+        var templates = await LoadedTemplatesAsync();
+
         TemplateStateChanged?.Invoke();
-        
-        return _cachedTemplates;
-    }   
+
+        return templates;
+    }
 
     public async Task CreateTemplateAsync(Template template)
     {
+        // Loaded before the write, not after: loading afterwards would read back the row
+        // just written and then add it a second time.
+        var templates = await LoadedTemplatesAsync();
+
         await _templatesService.CreateTemplateAsync(template);
 
-        _cachedTemplates ??= new();
-        
-        _cachedTemplates.Add(template);
-        
+        templates.Add(template);
+
         TemplateStateChanged?.Invoke();
     }
 
     public async Task UpdateTemplateAsync(Template template, bool newVersion = false)
     {
+        var templates = await LoadedTemplatesAsync();
+
         await _templatesService.UpdateTemplateAsync(template, newVersion);
 
-        int index = _cachedTemplates.FindIndex(x => x.TemplateId.Equals(template.TemplateId));
+        int index = templates.FindIndex(x => x.TemplateId.Equals(template.TemplateId));
         if(index >= 0)
-            _cachedTemplates[index] = template;
+            templates[index] = template;
 
         TemplateStateChanged?.Invoke();
     }
 
     public async Task DeleteTemplateAsync(Template template)
     {
+        var templates = await LoadedTemplatesAsync();
+
         await _templatesService.DeleteTemplateAsync(template);
 
-        _cachedTemplates.RemoveAll(x => x.TemplateId.Equals(template.TemplateId));
+        templates.RemoveAll(x => x.TemplateId.Equals(template.TemplateId));
 
         TemplateStateChanged?.Invoke();
     }
@@ -86,13 +99,34 @@ public class TemplatesState : ITemplatesState
 
 public interface ITemplatesState
 {
-    public Task<List<Template>> GetTemplatesAsync();
+    /// <summary>
+    /// The cached templates, or null before anything has loaded them. Subscribe to
+    /// <see cref="TemplateStateChanged"/> to hear when this changes.
+    /// </summary>
+    List<Template>? Templates { get; }
 
-    public Task CreateTemplateAsync(Template template);
+    /// <summary>
+    /// Raised whenever the cached set changes. An event rather than a settable delegate,
+    /// because there are four subscribers and any one of them assigning with = would have
+    /// silently dropped the other three.
+    /// </summary>
+    event Action? TemplateStateChanged;
 
-    public Task UpdateTemplateAsync(Template template, bool newVersion = false);
+    /// <summary>
+    /// Raised by <see cref="LoadTemplate"/>, carrying the template the messaging editor
+    /// should open.
+    /// </summary>
+    event Action<Template>? TemplateLoaded;
 
-    public Task DeleteTemplateAsync(Template template);
+    void LoadTemplate(Template template);
 
-    public Task<Template> DuplicateTemplateAsync(Template template);
+    Task<List<Template>> GetTemplatesAsync();
+
+    Task CreateTemplateAsync(Template template);
+
+    Task UpdateTemplateAsync(Template template, bool newVersion = false);
+
+    Task DeleteTemplateAsync(Template template);
+
+    Task<Template> DuplicateTemplateAsync(Template template);
 }
