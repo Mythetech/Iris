@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using EasyNetQ.Management.Client;
 using Iris.Brokers.Exceptions;
 using Iris.Brokers.Models;
+using ConnectorProviders = Iris.Contracts.Brokers.Models.ConnectorProviders;
 
 namespace Iris.Brokers.RabbitMQ
 {

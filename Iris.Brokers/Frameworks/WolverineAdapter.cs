@@ -1,6 +1,7 @@
 using System.Globalization;
 using Iris.Brokers.Models;
 using Iris.Contracts.Messaging.Frameworks;
+using ConnectorProviders = Iris.Contracts.Brokers.Models.ConnectorProviders;
 
 namespace Iris.Brokers.Frameworks;
 
