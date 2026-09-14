@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 using Iris.Brokers.Models;
+using ConnectorTransports = Iris.Contracts.Brokers.Models.ConnectorTransports;
 
 namespace Iris.Brokers.Azure
 {

@@ -3,6 +3,8 @@ using Iris.Brokers;
 using Iris.Brokers.Frameworks;
 using Iris.Desktop.Brokers;
 using NSubstitute;
+using ConnectorProviders = Iris.Contracts.Brokers.Models.ConnectorProviders;
+using ConnectorTransports = Iris.Contracts.Brokers.Models.ConnectorTransports;
 
 namespace Iris.Desktop.Test.Brokers;
 

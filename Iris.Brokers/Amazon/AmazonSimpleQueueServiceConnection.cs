@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Iris.Brokers.Models;
+using ConnectorTransports = Iris.Contracts.Brokers.Models.ConnectorTransports;
 
 namespace Iris.Brokers.Amazon
 {

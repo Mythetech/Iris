@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using Azure.Storage.Queues;
 using Iris.Brokers.Models;
 using Microsoft.Extensions.Logging;
+using ConnectorTransports = Iris.Contracts.Brokers.Models.ConnectorTransports;
 
 namespace Iris.Brokers.Azure
 {

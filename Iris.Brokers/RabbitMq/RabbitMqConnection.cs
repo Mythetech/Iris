@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using System.Threading;
 using EasyNetQ.Management.Client;
 using EasyNetQ.Management.Client.Model;
 using Iris.Brokers.Extensions;
 using Iris.Brokers.Models;
+using ConnectorTransports = Iris.Contracts.Brokers.Models.ConnectorTransports;
 
 namespace Iris.Brokers.RabbitMQ
 {
