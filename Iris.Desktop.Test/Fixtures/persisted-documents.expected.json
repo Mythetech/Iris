@@ -1,0 +1,53 @@
+{
+  "connections": {
+    "Address": "String",
+    "ConnectionString": "String",
+    "CreatedAt": "DateTime",
+    "Password": "String",
+    "Provider": "String",
+    "Region": "String",
+    "Uri": "String",
+    "Username": "String",
+    "_id": "Int32"
+  },
+  "history": {
+    "Action": "String",
+    "Details": "String",
+    "EventAction": "String",
+    "EventParameters": {
+      "Address": "String"
+    },
+    "Source": "String",
+    "Target": "String",
+    "Timestamp": "DateTime",
+    "_id": "Int32"
+  },
+  "iris_message_layout": {
+    "Layout": [
+      {
+        "AreaIdentifier": "String",
+        "AreaIndex": "Int32",
+        "BadgeCount": "Int32",
+        "ComponentType": "String",
+        "IsActive": "Boolean",
+        "Name": "String",
+        "Parameters": {},
+        "_id": "Guid"
+      }
+    ],
+    "_id": "Int32"
+  },
+  "packages": {
+    "AddedAt": "DateTime",
+    "AssemblyName": "String",
+    "FilePath": "String",
+    "_id": "Int32"
+  },
+  "templates": {
+    "Json": "String",
+    "Name": "String",
+    "TemplateId": "Guid",
+    "Version": "Int32",
+    "_id": "Int32"
+  }
+}

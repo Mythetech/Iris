@@ -1,0 +1,68 @@
+{
+  "DisplayName": "OrderTestStateMachine",
+  "Framework": "MassTransit",
+  "States": [
+    {
+      "Name": "Accepted",
+      "IsInitial": false,
+      "IsFinal": false
+    },
+    {
+      "Name": "Cancelled",
+      "IsInitial": false,
+      "IsFinal": false
+    },
+    {
+      "Name": "Failed",
+      "IsInitial": false,
+      "IsFinal": false
+    },
+    {
+      "Name": "Initial",
+      "IsInitial": true,
+      "IsFinal": false
+    },
+    {
+      "Name": "Shipped",
+      "IsInitial": false,
+      "IsFinal": false
+    },
+    {
+      "Name": "Submitted",
+      "IsInitial": false,
+      "IsFinal": false
+    }
+  ],
+  "Transitions": [
+    {
+      "FromState": "Accepted",
+      "ToState": "Cancelled",
+      "EventName": "Cancel"
+    },
+    {
+      "FromState": "Accepted",
+      "ToState": "Shipped",
+      "EventName": "Ship"
+    },
+    {
+      "FromState": "Initial",
+      "ToState": "Submitted",
+      "EventName": "Submit"
+    },
+    {
+      "FromState": "Shipped",
+      "ToState": "Failed",
+      "EventName": "Cancel"
+    },
+    {
+      "FromState": "Submitted",
+      "ToState": "Accepted",
+      "EventName": "Accept"
+    },
+    {
+      "FromState": "Submitted",
+      "ToState": "Cancelled",
+      "EventName": "Cancel"
+    }
+  ]
+}

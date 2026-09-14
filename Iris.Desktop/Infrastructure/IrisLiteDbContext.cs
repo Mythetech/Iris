@@ -1,4 +1,9 @@
 ﻿using LiteDB;
+using Iris.Components.Shared.DynamicTabs;
+using Iris.Desktop.Brokers;
+using Iris.Desktop.History;
+using Iris.Desktop.PackageManagement;
+using Iris.Desktop.Templates;
 using Microsoft.Extensions.Logging;
 
 namespace Iris.Desktop.Infrastructure
@@ -18,6 +23,38 @@ namespace Iris.Desktop.Infrastructure
         private readonly LiteDatabase _database;
         private readonly ILogger<IrisLiteDbContext> _logger;
         private bool _disposed;
+
+        /// <summary>
+        /// Builds every persisted type's entity mapper once, up front.
+        ///
+        /// <para>
+        /// LiteDB maps a type on first use, into the process-wide <see cref="BsonMapper.Global"/>.
+        /// Two threads reaching an unmapped type at the same time can have one of them observe
+        /// a mapper the other is still filling in, which surfaces as
+        /// <c>NotSupportedException: Member X not found on BsonMapper for type Y</c> from an
+        /// EnsureIndex or a query, for a member that plainly exists. Iris writes history from
+        /// the send path while pages read from the render thread, so that is reachable on a
+        /// cold start; it showed up first as two test classes touching HistoryRepository at
+        /// once.
+        /// </para>
+        ///
+        /// <para>
+        /// A static constructor is the cheap fix: the runtime guarantees it runs once, and
+        /// nothing can reach a collection without going through this class. HistoryRecord is
+        /// here as well as PersistentHistoryRecord because the indexed member is declared on
+        /// the base, and that is the mapper LiteDB resolves it against.
+        /// </para>
+        /// </summary>
+        static IrisLiteDbContext()
+        {
+            BsonMapper.Global.Entity<SavedConnection>();
+            BsonMapper.Global.Entity<PersistentTemplate>();
+            BsonMapper.Global.Entity<SavedPackage>();
+            BsonMapper.Global.Entity<Iris.History.HistoryRecord>();
+            BsonMapper.Global.Entity<PersistentHistoryRecord>();
+            BsonMapper.Global.Entity<PersistentMessagingLayout>();
+            BsonMapper.Global.Entity<SerializedDynamicTabModel>();
+        }
 
         public IrisLiteDbContext(ILogger<IrisLiteDbContext> logger)
             : this(logger, GetDatabasePath())
