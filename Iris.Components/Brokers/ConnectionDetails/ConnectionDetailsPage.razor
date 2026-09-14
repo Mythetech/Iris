@@ -2,6 +2,7 @@
 @inherits IrisPageBase
 @using Iris.Components.Brokers
 @using Iris.Components.Brokers.ConnectionDetails
+@using Iris.Components.Infrastructure
 @using Iris.Contracts.Brokers.Models
 @using Mythetech.Framework.Components.SimpleTabs
 @inject IBrokerService BrokerService
@@ -83,9 +84,9 @@ else
 @code {
     [Parameter] public Guid Id { get; set; }
 
-    [Inject] private EndpointsViewRegistry EndpointsRegistry { get; set; } = default!;
-    [Inject] private ReadViewRegistry ReadRegistry { get; set; } = default!;
-    [Inject] private SendViewRegistry SendRegistry { get; set; } = default!;
+    [Inject] private ComponentRegistry<IConnectionEndpointsView> EndpointsRegistry { get; set; } = default!;
+    [Inject] private ComponentRegistry<IConnectionReadView> ReadRegistry { get; set; } = default!;
+    [Inject] private ComponentRegistry<IConnectionSendView> SendRegistry { get; set; } = default!;
 
     public override string Identifier { get; set; } = "ConnectionDetails";
 
@@ -118,9 +119,9 @@ else
 
         _showReadTab = _capabilities.CanPeek || _capabilities.CanReceive;
 
-        _endpointsViewType = ResolveView(EndpointsRegistry, _provider, typeof(DefaultEndpointsView));
-        _readViewType      = ResolveView(ReadRegistry, _provider, typeof(DefaultReadView));
-        _sendViewType      = ResolveView(SendRegistry, _provider, typeof(DefaultSendView));
+        _endpointsViewType = EndpointsRegistry.Resolve(typeof(DefaultEndpointsView), _provider.Transport, _provider.Name);
+        _readViewType      = ReadRegistry.Resolve(typeof(DefaultReadView), _provider.Transport, _provider.Name);
+        _sendViewType      = SendRegistry.Resolve(typeof(DefaultSendView), _provider.Transport, _provider.Name);
 
         _endpointsParameters = new Dictionary<string, object> { ["Provider"] = _provider };
         _sendParameters      = new Dictionary<string, object> { ["Provider"] = _provider };
@@ -132,47 +133,4 @@ else
 
         _loading = false;
     }
-
-    /// <summary>
-    /// Resolves a per-broker view type from <paramref name="registry"/> using a
-    /// two-step lookup: first the normalized <see cref="Provider.Transport"/>, then
-    /// the normalized <see cref="Provider.Name"/>. Falls back to the supplied
-    /// <paramref name="fallback"/> when neither key matches.
-    /// </summary>
-    /// <remarks>
-    /// Both keys are necessary because the underlying broker model produces them
-    /// in two different shapes:
-    /// <list type="bullet">
-    ///   <item>
-    ///     Both Azure adapters share <c>IConnector.Provider == "Azure"</c>
-    ///     (so <see cref="Provider.Name"/> is "Azure" for both). Only
-    ///     <see cref="Provider.Transport"/> distinguishes "AzureServiceBus" from
-    ///     "AzureQueueStorage" — the Transport-first lookup catches that.
-    ///   </item>
-    ///   <item>
-    ///     RabbitMq's <c>IConnection.Name</c> mutates to "Docker" or "CloudAmpq"
-    ///     depending on the connection string, so <see cref="Provider.Transport"/>
-    ///     can take values that no registry would sensibly key off. The fallback
-    ///     to normalized <see cref="Provider.Name"/> ("RabbitMq" → "rabbitmq")
-    ///     keeps RabbitMq instances pointing at the right view regardless.
-    ///   </item>
-    /// </list>
-    /// When adding a new adapter, register the view under whichever of the two
-    /// normalized strings is stable across instances of that broker.
-    /// </remarks>
-    private static Type ResolveView(IDictionary<string, Type> registry, Provider provider, Type fallback)
-    {
-        var transportKey = Normalize(provider.Transport);
-        if (transportKey.Length > 0 && registry.TryGetValue(transportKey, out var t1))
-            return t1;
-
-        var nameKey = Normalize(provider.Name);
-        if (nameKey.Length > 0 && registry.TryGetValue(nameKey, out var t2))
-            return t2;
-
-        return fallback;
-    }
-
-    private static string Normalize(string? s)
-        => new string((s ?? string.Empty).Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
 }
