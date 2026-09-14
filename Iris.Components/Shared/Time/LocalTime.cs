@@ -48,8 +48,10 @@ public sealed class LocalTime : ComponentBase, IDisposable
         }
     }
 
+    // Raised by InitializeTimeZone from OnAfterRenderAsync, so this is already on the
+    // renderer's dispatcher and StateHasChanged needs no dispatch.
     private void LocalTimeZoneChanged(object? sender, EventArgs e)
     {
-        _ = InvokeAsync(StateHasChanged);
+        StateHasChanged();
     }
 }
