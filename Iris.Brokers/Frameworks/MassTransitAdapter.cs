@@ -21,8 +21,25 @@ namespace Iris.Brokers.Frameworks
             FrameworkKey.Body("host"),
         ];
 
+        /// <summary>
+        /// Three round trips back this: RabbitMQ, Amazon SQS and Azure Service Bus.
+        ///
+        /// <para>
+        /// Azure Service Bus is named as a transport rather than as the Azure provider on
+        /// purpose. Claiming the provider, which is what <c>ConnectorProviders.All</c> did
+        /// here, also claimed Azure Queue Storage, because one connector reports
+        /// <c>Azure</c> for both. There is no Queue Storage round trip for MassTransit, and
+        /// the two transports do not share a wire format, so that half of the claim was
+        /// never evidence-backed.
+        /// </para>
+        /// </summary>
         public IReadOnlySet<string> VerifiedProviders { get; } =
-            new HashSet<string>(ConnectorProviders.All, StringComparer.OrdinalIgnoreCase);
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ConnectorProviders.RabbitMq,
+                ConnectorProviders.Amazon,
+                ConnectorTransports.AzureServiceBus,
+            };
 
         public FrameworkDescriptor Descriptor { get; } = new("MassTransit",
         [

@@ -52,7 +52,7 @@ namespace Iris.Brokers.RabbitMQ
         /// <summary>The virtual host every operation on this connection is scoped to.</summary>
         public string VHost => _vhost;
 
-        public string Name { get; set; } = "RabbitMq";
+        public string Name { get; set; } = ConnectorTransports.RabbitMq;
 
         public string Address => _address;
 

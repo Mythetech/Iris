@@ -23,16 +23,23 @@ namespace Iris.Brokers.Frameworks
         ];
 
         /// <summary>
-        /// Empty, and honestly so. This is the only adapter of the six with no consumer
-        /// round-trip test against any transport. The body below is the Azure Storage Queues
-        /// <c>MessageWrapper</c> shape, a JSON wrapper carrying a base64 body and no transport
-        /// headers, while the RabbitMQ and SQS transports read headers from AMQP properties and
-        /// SQS message attributes, so a consumer on either never sees EnclosedMessageTypes.
-        /// Claiming every provider hid that. Add a provider here only when a round-trip test
-        /// covers it.
+        /// Azure Queue Storage, and only that, backed by the round trip in
+        /// <c>NServiceBusTests</c>. It is the transport the body below was written for: the
+        /// Azure Storage Queues <c>MessageWrapper</c> shape, a JSON wrapper carrying a base64
+        /// body with its headers inline.
+        ///
+        /// <para>
+        /// Named as a transport rather than as the Azure provider, which would also claim
+        /// Azure Service Bus, where this is expected to fail. Service Bus, RabbitMQ and SQS
+        /// all read the same headers off native message properties, so a consumer on any of
+        /// the three never sees EnclosedMessageTypes.
+        /// </para>
         /// </summary>
         public IReadOnlySet<string> VerifiedProviders { get; } =
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ConnectorTransports.AzureQueueStorage,
+            };
 
         public FrameworkDescriptor Descriptor { get; } = new("NServiceBus",
         [

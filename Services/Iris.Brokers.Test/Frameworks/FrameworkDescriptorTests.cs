@@ -77,11 +77,21 @@ public class FrameworkDescriptorTests
         foreach (var adapter in rabbitOnly)
             adapter.VerifiedProviders.Should().BeEquivalentTo(new[] { ConnectorProviders.RabbitMq }, adapter.Name);
 
-        new MassTransitAdapter().VerifiedProviders.Should().BeEquivalentTo(ConnectorProviders.All);
+        // Azure Service Bus by transport, not ConnectorProviders.Azure. The Azure evidence is
+        // a Service Bus round-trip, and the provider name would carry Azure Queue Storage
+        // along with it on no evidence at all.
+        new MassTransitAdapter().VerifiedProviders.Should().BeEquivalentTo(
+            new[] { ConnectorProviders.RabbitMq, ConnectorProviders.Amazon, ConnectorTransports.AzureServiceBus });
 
-        // NServiceBus has no consumer round-trip test against any transport, so it claims
-        // nothing. The UI flags it as unverified everywhere, which is the truth.
-        new NServiceBusAdapter().VerifiedProviders.Should().BeEmpty();
+        // The mirror image: NServiceBus is proven on Azure Queue Storage and expected to fail
+        // on Service Bus, so it claims the transport rather than the provider.
+        new NServiceBusAdapter().VerifiedProviders.Should().BeEquivalentTo(
+            new[] { ConnectorTransports.AzureQueueStorage });
+
+        // No adapter may claim the Azure provider: it spans two transports with different
+        // wire formats, so such a claim is true of at most one of them.
+        foreach (var adapter in Adapters().Select(a => (IFramework)a[0]))
+            adapter.VerifiedProviders.Should().NotContain(ConnectorProviders.Azure, adapter.Name);
     }
 
     [Fact]

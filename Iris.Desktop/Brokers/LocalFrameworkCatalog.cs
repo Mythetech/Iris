@@ -39,7 +39,31 @@ public sealed class LocalFrameworkCatalog : IFrameworkCatalog
             Supported = result.Supported,
             UnsupportedReason = result.Reason,
             DroppedKeys = result.DroppedKeys.Select(k => k.Name).ToList(),
-            Verified = framework.VerifiedProviders.Contains(connection.Connector.Provider),
+            Verified = IsVerified(framework, connection),
         };
     }
+
+    /// <summary>
+    /// Matches the adapter's claim against the connection's transport first and its provider
+    /// second, the same two-step lookup <c>ConnectionDetailsPage.ResolveView</c> uses, and for
+    /// the same reason: neither identifier alone is right for every broker.
+    ///
+    /// <para>
+    /// Matching on the provider alone, which is what this did, cannot distinguish Azure
+    /// Service Bus from Azure Queue Storage, because one <c>AzureConnector</c> reports
+    /// <c>Azure</c> for both. Those two speak different wire formats, so an adapter proven
+    /// against one says nothing about the other, and a single claim covered both.
+    /// </para>
+    ///
+    /// <para>
+    /// Matching on the transport alone would break RabbitMQ, whose connection renames itself
+    /// to <c>Docker</c> or <c>CloudAmpq</c> by address. That is a deployment label rather than
+    /// a transport, and RabbitMQ has only the one transport anyway, so the provider is the
+    /// stable identifier there. An adapter therefore claims at whichever granularity actually
+    /// pins the wire format, and this accepts either.
+    /// </para>
+    /// </summary>
+    private static bool IsVerified(IFramework framework, IConnection connection)
+        => framework.VerifiedProviders.Contains(connection.Name)
+           || framework.VerifiedProviders.Contains(connection.Connector.Provider);
 }
