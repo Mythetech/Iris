@@ -112,20 +112,14 @@
 
     protected override void OnInitialized()
     {
-        if (TemplatesState is TemplatesState t)
-        {
-            t.TemplateLoaded += LoadTemplateToEditor;
-        }
-        
+        TemplatesState.TemplateLoaded += LoadTemplateToEditor;
+
         base.OnInitialized();
     }
 
     public void Dispose()
     {
-        if (TemplatesState is TemplatesState t)
-        {
-            t.TemplateLoaded -= LoadTemplateToEditor;
-        }
+        TemplatesState.TemplateLoaded -= LoadTemplateToEditor;
     }
 
     protected override async Task OnInitializedAsync()

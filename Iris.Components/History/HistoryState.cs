@@ -7,8 +7,17 @@ namespace Iris.Components.History;
 public class HistoryState
 {
     private readonly IHistoryService _service;
+
+    /// <summary>
+    /// The cached window, replaced wholesale rather than mutated. The History grid and the
+    /// Recent tab enumerate this while rendering and <c>MessageRecorder</c> writes to it from
+    /// the send path, so an in-place add is an InvalidOperationException in whichever reader
+    /// happens to be mid-enumeration.
+    /// </summary>
     public List<HistoryRecord>? History { get; private set; }
-    
+
+    private readonly Lock _sync = new();
+
     private List<AuditRecord>? _auditRecords;
 
     public HistoryState(IHistoryService service)
@@ -51,7 +60,10 @@ public class HistoryState
                     Action = x.Action,
                     Details = JsonSerializer.Serialize(x.Details),
                     EventAction = x.Action,
-                    EventParameters = x.Details.ToDictionary(k => k.Key, object (v) => v.Value),
+                    // Details is optional on the contract, and the local service produces a
+                    // null one from a row whose stored details deserialize to null.
+                    // Flattening it unguarded took out the whole page, not just the row.
+                    EventParameters = x.Details?.ToDictionary(k => k.Key, object (v) => v.Value) ?? [],
                     Source = x.User,
                     Target = x.Target,
                     Timestamp = x.When.GetValueOrDefault()
@@ -70,9 +82,12 @@ public class HistoryState
         {
             await GetUserHistoryAsync();
         }
-        
-        History.Add(record);
-        
+
+        lock (_sync)
+        {
+            History = [.. History ?? [], record];
+        }
+
         NotifyHistoryStateChanged();
     }
 }

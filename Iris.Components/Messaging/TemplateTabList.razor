@@ -101,7 +101,7 @@
 
     private async Task TemplateRenamed(Guid templateId, string name)
     {
-        var template = TemplatesState.Templates.FirstOrDefault(x => x.TemplateId == templateId);
+        var template = TemplatesState.Templates?.FirstOrDefault(x => x.TemplateId == templateId);
 
         if (template == null)
             return;
