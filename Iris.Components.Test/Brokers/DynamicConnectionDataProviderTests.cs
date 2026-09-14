@@ -6,11 +6,10 @@ using Iris.Contracts.Brokers.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
-using MudBlazor.Services;
 
 namespace Iris.Components.Test.Brokers
 {
-    public class DynamicConnectionDataProviderTests : TestContext
+    public class DynamicConnectionDataProviderTests : IrisTestContext
     {
         public DynamicConnectionDataProviderTests()
         {
@@ -21,9 +20,7 @@ namespace Iris.Components.Test.Brokers
                 {"amazon", typeof(AmazonConnectionData) }
         };
             Services.AddSingleton(providerLookup);
-            Services.AddMudServices();
-            JSInterop.Mode = JSRuntimeMode.Loose;
-            RenderComponent<MudPopoverProvider>();
+            AddPopoverProvider();
         }
 
         [Fact(DisplayName = "Dynamic connection data component provider can render rabbitmq")]
@@ -31,7 +28,7 @@ namespace Iris.Components.Test.Brokers
         {
             // Arrange 
             var provider = new SupportedProvider { Name = "RabbitMq" };
-            var cut = RenderComponent<DynamicConnectionDataProvider>(parameters => parameters
+            var cut = Render<DynamicConnectionDataProvider>(parameters => parameters
                 .Add(p => p.Provider, provider));
 
             // Act
@@ -46,7 +43,7 @@ namespace Iris.Components.Test.Brokers
         {
             // Arrange
             var provider = new SupportedProvider { Name = "Azure Service Bus" };
-            var cut = RenderComponent<DynamicConnectionDataProvider>(parameters => parameters
+            var cut = Render<DynamicConnectionDataProvider>(parameters => parameters
                 .Add(p => p.Provider, provider));
 
             // Act
@@ -61,7 +58,7 @@ namespace Iris.Components.Test.Brokers
         {
             // Arrange 
             var provider = new SupportedProvider { Name = "Amazon" };
-            var cut = RenderComponent<DynamicConnectionDataProvider>(parameters => parameters
+            var cut = Render<DynamicConnectionDataProvider>(parameters => parameters
                 .Add(p => p.Provider, provider));
 
             // Act
@@ -76,7 +73,7 @@ namespace Iris.Components.Test.Brokers
         {
             // Arrange
             var provider = new SupportedProvider { Name = "FakeProvider" };
-            var cut = RenderComponent<DynamicConnectionDataProvider>(parameters => parameters
+            var cut = Render<DynamicConnectionDataProvider>(parameters => parameters
                 .Add(p => p.Provider, provider));
 
             // Act
@@ -91,7 +88,7 @@ namespace Iris.Components.Test.Brokers
         {
             // Arrange
             var provider = new SupportedProvider { Name = "FakeProvider" };
-            var cut = RenderComponent<DynamicConnectionDataProvider>(parameters => parameters
+            var cut = Render<DynamicConnectionDataProvider>(parameters => parameters
                 .Add(p => p.Provider, provider));
 
             // Act

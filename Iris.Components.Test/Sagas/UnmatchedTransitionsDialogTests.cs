@@ -24,7 +24,7 @@ public class UnmatchedTransitionsDialogTests : IrisTestContext
     // when it is shown the way the chip shows it.
     private async Task<IRenderedComponent<MudDialogProvider>> ShowDialogAsync()
     {
-        var provider = RenderComponent<MudDialogProvider>();
+        var provider = Render<MudDialogProvider>();
         var dialogs = Services.GetRequiredService<IDialogService>();
         await provider.InvokeAsync(() => dialogs.ShowAsync(typeof(UnmatchedTransitionsDialog), "Unmatched transitions"));
         return provider;

@@ -88,10 +88,14 @@ Iris follows these architectural patterns (see `/docs/Architecture/`):
 ## 🧪 Testing
 
 ### Unit Tests
-- Use **xUnit** as the test framework
+- Use **xUnit v3** as the test framework. Test projects are executables that run on
+  Microsoft.Testing.Platform, which is why `global.json` names the runner and every test
+  csproj sets `<OutputType>Exe</OutputType>`
 - Use **NSubstitute** for mocking
-- Use **FluentAssertions** for readable assertions
-- Use **bUnit** for Blazor component testing
+- Use **FluentAssertions** for readable assertions. It stays below 8.0, which moved to a
+  paid commercial licence
+- Use **bUnit 2.x** for Blazor component testing. Derive from `IrisTestContext`, and note
+  that the base class is `BunitContext` and the render method is `Render<T>()`
 
 ### Integration Tests
 - Integration tests use **Testcontainers** for real broker instances

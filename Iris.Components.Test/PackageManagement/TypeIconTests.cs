@@ -13,7 +13,7 @@ public class TypeIconTests : IrisTestContext
     [InlineData("String")]
     public void Displays_CorrectlyTyped_StringIcon(string type)
     {
-        var cut = RenderComponent<TypeIcon>(parameters => parameters
+        var cut = Render<TypeIcon>(parameters => parameters
             .Add(p => p.Type, type));
 
         cut.Markup.Should().Contain("material-symbols-rounded");
@@ -31,7 +31,7 @@ public class TypeIconTests : IrisTestContext
     [InlineData("Int64")]
     public void Displays_CorrectlyTyped_NumberIcon(string type)
     {
-        var cut = RenderComponent<TypeIcon>(parameters => parameters
+        var cut = Render<TypeIcon>(parameters => parameters
             .Add(p => p.Type, type));
 
         cut.Markup.Should().Contain("material-symbols-rounded");
@@ -45,7 +45,7 @@ public class TypeIconTests : IrisTestContext
     [InlineData("DateTimeOffset")]
     public void Displays_CorrectlyTyped_DateIcon(string type)
     {
-        var cut = RenderComponent<TypeIcon>(parameters => parameters
+        var cut = Render<TypeIcon>(parameters => parameters
             .Add(p => p.Type, type));
 
         cut.Markup.Should().Contain("material-symbols-rounded");
@@ -56,7 +56,7 @@ public class TypeIconTests : IrisTestContext
     [InlineData("Boolean")]
     public void Displays_CorrectlyTyped_BooleanIcon(string type)
     {
-        var cut = RenderComponent<TypeIcon>(parameters => parameters
+        var cut = Render<TypeIcon>(parameters => parameters
             .Add(p => p.Type, type));
 
         cut.Markup.Should().Contain("material-symbols-rounded");
@@ -68,7 +68,7 @@ public class TypeIconTests : IrisTestContext
     [InlineData("UnrecognizedType")]
     public void Displays_CorrectlyTyped_ObjectIcon(string type)
     {
-        var cut = RenderComponent<TypeIcon>(parameters => parameters
+        var cut = Render<TypeIcon>(parameters => parameters
             .Add(p => p.Type, type));
 
         cut.Markup.Should().Contain("material-symbols-rounded");
@@ -79,7 +79,7 @@ public class TypeIconTests : IrisTestContext
     [InlineData("SomeType[]")]
     public void Displays_CorrectlyTyped_ArrayIcon(string type)
     {
-        var cut = RenderComponent<TypeIcon>(parameters => parameters
+        var cut = Render<TypeIcon>(parameters => parameters
             .Add(p => p.Type, type));
 
         cut.Markup.Should().Contain("material-symbols-rounded");
@@ -90,7 +90,7 @@ public class TypeIconTests : IrisTestContext
     [InlineData("Guid")]
     public void Displays_CorrectlyTyped_KeyIcon(string type)
     {
-        var cut = RenderComponent<TypeIcon>(parameters => parameters
+        var cut = Render<TypeIcon>(parameters => parameters
             .Add(p => p.Type, type));
 
         cut.Markup.Should().Contain("material-symbols-rounded");
@@ -100,7 +100,7 @@ public class TypeIconTests : IrisTestContext
     [Fact(DisplayName = "Displays default icon for null or empty type")]
     public void Displays_DefaultIcon_For_NullOrEmptyType()
     {
-        var cut = RenderComponent<TypeIcon>(parameters => parameters
+        var cut = Render<TypeIcon>(parameters => parameters
             .Add(p => p.Type, null));
 
         cut.Markup.Should().Contain("material-symbols-rounded");

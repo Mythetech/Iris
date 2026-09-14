@@ -22,7 +22,7 @@ public class FrameworkSelectorTests : IrisTestContext
     {
         Services.AddSingleton(_state);
         JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true);
-        _popoverProvider = RenderComponent<MudPopoverProvider>();
+        _popoverProvider = Render<MudPopoverProvider>();
 
         _state.SetAvailableFrameworks(
         [
@@ -36,7 +36,7 @@ public class FrameworkSelectorTests : IrisTestContext
     [Fact(DisplayName = "Lists every framework from the catalog, disabling unsupported ones")]
     public async Task Renders_CatalogItems()
     {
-        var cut = RenderComponent<FrameworkSelector>();
+        var cut = Render<FrameworkSelector>();
 
         await cut.Find(".mud-input-control").MouseDownAsync(new());
 
@@ -49,7 +49,7 @@ public class FrameworkSelectorTests : IrisTestContext
     [Fact(DisplayName = "Unsupported and partially carried frameworks explain themselves in a tooltip")]
     public async Task Renders_Reasons()
     {
-        var cut = RenderComponent<FrameworkSelector>();
+        var cut = Render<FrameworkSelector>();
 
         await cut.Find(".mud-input-control").MouseDownAsync(new());
 
@@ -61,7 +61,7 @@ public class FrameworkSelectorTests : IrisTestContext
     [Fact(DisplayName = "An unverified pairing stays selectable and says so in its tooltip")]
     public async Task Renders_UnverifiedNotice()
     {
-        var cut = RenderComponent<FrameworkSelector>();
+        var cut = Render<FrameworkSelector>();
 
         await cut.Find(".mud-input-control").MouseDownAsync(new());
 
@@ -74,7 +74,7 @@ public class FrameworkSelectorTests : IrisTestContext
     [Fact(DisplayName = "Choosing a framework selects its descriptor on the state")]
     public async Task Selecting_SetsDescriptor()
     {
-        var cut = RenderComponent<FrameworkSelector>();
+        var cut = Render<FrameworkSelector>();
 
         var select = cut.FindComponent<MudSelect<string>>();
         await cut.InvokeAsync(() => select.Instance.ValueChanged.InvokeAsync("MassTransit"));
@@ -89,7 +89,7 @@ public class FrameworkSelectorTests : IrisTestContext
         _state.SetFramework(_state.AvailableFrameworks[0]);
         _state.SetAvailableFrameworks([new FrameworkDescriptor("MassTransit", [], Supported: false, UnsupportedReason: "gone")]);
 
-        var cut = RenderComponent<FrameworkSelector>();
+        var cut = Render<FrameworkSelector>();
 
         cut.Markup.Should().Contain("gone");
     }
@@ -104,7 +104,7 @@ public class FrameworkSelectorTests : IrisTestContext
         _state.SetFramework(easyNetQ);
         _state.AddAdditionalProperty(new DictionaryViewModel { Key = "mine", Value = "1" });
 
-        var cut = RenderComponent<FrameworkSelector>();
+        var cut = Render<FrameworkSelector>();
 
         cut.FindAll("tbody tr").Count.Should().Be(2);
 

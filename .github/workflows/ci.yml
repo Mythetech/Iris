@@ -28,12 +28,12 @@ jobs:
 
       - name: Unit Tests
         run: |
-          dotnet test Services/Iris.Brokers.Test/Iris.Brokers.Test.csproj --no-build --configuration Release --verbosity normal
-          dotnet test Services/Assemblies/Iris.Assemblies.Test/Iris.Assemblies.Test.csproj --no-build --configuration Release --verbosity normal
-          dotnet test Iris.Components.Test/Iris.Components.Test.csproj --no-build --configuration Release --verbosity normal
-          dotnet test Services/Telemetry/Iris.Telemetry.Test/Iris.Telemetry.Test.csproj --no-build --configuration Release --verbosity normal
-          dotnet test Services/Sagas/Iris.Sagas.Test/Iris.Sagas.Test.csproj --no-build --configuration Release --verbosity normal
-          dotnet test Iris.Desktop.Test/Iris.Desktop.Test.csproj --no-build --configuration Release --verbosity normal
+          dotnet test --project Services/Iris.Brokers.Test/Iris.Brokers.Test.csproj --no-build --configuration Release --verbosity normal
+          dotnet test --project Services/Assemblies/Iris.Assemblies.Test/Iris.Assemblies.Test.csproj --no-build --configuration Release --verbosity normal
+          dotnet test --project Iris.Components.Test/Iris.Components.Test.csproj --no-build --configuration Release --verbosity normal
+          dotnet test --project Services/Telemetry/Iris.Telemetry.Test/Iris.Telemetry.Test.csproj --no-build --configuration Release --verbosity normal
+          dotnet test --project Services/Sagas/Iris.Sagas.Test/Iris.Sagas.Test.csproj --no-build --configuration Release --verbosity normal
+          dotnet test --project Iris.Desktop.Test/Iris.Desktop.Test.csproj --no-build --configuration Release --verbosity normal
 
   integration-tests:
     runs-on: ubuntu-latest
@@ -57,7 +57,7 @@ jobs:
 
       - name: Integration Tests
         run: >
-          dotnet test Iris.Integration.Tests/Iris.Integration.Tests.csproj
+          dotnet test --project Iris.Integration.Tests/Iris.Integration.Tests.csproj
           --no-build
           --configuration Release
           --verbosity normal

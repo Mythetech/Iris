@@ -6,22 +6,19 @@ using Iris.Contracts.Brokers.Models;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
-using MudBlazor.Services;
 using NSubstitute;
 using Xunit;
 
 namespace Iris.Components.Test.Endpoints;
 
-public class EndpointOffcanvasTests : TestContext
+public class EndpointOffcanvasTests : IrisTestContext
 {
     private readonly IBrokerService _brokerService = Substitute.For<IBrokerService>();
 
     public EndpointOffcanvasTests()
     {
-        Services.AddMudServices();
         Services.AddSingleton(_brokerService);
-        JSInterop.Mode = JSRuntimeMode.Loose;
-        RenderComponent<MudPopoverProvider>();
+        AddPopoverProvider();
     }
 
     private static EndpointDetails Sample(string name = "orders") => new()
@@ -39,7 +36,7 @@ public class EndpointOffcanvasTests : TestContext
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns((EndpointPropertiesDto?)null);
 
-        var cut = RenderComponent<EndpointOffcanvas>(p => p
+        var cut = Render<EndpointOffcanvas>(p => p
             .Add(x => x.Endpoint, Sample()));
 
         // The bare <h6>orders</h6> bug — markup must NOT contain it.
@@ -57,7 +54,7 @@ public class EndpointOffcanvasTests : TestContext
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns((EndpointPropertiesDto?)null);
 
-        var cut = RenderComponent<EndpointOffcanvas>(p => p
+        var cut = Render<EndpointOffcanvas>(p => p
             .Add(x => x.Endpoint, Sample())
             .Add(x => x.CanRead, false)
             .Add(x => x.ReadDisabledReason, "Broker does not support reading messages"));
@@ -75,7 +72,7 @@ public class EndpointOffcanvasTests : TestContext
             .Returns((EndpointPropertiesDto?)null);
 
         EndpointDetails? clicked = null;
-        var cut = RenderComponent<EndpointOffcanvas>(p => p
+        var cut = Render<EndpointOffcanvas>(p => p
             .Add(x => x.Endpoint, Sample())
             .Add(x => x.CanRead, true)
             .Add(x => x.OnReadClicked, ep => clicked = ep));
@@ -94,7 +91,7 @@ public class EndpointOffcanvasTests : TestContext
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns((EndpointPropertiesDto?)null);
 
-        var cut = RenderComponent<EndpointOffcanvas>(p => p
+        var cut = Render<EndpointOffcanvas>(p => p
             .Add(x => x.Endpoint, Sample()));
 
         cut.Markup.Should().Contain("Properties are not available for this broker.");
@@ -113,7 +110,7 @@ public class EndpointOffcanvasTests : TestContext
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(dto);
 
-        var cut = RenderComponent<EndpointOffcanvas>(p => p
+        var cut = Render<EndpointOffcanvas>(p => p
             .Add(x => x.Endpoint, Sample()));
 
         cut.Markup.Should().Contain("Messages");
@@ -139,7 +136,7 @@ public class EndpointOffcanvasTests : TestContext
             .Returns(Task.FromResult<EndpointPropertiesDto?>(first),
                       Task.FromException<EndpointPropertiesDto?>(new InvalidOperationException("broker unavailable")));
 
-        var cut = RenderComponent<EndpointOffcanvas>(p => p
+        var cut = Render<EndpointOffcanvas>(p => p
             .Add(x => x.Endpoint, Sample()));
 
         cut.Find("button[aria-label=\"Refresh properties\"]").HasAttribute("disabled").Should().BeFalse();
@@ -161,7 +158,7 @@ public class EndpointOffcanvasTests : TestContext
             Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
             .Returns(first, second);
 
-        var cut = RenderComponent<EndpointOffcanvas>(p => p
+        var cut = Render<EndpointOffcanvas>(p => p
             .Add(x => x.Endpoint, Sample()));
 
         var valueElements = cut.FindAll(".key-value-row-value");

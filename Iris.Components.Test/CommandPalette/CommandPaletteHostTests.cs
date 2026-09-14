@@ -26,7 +26,7 @@ public class CommandPaletteHostTests : IrisTestContext
     [Fact(DisplayName = "Mounts two MudHotkey instances: Ctrl+K and Cmd+K")]
     public void Mounts_two_hotkeys_for_ctrl_and_cmd()
     {
-        var cut = RenderComponent<CommandPaletteHost>();
+        var cut = Render<CommandPaletteHost>();
 
         var hotkeys = cut.FindComponents<MudHotkey>();
         hotkeys.Should().HaveCount(4);
@@ -40,7 +40,7 @@ public class CommandPaletteHostTests : IrisTestContext
     [Fact(DisplayName = "Pressing the hotkey opens the CommandPaletteDialog via IDialogService")]
     public async Task Hotkey_opens_command_palette_dialog()
     {
-        var cut = RenderComponent<CommandPaletteHost>();
+        var cut = Render<CommandPaletteHost>();
         var ctrlHotkey = cut.FindComponents<MudHotkey>()
             .Single(h => h.Instance.Key == JsKey.KeyK && h.Instance.KeyModifiers.Contains(JsKeyModifier.ControlLeft));
 
@@ -56,7 +56,7 @@ public class CommandPaletteHostTests : IrisTestContext
     public async Task Hotkey_does_not_stack_when_palette_already_open()
     {
         _paletteService.MarkOpened();
-        var cut = RenderComponent<CommandPaletteHost>();
+        var cut = Render<CommandPaletteHost>();
         var ctrlHotkey = cut.FindComponents<MudHotkey>()
             .Single(h => h.Instance.Key == JsKey.KeyK && h.Instance.KeyModifiers.Contains(JsKeyModifier.ControlLeft));
 
@@ -71,7 +71,7 @@ public class CommandPaletteHostTests : IrisTestContext
     [Fact(DisplayName = "Both Ctrl+K and Cmd+K hotkeys open the palette")]
     public async Task Both_hotkeys_open_palette()
     {
-        var cut = RenderComponent<CommandPaletteHost>();
+        var cut = Render<CommandPaletteHost>();
         var hotkeys = cut.FindComponents<MudHotkey>()
             .Where(h => h.Instance.Key == JsKey.KeyK).ToArray();
 

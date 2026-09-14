@@ -44,7 +44,7 @@ public class PackagesPageTests : IrisTestContext
         _packages.UploadAssemblyAsync(Arg.Any<string>())
             .Returns(new Success<AssemblyData>(Uploaded()));
 
-        var cut = RenderComponent<Packages>();
+        var cut = Render<Packages>();
 
         await cut.Find("button").ClickAsync(new());
 

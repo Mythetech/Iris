@@ -27,7 +27,7 @@ public class ConnectionDoughnutTests : IrisTestContext
     [InlineData(25)]
     public void Survives_more_connections_than_colours(int connections)
     {
-        var cut = RenderComponent<ConnectionDoughnut>(p => p
+        var cut = Render<ConnectionDoughnut>(p => p
             .Add(x => x.Connections, ConnectionsAcross(connections)));
 
         cut.FindAll("button.mud-chip").Should().HaveCount(connections);

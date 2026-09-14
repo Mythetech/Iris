@@ -4,20 +4,13 @@ using Iris.Components.Brokers;
 using Iris.Components.Brokers.ConnectionDetails;
 using Iris.Contracts.Brokers.Models;
 using Microsoft.Extensions.DependencyInjection;
-using MudBlazor.Services;
 using NSubstitute;
 using Xunit;
 
 namespace Iris.Components.Test.Brokers.ConnectionDetails;
 
-public class AzureServiceBusEndpointsViewTests : TestContext
+public class AzureServiceBusEndpointsViewTests : IrisTestContext
 {
-    public AzureServiceBusEndpointsViewTests()
-    {
-        Services.AddMudServices();
-        JSInterop.Mode = JSRuntimeMode.Loose;
-    }
-
     [Fact(DisplayName = "AzureServiceBusEndpointsView shows Queues, Topics and Subscriptions")]
     public void Shows_three_sections()
     {
@@ -31,7 +24,7 @@ public class AzureServiceBusEndpointsViewTests : TestContext
         });
         Services.AddSingleton(brokerService);
 
-        var cut = RenderComponent<AzureServiceBusEndpointsView>(p => p.Add(x => x.Provider, provider));
+        var cut = Render<AzureServiceBusEndpointsView>(p => p.Add(x => x.Provider, provider));
 
         cut.Markup.Should().Contain("Queues");
         cut.Markup.Should().Contain("Topics");

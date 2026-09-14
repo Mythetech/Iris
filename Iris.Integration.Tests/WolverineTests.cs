@@ -39,7 +39,7 @@ namespace Iris.Integration.Tests
             _rabbitMqContainer = fixture.Container;
         }
 
-        public async Task InitializeAsync()
+        public async ValueTask InitializeAsync()
         {
             var amqpPort = _rabbitMqContainer.GetMappedPublicPort(5672);
 
@@ -56,7 +56,7 @@ namespace Iris.Integration.Tests
                 .StartAsync();
         }
 
-        public async Task DisposeAsync()
+        public async ValueTask DisposeAsync()
         {
             if (_host is not null)
             {

@@ -9,12 +9,12 @@ namespace Iris.Components.Test.Shared;
 
 public class ContextPanelLayoutTests : IrisTestContext
 {
-    private FakeNavigationManager Nav => Services.GetRequiredService<FakeNavigationManager>();
+    private BunitNavigationManager Nav => Services.GetRequiredService<BunitNavigationManager>();
 
     [Fact]
     public void Renders_PageLink_ForTitle()
     {
-        var cut = RenderComponent<ContextPanelLayout>(p => p
+        var cut = Render<ContextPanelLayout>(p => p
             .Add(x => x.Title, "Messaging")
             .Add(x => x.PageHref, "/Messaging"));
 
@@ -24,7 +24,7 @@ public class ContextPanelLayoutTests : IrisTestContext
     [Fact]
     public void PageLink_Navigates_ToPageHref()
     {
-        var cut = RenderComponent<ContextPanelLayout>(p => p
+        var cut = Render<ContextPanelLayout>(p => p
             .Add(x => x.Title, "Messaging")
             .Add(x => x.PageHref, "/Messaging"));
 
@@ -36,7 +36,7 @@ public class ContextPanelLayoutTests : IrisTestContext
     [Fact]
     public void Omits_PageLink_WhenNoHref()
     {
-        var cut = RenderComponent<ContextPanelLayout>(p => p
+        var cut = Render<ContextPanelLayout>(p => p
             .Add(x => x.Title, "Plugin")
             .AddChildContent("<p>body</p>"));
 
@@ -47,7 +47,7 @@ public class ContextPanelLayoutTests : IrisTestContext
     [Fact]
     public void Renders_PageLink_BelowTheBody()
     {
-        var cut = RenderComponent<ContextPanelLayout>(p => p
+        var cut = Render<ContextPanelLayout>(p => p
             .Add(x => x.Title, "History")
             .Add(x => x.PageHref, "/History")
             .AddChildContent("<p>recent activity</p>"));
@@ -59,7 +59,7 @@ public class ContextPanelLayoutTests : IrisTestContext
     [Fact]
     public void Renders_FooterContent_BetweenBodyAndPageLink()
     {
-        var cut = RenderComponent<ContextPanelLayout>(p => p
+        var cut = Render<ContextPanelLayout>(p => p
             .Add(x => x.Title, "Connections")
             .Add(x => x.PageHref, "/Connections")
             .AddChildContent("<p>connection list</p>")
@@ -75,7 +75,7 @@ public class ContextPanelLayoutTests : IrisTestContext
     [Fact]
     public void Body_IsScrollable_SoTheFooterStaysPinned()
     {
-        var cut = RenderComponent<ContextPanelLayout>(p => p
+        var cut = Render<ContextPanelLayout>(p => p
             .Add(x => x.Title, "Packages")
             .Add(x => x.PageHref, "/Packages"));
 

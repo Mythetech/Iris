@@ -15,7 +15,7 @@ using NSubstitute;
 
 namespace Iris.Components.Test.Sagas;
 
-public class SagaConsumerTests : TestContext
+public class SagaConsumerTests : IrisTestContext
 {
     private readonly ISagaDefinitionProvider _provider = Substitute.For<ISagaDefinitionProvider>();
     private readonly SagaTelemetrySettings _settings = new();

@@ -30,7 +30,7 @@ namespace Iris.Integration.Tests
             _rabbitMqContainer = fixture.Container;
         }
 
-        public async Task InitializeAsync()
+        public async ValueTask InitializeAsync()
         {
             var amqpPort = _rabbitMqContainer.GetMappedPublicPort(5672);
 
@@ -46,10 +46,10 @@ namespace Iris.Integration.Tests
             await _consumer.ReceiveAsync(TimeSpan.FromMilliseconds(100));
         }
 
-        public Task DisposeAsync()
+        public ValueTask DisposeAsync()
         {
             _consumer?.Dispose();
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         }
 
         [Fact(DisplayName = "Iris Brighter-wrapped message is parsed by a real Brighter RMQ consumer")]

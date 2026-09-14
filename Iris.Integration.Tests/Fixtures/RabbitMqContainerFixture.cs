@@ -13,9 +13,9 @@ public class RabbitMqContainerFixture : IAsyncLifetime
         .WithExposedPort(15672)
         .Build();
 
-    public Task InitializeAsync() => Container.StartAsync();
+    public ValueTask InitializeAsync() => new(Container.StartAsync());
 
-    public Task DisposeAsync() => Container.DisposeAsync().AsTask();
+    public ValueTask DisposeAsync() => Container.DisposeAsync();
 }
 
 [CollectionDefinition("RabbitMQ")]
