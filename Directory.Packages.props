@@ -33,6 +33,9 @@
     <PackageVersion Include="Rebus.RabbitMq" Version="10.1.1" />
     <PackageVersion Include="WolverineFx.RabbitMQ" Version="5.29.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
+    <!-- Added to every test project by Directory.Build.targets, not by csproj. Replaces
+         coverlet.collector, which only works under VSTest; Iris runs on Microsoft.Testing.Platform. -->
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.11.2" />
     <PackageVersion Include="xunit.v3" Version="4.0.1" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

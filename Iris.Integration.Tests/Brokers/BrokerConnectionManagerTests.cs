@@ -5,6 +5,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Iris.Integration.Tests.Brokers;
 
+/// <summary>
+/// Resolution only, no broker and no Docker, so it runs with the unit tests rather than in
+/// the container job. <see cref="TestCategoryTests"/> is why that has to be said out loud.
+/// </summary>
+[Trait("Category", TestCategories.Unit)]
 public class BrokerConnectionManagerTests
 {
     private readonly IBrokerConnectionManager _manager;

@@ -63,7 +63,7 @@ internal sealed class IrisAssemblyLoadContext : AssemblyLoadContext
         // The deps file is authoritative when the DLL was published with one.
         var resolved = _resolver?.ResolveAssemblyToPath(name);
         if (resolved is not null && File.Exists(resolved))
-            return context.LoadFromAssemblyPath(resolved);
+            return LoadWithoutLocking(context, resolved);
 
         // A DLL copied out of a bin folder usually arrives without its deps.json, so fall back
         // to the plain convention: the dependency sits next to the assembly that needs it.
@@ -72,6 +72,31 @@ internal sealed class IrisAssemblyLoadContext : AssemblyLoadContext
 
         var candidate = Path.Combine(_probingDirectory, name.Name + ".dll");
 
-        return File.Exists(candidate) ? context.LoadFromAssemblyPath(candidate) : null;
+        return File.Exists(candidate) ? LoadWithoutLocking(context, candidate) : null;
+    }
+
+    /// <summary>
+    /// Reads the dependency into memory rather than calling
+    /// <see cref="AssemblyLoadContext.LoadFromAssemblyPath"/>, which memory-maps the file and
+    /// holds it open for the life of the context.
+    ///
+    /// <para>
+    /// On Windows that lock means a user cannot rebuild or delete a dependency while Iris has
+    /// the package loaded, which is precisely what <c>AssemblyLoader</c> avoids for the
+    /// assembly itself by loading it from a stream. Doing it for the assembly but not for the
+    /// assemblies it drags in makes the guarantee only half true. Linux and macOS allow
+    /// unlinking an open file, so this was invisible until CI grew a Windows leg.
+    /// </para>
+    ///
+    /// <para>
+    /// The cost is that these assemblies report an empty <c>Location</c>, which is already
+    /// true of the one Iris was asked to load, and no automatic PDB pickup, which Iris does
+    /// not use.
+    /// </para>
+    /// </summary>
+    private static Assembly LoadWithoutLocking(AssemblyLoadContext context, string path)
+    {
+        using var stream = File.OpenRead(path);
+        return context.LoadFromStream(stream);
     }
 }

@@ -15,7 +15,7 @@ using Testcontainers.RabbitMq;
 namespace Iris.Integration.Tests
 {
     [Collection("RabbitMQ")]
-    [Trait("Category", "Container")]
+    [Trait("Category", TestCategories.Container)]
     public class BrighterTests : IAsyncLifetime
     {
         private const string QueueName = "iris-brighter-test";

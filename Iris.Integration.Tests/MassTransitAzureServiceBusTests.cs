@@ -27,7 +27,7 @@ namespace Iris.Integration.Tests
     /// deserialized by MassTransit's own receive pipeline.
     /// </summary>
     [Collection("AzureServiceBus")]
-    [Trait("Category", "Container")]
+    [Trait("Category", TestCategories.Container)]
     public class MassTransitAzureServiceBusTests
     {
         private readonly AzureServiceBusContainerFixture _emulator;
