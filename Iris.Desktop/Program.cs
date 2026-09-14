@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Hermes;
 using Hermes.Blazor;
 using Iris.Assemblies;
@@ -89,11 +89,7 @@ public class Program
 
         builder.Services.AddTransient<IAssemblyLoadService, AssemblyLoader>();
         builder.Services.AddTransient<ISampleJsonGenerator, SampleJsonGenerator>();
-        builder.Services.AddTransient<IrisLiteDbContext>();
-        builder.Services.AddTransient<HistoryRepository>();
-        builder.Services.AddTransient<ConnectionRepository>();
-        builder.Services.AddSingleton<TemplateRepository>();
-        builder.Services.AddSingleton<PackageRepository>();
+        builder.Services.AddIrisPersistence();
         builder.Services.AddTransient<AutoDiscovery>();
         builder.Services.AddSingleton<ITelemetrySink, MessageBusTelemetrySink>();
         builder.Services.AddSingleton<IOtlpReceiver, OtlpReceiverHost>();
