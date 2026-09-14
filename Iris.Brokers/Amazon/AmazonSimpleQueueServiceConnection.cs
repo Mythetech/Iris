@@ -28,7 +28,7 @@ namespace Iris.Brokers.Amazon
 
         public Guid Id { get; } = Guid.NewGuid();
 
-        public string Name => "SimpleQueueService";
+        public string Name => ConnectorTransports.SimpleQueueService;
 
         public int EndpointCount => _endpoints.Count;
 
