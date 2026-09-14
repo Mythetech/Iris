@@ -21,7 +21,7 @@ namespace Iris.Integration.Tests
     public record IrisRebusTestMessage(int Red, int Green, int Blue);
 
     [Collection("RabbitMQ")]
-    [Trait("Category", "Container")]
+    [Trait("Category", TestCategories.Container)]
     public class RebusTests : IAsyncLifetime
     {
         private const string QueueName = "iris-rebus-test";

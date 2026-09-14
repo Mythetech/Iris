@@ -31,7 +31,7 @@ public record IrisNServiceBusTestMessage(int Red, int Green, int Blue) : IMessag
 /// </para>
 /// </summary>
 [Collection("Azurite")]
-[Trait("Category", "Container")]
+[Trait("Category", TestCategories.Container)]
 public class NServiceBusTests : IAsyncLifetime
 {
     private const string EndpointName = "irisnsbtest";

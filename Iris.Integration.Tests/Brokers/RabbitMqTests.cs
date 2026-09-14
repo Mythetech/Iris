@@ -11,7 +11,7 @@ using Testcontainers.RabbitMq;
 namespace Iris.Integration.Tests.Brokers
 {
     [Collection("RabbitMQ")]
-    [Trait("Category", "Container")]
+    [Trait("Category", TestCategories.Container)]
     public class RabbitMqTests
     {
         private readonly RabbitMqContainer _rabbitMqContainer;

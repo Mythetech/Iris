@@ -18,7 +18,7 @@ namespace Iris.Integration.Tests
     public record IrisEasyNetQTestMessage(int Red, int Green, int Blue);
 
     [Collection("RabbitMQ")]
-    [Trait("Category", "Container")]
+    [Trait("Category", TestCategories.Container)]
     public class EasyNetQTests : IAsyncLifetime
     {
         private const string QueueName = "iris-easynetq-test";

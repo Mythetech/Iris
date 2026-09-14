@@ -34,6 +34,29 @@ public class AssemblyLoaderTests : IClassFixture<EmittedAssemblyFixture>
         loaded.Context.Unload();
     }
 
+    [Fact(DisplayName = "A resolved dependency is read into memory, not mapped from its file")]
+    public async Task Does_not_hold_the_dependency_file_open()
+    {
+        // A dependency pulled in with LoadFromAssemblyPath stays memory-mapped for the life of
+        // the context, so on Windows the user cannot rebuild or delete it while Iris has the
+        // package loaded. AssemblyLoader already avoids that for the assembly it is handed;
+        // this is the other half.
+        //
+        // Asserted through Location rather than by trying to delete the file, because Linux
+        // and macOS let you unlink an open file and the delete would pass there either way.
+        // An empty Location is what a stream-loaded assembly reports.
+        var path = _fixture.StageContracts(withDependency: true);
+        var loaded = await LoadAsync(path);
+
+        loaded!.Assembly.ToContract();
+
+        var dependency = loaded.Context.Assemblies
+            .Single(a => a.GetName().Name == EmittedAssemblyFixture.DependencyName);
+        dependency.Location.Should().BeEmpty("a dependency loaded by path keeps its file locked on Windows");
+
+        loaded.Context.Unload();
+    }
+
     [Fact(DisplayName = "Without the dependency the failure still happens at mapping, not at load")]
     public async Task Reports_the_missing_dependency_when_it_is_not_beside_the_assembly()
     {
