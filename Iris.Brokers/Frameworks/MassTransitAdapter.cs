@@ -1,8 +1,10 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using Iris.Contracts.Messaging.Frameworks;
 using MassTransit;
+using ConnectorProviders = Iris.Contracts.Brokers.Models.ConnectorProviders;
+using ConnectorTransports = Iris.Contracts.Brokers.Models.ConnectorTransports;
 
 namespace Iris.Brokers.Frameworks
 {

@@ -5,6 +5,8 @@ using FluentAssertions;
 using Iris.Brokers;
 using Iris.Brokers.Frameworks;
 using Xunit;
+using ConnectorProviders = Iris.Contracts.Brokers.Models.ConnectorProviders;
+using ConnectorTransports = Iris.Contracts.Brokers.Models.ConnectorTransports;
 
 namespace Iris.Brokers.Test.Frameworks;
 

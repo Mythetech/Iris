@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Iris.Brokers.Exceptions;
 using Iris.Brokers.Models;
+using ConnectorProviders = Iris.Contracts.Brokers.Models.ConnectorProviders;
 
 namespace Iris.Brokers.Amazon
 {
