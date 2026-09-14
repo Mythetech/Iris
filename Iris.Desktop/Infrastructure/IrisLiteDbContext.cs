@@ -1,4 +1,4 @@
-using LiteDB;
+﻿using LiteDB;
 using Microsoft.Extensions.Logging;
 
 namespace Iris.Desktop.Infrastructure
@@ -6,17 +6,40 @@ namespace Iris.Desktop.Infrastructure
     public class IrisLiteDbContext : IDisposable
     {
         private static string DatabaseName { get; } = "IrisDb.db";
+
+        /// <summary>
+        /// Stamped on the database so a future breaking change to any collection has a
+        /// version to migrate from. Nothing reads it yet beyond recording it; the point
+        /// is that a database written today can be told apart from one written after the
+        /// first schema change, which is impossible once records are already on disk.
+        /// </summary>
+        public const int SchemaVersion = 1;
+
         private readonly LiteDatabase _database;
         private readonly ILogger<IrisLiteDbContext> _logger;
         private bool _disposed;
 
         public IrisLiteDbContext(ILogger<IrisLiteDbContext> logger)
+            : this(logger, GetDatabasePath())
+        {
+        }
+
+        /// <summary>
+        /// Takes the file explicitly so a test can run against a temporary database rather
+        /// than the developer's real one. DI selects the single-argument constructor,
+        /// because a string is not something the container can resolve.
+        /// </summary>
+        public IrisLiteDbContext(ILogger<IrisLiteDbContext> logger, string dbPath)
         {
             _logger = logger;
-            var dbPath = GetDatabasePath();
             var connectionString = new ConnectionString
             {
                 Filename = dbPath,
+
+                // Shared, not Direct, even though this is now a single long-lived
+                // connection. Direct takes an exclusive lock on the file, and nothing
+                // stops a user from launching Iris twice; the second one would fail to
+                // open its own database rather than simply being slower.
                 Connection = ConnectionType.Shared
             };
 
@@ -40,6 +63,9 @@ namespace Iris.Desktop.Infrastructure
 
                 _database = new LiteDatabase(connectionString);
             }
+
+            if (_database.UserVersion == 0)
+                _database.UserVersion = SchemaVersion;
         }
 
         /// <summary>
@@ -68,12 +94,29 @@ namespace Iris.Desktop.Infrastructure
             return quarantinePath;
         }
 
+        /// <summary>The default location, alongside the user's other application data.</summary>
         private static string GetDatabasePath()
         {
             var basePath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var folderPath = Path.Combine(basePath, "Iris");
             Directory.CreateDirectory(folderPath);
             return Path.Combine(folderPath, DatabaseName);
+        }
+
+        /// <summary>The schema version recorded in the file this context opened.</summary>
+        public int UserVersion => _database.UserVersion;
+
+        /// <summary>
+        /// The index names defined on a collection, read from LiteDB's own catalogue.
+        /// A missing index is invisible until a collection is large enough to hurt, so it
+        /// is worth being able to assert on.
+        /// </summary>
+        public IReadOnlyList<string> ListIndexes(string collection)
+        {
+            return _database.GetCollection("$indexes")
+                .Find(LiteDB.Query.EQ("collection", collection))
+                .Select(document => document["name"].AsString)
+                .ToList();
         }
 
         public ILiteCollection<T> GetCollection<T>(string? name = null)
