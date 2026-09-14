@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 namespace Iris.Integration.Tests.Brokers
 {
     [Collection("Azurite")]
-    [Trait("Category", "Container")]
+    [Trait("Category", TestCategories.Container)]
     public class AzureStorageQueueServiceContainerTests
     {
         private const string QueueName = "integration-test";

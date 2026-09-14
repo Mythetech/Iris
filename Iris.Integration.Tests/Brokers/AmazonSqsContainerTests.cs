@@ -19,7 +19,7 @@ namespace Iris.Integration.Tests.Brokers
     /// so there is one AWS emulator rather than one per service.
     /// </summary>
     [Collection("LocalEmu")]
-    [Trait("Category", "Container")]
+    [Trait("Category", TestCategories.Container)]
     public class AmazonSqsContainerTests
     {
         private readonly LocalEmuContainerFixture _emulator;

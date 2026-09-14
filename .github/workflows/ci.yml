@@ -6,13 +6,33 @@ on:
   pull_request:
     branches: [main]
 
+# Nothing here writes anything back. Declared explicitly so a workflow that later needs a
+# write has to say so, rather than inheriting whatever the repository default happens to be.
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  unit-tests:
+    name: Unit tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+
+    strategy:
+      # Both platforms report. A Windows-only failure is exactly what this job exists to
+      # find, and losing the Linux result to it would hide everything else.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
         with:
+          # Nerdbank.GitVersioning computes the version from commit height, so it needs the
+          # full history rather than the default shallow clone.
           fetch-depth: 0
 
       - name: Setup .NET
@@ -20,44 +40,76 @@ jobs:
         with:
           global-json-file: global.json
 
-      - name: Restore dependencies
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('Directory.Packages.props', 'global.json', '**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Restore
         run: dotnet restore
 
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
-      - name: Unit Tests
-        run: |
-          dotnet test --project Services/Iris.Brokers.Test/Iris.Brokers.Test.csproj --no-build --configuration Release --verbosity normal
-          dotnet test --project Services/Assemblies/Iris.Assemblies.Test/Iris.Assemblies.Test.csproj --no-build --configuration Release --verbosity normal
-          dotnet test --project Iris.Components.Test/Iris.Components.Test.csproj --no-build --configuration Release --verbosity normal
-          dotnet test --project Services/Telemetry/Iris.Telemetry.Test/Iris.Telemetry.Test.csproj --no-build --configuration Release --verbosity normal
-          dotnet test --project Services/Sagas/Iris.Sagas.Test/Iris.Sagas.Test.csproj --no-build --configuration Release --verbosity normal
-          dotnet test --project Iris.Desktop.Test/Iris.Desktop.Test.csproj --no-build --configuration Release --verbosity normal
-
-  integration-tests:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: global.json
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --no-restore --configuration Release
-
-      - name: Integration Tests
+      # The whole solution, not a list of projects: a new test project is picked up by
+      # existing, rather than by someone remembering to add a line here. Everything needing
+      # Docker is excluded by trait and runs in the job below; TestCategoryTests is what makes
+      # sure a test class cannot forget to declare which of the two it is.
+      - name: Unit tests
         run: >
-          dotnet test --project Iris.Integration.Tests/Iris.Integration.Tests.csproj
+          dotnet test
           --no-build
           --configuration Release
-          --verbosity normal
+          --filter-not-trait "Category=Container"
+          --minimum-expected-tests 700
+          --coverage
+          --coverage-output-format cobertura
+          --coverage-output coverage.cobertura.xml
+          --results-directory ${{ github.workspace }}/TestResults
+
+      - name: Upload coverage
+        if: ${{ matrix.os == 'ubuntu-latest' && !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: TestResults/coverage.cobertura.xml
+          if-no-files-found: error
+
+  integration-tests:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('Directory.Packages.props', 'global.json', '**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      # Only what needs a broker. The rest of Iris.Integration.Tests already ran above.
+      - name: Integration tests
+        run: >
+          dotnet test
+          --no-build
+          --configuration Release
+          --filter-trait "Category=Container"
+          --minimum-expected-tests 40

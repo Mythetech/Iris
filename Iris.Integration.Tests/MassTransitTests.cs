@@ -19,7 +19,7 @@ namespace Iris.Integration.Tests
     public record IrisMtTestMessage(int Red, int Green, int Blue);
 
     [Collection("RabbitMQ")]
-    [Trait("Category", "Container")]
+    [Trait("Category", TestCategories.Container)]
     public class MassTransitTests
     {
         private readonly RabbitMqContainer _rabbitMqContainer;

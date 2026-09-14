@@ -27,7 +27,7 @@ namespace Iris.Integration.Tests
     /// subscription feeding the endpoint queue.
     /// </summary>
     [Collection("LocalEmu")]
-    [Trait("Category", "Container")]
+    [Trait("Category", TestCategories.Container)]
     public class MassTransitAmazonSqsTests
     {
         private readonly LocalEmuContainerFixture _emulator;

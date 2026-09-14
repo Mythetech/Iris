@@ -98,9 +98,12 @@ public sealed class EmittedAssemblyFixture : IDisposable
         {
             System.IO.Directory.Delete(Directory, recursive: true);
         }
-        catch (IOException)
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            // A leftover temp directory is not worth failing a green test over.
+            // A leftover temp directory is not worth failing a green test over, which was
+            // always the intent; UnauthorizedAccessException is not an IOException, so on
+            // Windows a still-locked DLL escaped the catch and failed five passing tests in
+            // cleanup instead.
         }
     }
 }

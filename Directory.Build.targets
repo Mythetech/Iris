@@ -1,0 +1,13 @@
+<Project>
+
+  <!--
+    Every test project collects coverage. Declared here rather than in each of the seven test
+    csproj files so that a new test project is included by virtue of being one, not by someone
+    remembering to add a line. The CI job that reads the output picks projects the same way,
+    off the solution, for the same reason.
+  -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+  </ItemGroup>
+
+</Project>
