@@ -1,4 +1,5 @@
-﻿<MudStack Class="mud-width-full">
+@using Iris.Components.Infrastructure
+<MudStack Class="mud-width-full">
     @if (Provider == null || _providerDataType == null)
     {
         <ProtectedTextField Dense="true" Label="Connection String" @bind-Value="@_connectionString" />
@@ -13,7 +14,7 @@
 
 @code {
     [Inject]
-    public Dictionary<string, Type> DataProviderLookup { get; set; } = default!;
+    public ComponentRegistry<IConnectionDataProvider> DataProviderRegistry { get; set; } = default!;
 
     private ConnectionData Data { get; set; } = new()
     {
@@ -22,13 +23,15 @@
 
     public ConnectionData GetData()
     {
-        if (_dynamicConnectionDataComponent?.Instance == null || Provider == null || _providerDataType == null)
-        {
-            Data.ConnectionString = _connectionString;
-            return Data;
-        }
+        // _providerDataType is the authority on which branch rendered. The @ref can outlive
+        // the component when the selection moves to a provider with no registered view, and
+        // reading its payload then would return the previous provider's data.
+        if (_providerDataType is not null
+            && _dynamicConnectionDataComponent?.Instance is IConnectionDataProvider provider)
+            return provider.Payload;
 
-        return (_dynamicConnectionDataComponent!.Instance as IConnectionDataProvider)!.Payload;
+        Data.ConnectionString = _connectionString;
+        return Data;
     }
 
     [Parameter]
@@ -44,13 +47,10 @@
 
     protected override void OnParametersSet()
     {
-        if (Provider != null && DataProviderLookup != null && DataProviderLookup.ContainsKey(Provider.Name.Replace(" ", "").ToLower()))
+        if (DataProviderRegistry.TryResolve(out var providerDataType, Provider?.Name))
         {
-            _providerDataType = DataProviderLookup[Provider.Name.Replace(" ", "").ToLower()];
-
-            _parameters = new Dictionary<string, object>();
-
-            _parameters.Add("Data", Data);
+            _providerDataType = providerDataType;
+            _parameters = new Dictionary<string, object> { ["Data"] = Data };
         }
         else
         {

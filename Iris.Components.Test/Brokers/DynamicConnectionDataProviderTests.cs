@@ -2,6 +2,7 @@
 using Bunit;
 using FluentAssertions;
 using Iris.Components.Brokers;
+using Iris.Components.Infrastructure;
 using Iris.Contracts.Brokers.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,13 +14,11 @@ namespace Iris.Components.Test.Brokers
     {
         public DynamicConnectionDataProviderTests()
         {
-            var providerLookup = new Dictionary<string, Type>
-        {
-            { "azureservicebus", null },
-            { "rabbitmq", typeof(RabbitMqConnectionData) },
-                {"amazon", typeof(AmazonConnectionData) }
-        };
-            Services.AddSingleton(providerLookup);
+            // Azure Service Bus is deliberately absent: an unregistered provider falls back
+            // to the plain connection string field.
+            Services.AddSingleton(new ComponentRegistry<IConnectionDataProvider>()
+                .Register<RabbitMqConnectionData>("RabbitMq")
+                .Register<AmazonConnectionData>("Amazon"));
             AddPopoverProvider();
         }
 
@@ -97,6 +96,23 @@ namespace Iris.Components.Test.Brokers
             // Assert
             var connectionData = cut.Instance.GetData();
             connectionData.ConnectionString.Should().Be("New Value");
+        }
+
+        [Fact(DisplayName = "Switching from a registered provider to an unregistered one does not return the previous payload")]
+        public async Task DynamicProvider_SwitchingToUnregistered_DoesNotReturnStalePayload()
+        {
+            // Arrange: render the RabbitMq-specific form first so the DynamicComponent @ref is set.
+            var cut = Render<DynamicConnectionDataProvider>(parameters => parameters
+                .Add(p => p.Provider, new SupportedProvider { Name = "RabbitMq" }));
+            cut.FindComponent<RabbitMqConnectionData>().Should().NotBeNull();
+
+            // Act: move to a provider with no registered view, then type a connection string.
+            await cut.InvokeAsync(() => cut.Render(parameters => parameters
+                .Add(p => p.Provider, new SupportedProvider { Name = "FakeProvider" })));
+            await cut.Find("input[type='password']").InputAsync(new ChangeEventArgs { Value = "amqp://typed" });
+
+            // Assert: the payload comes from the text field, not the stale RabbitMq component.
+            cut.Instance.GetData().ConnectionString.Should().Be("amqp://typed");
         }
     }
 }
