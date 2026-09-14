@@ -58,7 +58,7 @@ namespace Iris.Integration.Tests
                 cfg.ReceiveEndpoint(queueName, e => e.Consumer(() => consumer));
             });
 
-            await bus.StartAsync();
+            await bus.StartAsync(TestContext.Current.CancellationToken);
 
             try
             {
@@ -98,15 +98,11 @@ namespace Iris.Integration.Tests
                     request);
 
                 // Assert — the MassTransit consumer must deserialize and receive the payload.
-                var completed = await Task.WhenAny(
+                var context = await Eventually.CompletesAsync(
                     consumer.Received.Task,
-                    Task.Delay(TimeSpan.FromSeconds(30)));
-
-                completed.Should().BeSameAs(
-                    consumer.Received.Task,
-                    "MassTransit should consume the Iris-wrapped envelope within 30s — a timeout means the adapter produced a wire format MassTransit can't route or deserialize");
-
-                var context = await consumer.Received.Task;
+                    TimeSpan.FromSeconds(30),
+                    "MassTransit consumes the Iris-wrapped envelope; a timeout means the adapter produced a wire format MassTransit cannot route or deserialize",
+                    TestContext.Current.CancellationToken);
                 context.Message.Red.Should().Be(1);
                 context.Message.Green.Should().Be(2);
                 context.Message.Blue.Should().Be(3);
@@ -123,7 +119,7 @@ namespace Iris.Integration.Tests
             }
             finally
             {
-                await bus.StopAsync();
+                await bus.StopAsync(TestContext.Current.CancellationToken);
             }
         }
 

@@ -93,11 +93,11 @@ namespace Iris.Integration.Tests
                 Type = "Queue",
             }, request);
 
-            var completed = await Task.WhenAny(_received.Task, Task.Delay(TimeSpan.FromSeconds(30)));
-            completed.Should().BeSameAs(_received.Task,
-                "EasyNetQ should consume the message within 30s; a timeout means the AMQP type property did not reach the consumer");
-
-            var message = await _received.Task;
+            var message = await Eventually.CompletesAsync(
+                _received.Task,
+                TimeSpan.FromSeconds(30),
+                "EasyNetQ consumes the message; a timeout means the AMQP type property did not reach the consumer",
+                TestContext.Current.CancellationToken);
             message.Should().Be(new IrisEasyNetQTestMessage(1, 2, 3));
         }
     }

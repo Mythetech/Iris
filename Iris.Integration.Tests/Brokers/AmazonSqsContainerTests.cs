@@ -59,7 +59,8 @@ namespace Iris.Integration.Tests.Brokers
             Name = queueName,
         };
 
-        [Fact(DisplayName = "AmazonSqsConnection implements receive + dlq receive only", Timeout = 120000)]
+        // No Timeout: this test awaits nothing, so there is nothing for one to interrupt.
+        [Fact(DisplayName = "AmazonSqsConnection implements receive + dlq receive only")]
         public Task Connection_implements_expected_interfaces()
         {
             using var client = CreateSqsClient();
@@ -80,22 +81,25 @@ namespace Iris.Integration.Tests.Brokers
             var receiver = (IMessageReceiver)connection;
 
             var queueName = "iris-sqs-receive-test";
-            await client.CreateQueueAsync(queueName);
+            await client.CreateQueueAsync(queueName, TestContext.Current.CancellationToken);
 
             await client.SendMessageAsync(new SendMessageRequest
             {
-                QueueUrl = (await client.GetQueueUrlAsync(queueName)).QueueUrl,
+                QueueUrl = (await client.GetQueueUrlAsync(queueName, TestContext.Current.CancellationToken)).QueueUrl,
                 MessageBody = "{\"i\":1}",
                 MessageAttributes = new Dictionary<string, MessageAttributeValue>
                 {
                     ["customAttr"] = new() { DataType = "String", StringValue = "hello" },
                 },
-            });
+            }, TestContext.Current.CancellationToken);
 
-            // Give the queue a beat to make the message visible.
-            await Task.Delay(500);
-
-            var msgs = await receiver.ReceiveAsync(Endpoint(queueName), 10);
+            // Polled rather than slept on. An empty receive consumes nothing, so retrying is
+            // free, and the send-to-visible latency is the emulator's business, not a number
+            // this test should be guessing.
+            var msgs = await Eventually.NonEmptyAsync(
+                _ => receiver.ReceiveAsync(Endpoint(queueName), 10),
+                "the sent message becomes visible on the queue",
+                TestContext.Current.CancellationToken);
 
             msgs.Should().NotBeEmpty();
             var msg = msgs[0];
@@ -114,9 +118,9 @@ namespace Iris.Integration.Tests.Brokers
             var dlqReceiver = (IDeadLetterReceiver)connection;
 
             var queueName = "iris-sqs-no-dlq-test";
-            await client.CreateQueueAsync(queueName);
+            await client.CreateQueueAsync(queueName, TestContext.Current.CancellationToken);
 
-            var dlqMsgs = await dlqReceiver.ReceiveDeadLetterAsync(Endpoint(queueName), 10);
+            var dlqMsgs = await dlqReceiver.ReceiveDeadLetterAsync(Endpoint(queueName), 10, TestContext.Current.CancellationToken);
 
             dlqMsgs.Should().BeEmpty();
         }
@@ -132,12 +136,12 @@ namespace Iris.Integration.Tests.Brokers
             var dlqName = "iris-sqs-dlq";
             var mainName = "iris-sqs-main";
 
-            var dlqUrlResp = await client.CreateQueueAsync(dlqName);
+            var dlqUrlResp = await client.CreateQueueAsync(dlqName, TestContext.Current.CancellationToken);
             var dlqAttrs = await client.GetQueueAttributesAsync(new GetQueueAttributesRequest
             {
                 QueueUrl = dlqUrlResp.QueueUrl,
                 AttributeNames = new List<string> { "QueueArn" },
-            });
+            }, TestContext.Current.CancellationToken);
             var dlqArn = dlqAttrs.Attributes["QueueArn"];
 
             var mainUrlResp = await client.CreateQueueAsync(new CreateQueueRequest
@@ -148,48 +152,51 @@ namespace Iris.Integration.Tests.Brokers
                     ["RedrivePolicy"] =
                         $"{{\"deadLetterTargetArn\":\"{dlqArn}\",\"maxReceiveCount\":1}}",
                 },
-            });
+            }, TestContext.Current.CancellationToken);
             var mainUrl = mainUrlResp.QueueUrl;
 
-            // Send a message to the main queue, then drive its delivery
-            // count past maxReceiveCount=1 so the broker moves it to the DLQ.
-            // Step 1: send.
-            await client.SendMessageAsync(mainUrl, "{\"will\":\"dead-letter\"}");
-            await Task.Delay(300);
+            // Send a message to the main queue, then drive its delivery count past
+            // maxReceiveCount=1 so the broker moves it to the DLQ.
+            await client.SendMessageAsync(mainUrl, "{\"will\":\"dead-letter\"}", TestContext.Current.CancellationToken);
 
-            // Step 2: receive once with a very short visibility timeout so
-            // we can re-receive without waiting. Don't delete — let the
-            // visibility timer lapse so the broker re-attempts delivery.
-            var firstAttempt = await client.ReceiveMessageAsync(new ReceiveMessageRequest
-            {
-                QueueUrl = mainUrl,
-                MaxNumberOfMessages = 1,
-                VisibilityTimeout = 1,
-                WaitTimeSeconds = 1,
-            });
+            // Step 1: take delivery once with a one second visibility timeout, and do not
+            // delete it, so the timer lapses and the broker re-attempts delivery.
+            var firstAttempt = await Eventually.Async(
+                _ => client.ReceiveMessageAsync(new ReceiveMessageRequest
+                {
+                    QueueUrl = mainUrl,
+                    MaxNumberOfMessages = 1,
+                    VisibilityTimeout = 1,
+                    WaitTimeSeconds = 1,
+                }),
+                response => response.Messages is { Count: > 0 },
+                "the message is delivered from the main queue once",
+                TestContext.Current.CancellationToken);
+
             firstAttempt.Messages.Should().NotBeNull().And.NotBeEmpty();
 
-            // Wait for visibility to expire so the message becomes deliverable
-            // again — this is the trigger for the redrive policy.
-            await Task.Delay(2000);
+            // Step 2: keep re-receiving until the DLQ has it. Each attempt that finds the
+            // message visible again counts as another delivery and is what actually trips
+            // the redrive policy, so the poll drives the broker rather than waiting on it.
+            //
+            // This replaces a sleep sized to the visibility timeout followed by a single
+            // receive whose own comment admitted it did not know what it would return.
+            var dlqMessages = await Eventually.NonEmptyAsync(
+                async _ =>
+                {
+                    await client.ReceiveMessageAsync(new ReceiveMessageRequest
+                    {
+                        QueueUrl = mainUrl,
+                        MaxNumberOfMessages = 1,
+                        VisibilityTimeout = 1,
+                        WaitTimeSeconds = 1,
+                    });
 
-            // Step 3: receive again — the broker counts this as the 2nd
-            // delivery attempt and moves the message to the DLQ instead of
-            // returning it. The receive call returns empty.
-            var secondAttempt = await client.ReceiveMessageAsync(new ReceiveMessageRequest
-            {
-                QueueUrl = mainUrl,
-                MaxNumberOfMessages = 1,
-                VisibilityTimeout = 1,
-                WaitTimeSeconds = 1,
-            });
-            // The message should now be in the DLQ; the second attempt
-            // returns nothing or returns and we'd receive it again, but
-            // either way the next call to ReceiveDeadLetterAsync should
-            // find it.
-            await Task.Delay(500);
-
-            var dlqMessages = await dlqReceiver.ReceiveDeadLetterAsync(Endpoint(mainName), 10);
+                    return await dlqReceiver.ReceiveDeadLetterAsync(Endpoint(mainName), 10);
+                },
+                "the message is redriven to the dead letter queue",
+                TestContext.Current.CancellationToken,
+                interval: TimeSpan.FromMilliseconds(500));
 
             dlqMessages.Should().NotBeEmpty(
                 "the message should have been redriven to the DLQ after exceeding maxReceiveCount=1");
@@ -206,7 +213,7 @@ namespace Iris.Integration.Tests.Brokers
             using var client = CreateSqsClient();
             var connection = CreateConnection(client);
             var queueName = "iris-sqs-send-headers-test";
-            await client.CreateQueueAsync(queueName);
+            await client.CreateQueueAsync(queueName, TestContext.Current.CancellationToken);
 
             var adapter = new BrighterAdapter();
             var request = MessageRequest.Create("OrderPlaced", "{\"i\":1}", generateIrisHeaders: true, "MyApp.OrderPlaced");
@@ -216,9 +223,11 @@ namespace Iris.Integration.Tests.Brokers
             FrameworkCompatibility.RemoveDropped(request, compatibility);
 
             await connection.SendAsync(Endpoint(queueName), request);
-            await Task.Delay(500);
 
-            var msgs = await ((IMessageReceiver)connection).ReceiveAsync(Endpoint(queueName), 10);
+            var msgs = await Eventually.NonEmptyAsync(
+                _ => ((IMessageReceiver)connection).ReceiveAsync(Endpoint(queueName), 10),
+                "the sent message becomes visible on the queue",
+                TestContext.Current.CancellationToken);
 
             msgs.Should().ContainSingle();
             msgs[0].Properties.Should().ContainKey("MessageType").WhoseValue.Should().Be("MT_EVENT");

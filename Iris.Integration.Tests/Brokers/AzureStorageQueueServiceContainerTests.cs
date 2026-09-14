@@ -32,7 +32,7 @@ namespace Iris.Integration.Tests.Brokers
         {
             // Arrange
             var queueClient = new QueueClient(ConnectionString, QueueName);
-            await queueClient.CreateIfNotExistsAsync();
+            await queueClient.CreateIfNotExistsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
             var connectionData = new ConnectionData()
             {
@@ -55,7 +55,7 @@ namespace Iris.Integration.Tests.Brokers
         {
             // Arrange
             var queueClient = new QueueClient(ConnectionString, QueueName);
-            await queueClient.CreateIfNotExistsAsync();
+            await queueClient.CreateIfNotExistsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
             var messageText = "{\"Red\": 0, \"Green\": 20, \"Blue\": 30}";
 
@@ -128,8 +128,8 @@ namespace Iris.Integration.Tests.Brokers
             var connection = await CreateAndSeedAsync(queue, 3);
             var peeker = (IMessagePeeker)connection;
 
-            var first = await peeker.PeekAsync(Endpoint(queue), 10);
-            var second = await peeker.PeekAsync(Endpoint(queue), 10);
+            var first = await peeker.PeekAsync(Endpoint(queue), 10, TestContext.Current.CancellationToken);
+            var second = await peeker.PeekAsync(Endpoint(queue), 10, TestContext.Current.CancellationToken);
 
             first.Should().HaveCount(3);
             second.Should().HaveCount(3);
@@ -144,8 +144,8 @@ namespace Iris.Integration.Tests.Brokers
             var receiver = (IMessageReceiver)connection;
             var peeker = (IMessagePeeker)connection;
 
-            var received = await receiver.ReceiveAsync(Endpoint(queue), 10);
-            var afterPeek = await peeker.PeekAsync(Endpoint(queue), 10);
+            var received = await receiver.ReceiveAsync(Endpoint(queue), 10, TestContext.Current.CancellationToken);
+            var afterPeek = await peeker.PeekAsync(Endpoint(queue), 10, TestContext.Current.CancellationToken);
 
             received.Should().HaveCount(3);
             afterPeek.Should().BeEmpty();
@@ -158,7 +158,7 @@ namespace Iris.Integration.Tests.Brokers
             var connection = await CreateAndSeedAsync(queue, 1);
             var receiver = (IMessageReceiver)connection;
 
-            var msgs = await receiver.ReceiveAsync(Endpoint(queue), 1);
+            var msgs = await receiver.ReceiveAsync(Endpoint(queue), 1, TestContext.Current.CancellationToken);
 
             msgs.Should().HaveCount(1);
             var m = msgs[0];
@@ -173,8 +173,8 @@ namespace Iris.Integration.Tests.Brokers
         public async Task Send_with_headers_still_enqueues_body()
         {
             var queueClient = new QueueClient(ConnectionString, QueueName);
-            await queueClient.CreateIfNotExistsAsync();
-            await queueClient.ClearMessagesAsync();
+            await queueClient.CreateIfNotExistsAsync(cancellationToken: TestContext.Current.CancellationToken);
+            await queueClient.ClearMessagesAsync(TestContext.Current.CancellationToken);
 
             var connection = new AzureQueueStorageConnection(
                 new ConnectionMetadata { Connector = new AzureConnector(new LoggerFactory()), Address = ConnectionString },
@@ -183,7 +183,7 @@ namespace Iris.Integration.Tests.Brokers
             var request = MessageRequest.Create(QueueName, "{\"Red\":1}", generateIrisHeaders: true);
             await connection.SendAsync(new EndpointDetails { Provider = "AzureQueueStorage", Address = ConnectionString, Name = QueueName, Type = "Queue" }, request);
 
-            var peeked = await queueClient.PeekMessageAsync();
+            var peeked = await queueClient.PeekMessageAsync(TestContext.Current.CancellationToken);
             peeked.Value.Body.ToString().Should().Be("{\"Red\":1}");
         }
     }

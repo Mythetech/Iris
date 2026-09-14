@@ -94,11 +94,11 @@ namespace Iris.Integration.Tests
                 Type = "Queue",
             }, request);
 
-            var completed = await Task.WhenAny(IrisWolverineTestHandler.Received.Task, Task.Delay(TimeSpan.FromSeconds(30)));
-            completed.Should().BeSameAs(IrisWolverineTestHandler.Received.Task,
-                "Wolverine should handle the message within 30s; a timeout means the identity in the AMQP type property did not match the handler");
-
-            var message = await IrisWolverineTestHandler.Received.Task;
+            var message = await Eventually.CompletesAsync(
+                IrisWolverineTestHandler.Received.Task,
+                TimeSpan.FromSeconds(30),
+                "Wolverine handles the message; a timeout means the identity in the AMQP type property did not match the handler",
+                TestContext.Current.CancellationToken);
             message.Should().Be(new IrisWolverineTestMessage(1, 2, 3));
         }
     }
