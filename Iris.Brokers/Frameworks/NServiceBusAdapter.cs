@@ -1,7 +1,8 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using Iris.Contracts.Messaging.Frameworks;
 using NServiceBus.Transport;
+using ConnectorTransports = Iris.Contracts.Brokers.Models.ConnectorTransports;
 
 namespace Iris.Brokers.Frameworks
 {

@@ -1,9 +1,10 @@
-﻿using Iris.Components.Admin;
+using Iris.Components.Admin;
 using Iris.Components.Breadcrumbs;
 using Iris.Components.Brokers;
 using Iris.Components.CommandPalette;
 using Iris.Components.History;
 using Iris.Components.Infrastructure;
+using Iris.Contracts.Brokers.Models;
 using Iris.Components.Theme;
 using Mythetech.Framework.Infrastructure.MessageBus;
 using Iris.Components.Messaging;
@@ -65,12 +66,12 @@ namespace Iris.Components
             // Per-broker UI slots. A broker with no entry falls back to the default view,
             // so adding one needs no change to the components that dispatch on these.
             services.AddSingleton(new ComponentRegistry<Brokers.IConnectionDataProvider>()
-                .Register<Brokers.RabbitMqConnectionData>("RabbitMq")
-                .Register<Brokers.AmazonConnectionData>("Amazon"));
+                .Register<Brokers.RabbitMqConnectionData>(ConnectorProviders.RabbitMq)
+                .Register<Brokers.AmazonConnectionData>(ConnectorProviders.Amazon));
 
             services.AddSingleton(new ComponentRegistry<Brokers.ConnectionDetails.IConnectionEndpointsView>()
-                .Register<Brokers.ConnectionDetails.RabbitMqEndpointsView>("RabbitMq")
-                .Register<Brokers.ConnectionDetails.AzureServiceBusEndpointsView>("AzureServiceBus"));
+                .Register<Brokers.ConnectionDetails.RabbitMqEndpointsView>(ConnectorProviders.RabbitMq)
+                .Register<Brokers.ConnectionDetails.AzureServiceBusEndpointsView>(ConnectorTransports.AzureServiceBus));
 
             services.AddSingleton(new ComponentRegistry<Brokers.ConnectionDetails.IConnectionReadView>());
             services.AddSingleton(new ComponentRegistry<Brokers.ConnectionDetails.IConnectionSendView>());

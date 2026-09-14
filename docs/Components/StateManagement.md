@@ -99,7 +99,10 @@ public class State
 
 ### Consumer Example
 
-Implement `IConsumer<T>` and the framework registers it through `AddMessageBus()` /
+Prefer a thin standalone consumer that composes the States it needs and calls public methods
+on them, rather than making a State a consumer itself. It keeps the State's surface to its
+own domain, lets one reaction touch several States, and keeps the message contract out of the
+State. Implement `IConsumer<T>` and the framework registers it through `AddMessageBus()` /
 `UseMessageBus()`. Do not subscribe consumers by hand in `Program.cs`.
 
 ```csharp
@@ -116,11 +119,12 @@ public sealed class AssemblyChangeConsumer : IConsumer<AssemblyLoaded>, IConsume
 }
 ```
 
-A **scoped** State must not implement `IConsumer<T>` itself. Assembly scanning registers
-consumer types as root-resolved, so the bus would construct its own instance and update a
-copy the UI never sees. Bridge it with a nested subscription class holding a reference to
-the State, subscribed on construction and unsubscribed in `Dispose`. A singleton State can
-implement `IConsumer<T>` directly.
+A singleton State may implement `IConsumer<T>` directly where the subscription is clearly its
+own concern and a separate class would be ceremony. A **scoped** State must not: assembly
+scanning registers consumer types as root-resolved, so the bus would construct its own
+instance and update a copy the UI never sees. Bridge it with a nested subscription class
+holding a reference to the State, subscribed on construction and unsubscribed in `Dispose`,
+as `MessageState` does for settings changes.
 
 ### Component Size
 
@@ -135,7 +139,7 @@ concerns (dialogs, JS interop, focus).
 ### Differences from Flux/NgRx
 - No explicit action creators/types
 - No reducer functions
-- Optional message bus instead of mandatory dispatcher
+- A message bus carrying typed messages instead of a dispatcher fed by action objects
 - C# events/delegates instead of Observable streams
 - No built-in undo/redo
 

@@ -1,5 +1,6 @@
 using Iris.Contracts.Messaging.Frameworks;
 using RebusHeaders = Rebus.Messages.Headers;
+using ConnectorProviders = Iris.Contracts.Brokers.Models.ConnectorProviders;
 
 namespace Iris.Brokers.Frameworks;
 
