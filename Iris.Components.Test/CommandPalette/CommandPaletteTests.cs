@@ -30,7 +30,7 @@ public class CommandPaletteTests : IrisTestContext
     [Fact(DisplayName = "Renders all commands when query is empty")]
     public void Renders_all_commands_initially()
     {
-        var cut = Render();
+        var cut = RenderPalette();
 
         var options = cut.FindAll("[role='option']");
         options.Should().HaveCount(3);
@@ -40,7 +40,7 @@ public class CommandPaletteTests : IrisTestContext
     [Fact(DisplayName = "Initial selected index is 0 and aria-activedescendant points to first command")]
     public void Initial_selection_is_first_command()
     {
-        var cut = Render();
+        var cut = RenderPalette();
 
         var input = cut.Find("input");
         input.GetAttribute("aria-activedescendant").Should().Be("cmd-home");
@@ -52,7 +52,7 @@ public class CommandPaletteTests : IrisTestContext
     [Fact(DisplayName = "Typing in the search input filters the results")]
     public async Task Typing_filters_results()
     {
-        var cut = Render();
+        var cut = RenderPalette();
 
         await cut.Find("input").InputAsync(new ChangeEventArgs { Value = "mess" });
 
@@ -64,7 +64,7 @@ public class CommandPaletteTests : IrisTestContext
     [Fact(DisplayName = "Filter matches description text via keyword")]
     public async Task Filter_matches_description_through_service()
     {
-        var cut = Render();
+        var cut = RenderPalette();
 
         await cut.Find("input").InputAsync(new ChangeEventArgs { Value = "compose" });
 
@@ -75,7 +75,7 @@ public class CommandPaletteTests : IrisTestContext
     [Fact(DisplayName = "ArrowDown moves selection forward and wraps at end")]
     public async Task ArrowDown_wraps_at_end()
     {
-        var cut = Render();
+        var cut = RenderPalette();
         var input = cut.Find("input");
 
         await input.KeyDownAsync(new KeyboardEventArgs { Key = "ArrowDown" });
@@ -91,7 +91,7 @@ public class CommandPaletteTests : IrisTestContext
     [Fact(DisplayName = "ArrowUp moves selection backward and wraps at start")]
     public async Task ArrowUp_wraps_at_start()
     {
-        var cut = Render();
+        var cut = RenderPalette();
         var input = cut.Find("input");
 
         await input.KeyDownAsync(new KeyboardEventArgs { Key = "ArrowUp" });
@@ -104,7 +104,7 @@ public class CommandPaletteTests : IrisTestContext
     [Fact(DisplayName = "Home key jumps selection to first command")]
     public async Task Home_jumps_to_first()
     {
-        var cut = Render();
+        var cut = RenderPalette();
         var input = cut.Find("input");
 
         await input.KeyDownAsync(new KeyboardEventArgs { Key = "ArrowDown" });
@@ -117,7 +117,7 @@ public class CommandPaletteTests : IrisTestContext
     [Fact(DisplayName = "End key jumps selection to last command")]
     public async Task End_jumps_to_last()
     {
-        var cut = Render();
+        var cut = RenderPalette();
         var input = cut.Find("input");
 
         await input.KeyDownAsync(new KeyboardEventArgs { Key = "End" });
@@ -128,7 +128,7 @@ public class CommandPaletteTests : IrisTestContext
     [Fact(DisplayName = "Enter invokes the selected command and fires OnInvoked")]
     public async Task Enter_invokes_selected_command_and_fires_callback()
     {
-        var cut = Render();
+        var cut = RenderPalette();
         var input = cut.Find("input");
 
         await input.KeyDownAsync(new KeyboardEventArgs { Key = "ArrowDown" }); // select messaging
@@ -142,7 +142,7 @@ public class CommandPaletteTests : IrisTestContext
     [Fact(DisplayName = "Escape fires OnCancel without invoking any command")]
     public async Task Escape_cancels_without_invoking()
     {
-        var cut = Render();
+        var cut = RenderPalette();
 
         await cut.Find("input").KeyDownAsync(new KeyboardEventArgs { Key = "Escape" });
 
@@ -154,7 +154,7 @@ public class CommandPaletteTests : IrisTestContext
     [Fact(DisplayName = "Selection resets to index 0 when filter results change")]
     public async Task Selection_resets_when_filter_changes()
     {
-        var cut = Render();
+        var cut = RenderPalette();
         var input = cut.Find("input");
 
         await input.KeyDownAsync(new KeyboardEventArgs { Key = "End" }); // select history
@@ -170,7 +170,7 @@ public class CommandPaletteTests : IrisTestContext
     [Fact(DisplayName = "Empty results render the empty-state message and Enter is a no-op")]
     public async Task Empty_state_renders_and_enter_is_noop()
     {
-        var cut = Render();
+        var cut = RenderPalette();
         var input = cut.Find("input");
 
         await input.InputAsync(new ChangeEventArgs { Value = "zzznotacommand" });
@@ -187,7 +187,7 @@ public class CommandPaletteTests : IrisTestContext
     [Fact(DisplayName = "Mouse hover over a row updates selection to that row")]
     public void Hover_updates_selection()
     {
-        var cut = Render();
+        var cut = RenderPalette();
 
         var historyRow = cut.FindAll("[role='option']")[2];
         historyRow.MouseOver();
@@ -198,7 +198,7 @@ public class CommandPaletteTests : IrisTestContext
     [Fact(DisplayName = "Click on a row invokes that command and fires OnInvoked")]
     public async Task Click_invokes_command_and_fires_callback()
     {
-        var cut = Render();
+        var cut = RenderPalette();
 
         await cut.FindAll("[role='option']")[1].ClickAsync(new MouseEventArgs());
 
@@ -208,8 +208,8 @@ public class CommandPaletteTests : IrisTestContext
 
     // ----- helpers -----
 
-    private IRenderedComponent<CommandPalettePanel> Render() =>
-        RenderComponent<CommandPalettePanel>(parameters => parameters
+    private IRenderedComponent<CommandPalettePanel> RenderPalette() =>
+        Render<CommandPalettePanel>(parameters => parameters
             .Add(p => p.OnCancel, EventCallback.Factory.Create(this, () => _cancelCount++))
             .Add(p => p.OnInvoked, EventCallback.Factory.Create<string>(this, _ => _invokedCount++)));
 

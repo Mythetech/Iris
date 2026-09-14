@@ -33,11 +33,11 @@ public class TemplateTabListTests : IrisTestContext
         AddPopoverProvider();
 
         var instance = new TemplateTabList();
-        return RenderComponent<TemplateTabList>(p => p.Add(x => x.Instance, instance));
+        return Render<TemplateTabList>(p => p.Add(x => x.Instance, instance));
     }
 
     [Fact(DisplayName = "Disposing the tab leaves no handler behind on TemplatesState")]
-    public void Unsubscribes_on_dispose()
+    public async Task Unsubscribes_on_dispose()
     {
         // The old subscription used one async lambda to subscribe and a second,
         // syntactically identical but distinct one to unsubscribe, so the -= matched
@@ -46,21 +46,21 @@ public class TemplateTabListTests : IrisTestContext
         // survivor re-ran the tab's whole initialization on the next change.
         RenderTabList();
 
-        // DisposeComponents, not cut.Dispose: only the former unmounts the component and
-        // makes Blazor call IDisposable.Dispose on it.
-        DisposeComponents();
+        // DisposeComponentsAsync, not cut.Dispose: only unmounting makes Blazor call
+        // IDisposable.Dispose on the component.
+        await DisposeComponentsAsync();
 
         _state.TemplateStateChanged.Should().BeNull(
             "the handler added in OnInitialized must be the one removed in Dispose");
     }
 
     [Fact(DisplayName = "Repeated activations do not accumulate handlers")]
-    public void Does_not_accumulate_handlers_across_activations()
+    public async Task Does_not_accumulate_handlers_across_activations()
     {
         for (var i = 0; i < 3; i++)
         {
             RenderTabList();
-            DisposeComponents();
+            await DisposeComponentsAsync();
         }
 
         _state.TemplateStateChanged.Should().BeNull();
@@ -72,7 +72,7 @@ public class TemplateTabListTests : IrisTestContext
         AddPopoverProvider();
 
         var instance = new TemplateTabList();
-        var cut = RenderComponent<TemplateTabList>(p => p.Add(x => x.Instance, instance));
+        var cut = Render<TemplateTabList>(p => p.Add(x => x.Instance, instance));
 
         instance.BadgeCount.Should().Be(1);
 

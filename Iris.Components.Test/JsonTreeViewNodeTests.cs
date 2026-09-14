@@ -5,18 +5,11 @@ using Bunit;
 using FluentAssertions;
 using Iris.Components.Shared.JsonTreeView;
 using Microsoft.Extensions.DependencyInjection;
-using MudBlazor.Services;
 
 namespace Iris.Components.Test
 {
-    public class JsonTreeViewNodeTests : TestContext
+    public class JsonTreeViewNodeTests : IrisTestContext
     {
-        public JsonTreeViewNodeTests()
-        {
-            Services.AddMudServices();
-            JSInterop.Mode = JSRuntimeMode.Loose;
-        }
-
         [Fact(DisplayName = "Can render json tree nodes with value types")]
         public void JsonTreeViewNode_ShouldRenderCorrectly_GivenFlatJsonObject()
         {
@@ -25,7 +18,7 @@ namespace Iris.Components.Test
             var node = JsonNode.Parse(json);
 
             // Act
-            var cut = RenderComponent<JsonTreeViewNode>(parameters => parameters
+            var cut = Render<JsonTreeViewNode>(parameters => parameters
                 .Add(p => p.Node, node)
             );
 

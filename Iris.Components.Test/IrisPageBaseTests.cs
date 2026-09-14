@@ -36,7 +36,7 @@ public class IrisPageBaseTests : IrisTestContext
     public void Can_Handle_ApiErrorResponses()
     {
         // Arrange
-        var page = RenderComponent<IrisPageBase>();
+        var page = Render<IrisPageBase>();
         var error = new ApiErrorResponse()
         {
             StatusCode = 400,
@@ -64,7 +64,7 @@ public class IrisPageBaseTests : IrisTestContext
     public void Can_Handle_ApiSuccessResponses()
     {
         // Arrange
-        var page = RenderComponent<IrisPageBase>();
+        var page = Render<IrisPageBase>();
         
         var result = new Success<bool>(true, "test");
         
@@ -81,7 +81,7 @@ public class IrisPageBaseTests : IrisTestContext
     public void Can_Handle_BadErrorResponses()
     {
         // Arrange
-        var page = RenderComponent<IrisPageBase>();
+        var page = Render<IrisPageBase>();
         var error = new
         {
             testStatusCode = 400,

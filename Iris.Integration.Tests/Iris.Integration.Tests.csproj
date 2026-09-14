@@ -7,15 +7,15 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector"  />
     <PackageReference Include="Microsoft.Extensions.Http" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
   
-    <PackageReference Include="xunit" />
-    <PackageReference Include="xunit.runner.visualstudio"  />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Testcontainers.RabbitMq" />
     <PackageReference Include="MassTransit.RabbitMQ" />
     <PackageReference Include="MassTransit.AmazonSQS" />
@@ -23,7 +23,6 @@
     <PackageReference Include="Rebus" />
     <PackageReference Include="Rebus.RabbitMq" />
     <PackageReference Include="FluentAssertions"  />
-    <PackageReference Include="Xunit.SkippableFact" />
     <PackageReference Include="Testcontainers.PostgreSql"  />
     <PackageReference Include="Testcontainers.Azurite" />
     <PackageReference Include="Docker.DotNet" />

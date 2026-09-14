@@ -15,7 +15,7 @@ namespace Iris.Components.Test
         
         public IrisLoadingButtonTests()
         {
-            _popoverProvider = RenderComponent<MudPopoverProvider>();
+            _popoverProvider = Render<MudPopoverProvider>();
         }
 
         [Fact(DisplayName = "Button renders with correct text")]
@@ -23,7 +23,7 @@ namespace Iris.Components.Test
         {
             // Arrange
             var buttonText = "Click Me";
-            var cut = RenderComponent<IrisLoadingButton>(parameters => parameters
+            var cut = Render<IrisLoadingButton>(parameters => parameters
                 .Add(p => p.Text, buttonText));
 
             // Act
@@ -38,7 +38,7 @@ namespace Iris.Components.Test
         {
             // Arrange
             var loadingText = "Loading...";
-            var cut = RenderComponent<IrisLoadingButton>(parameters => parameters
+            var cut = Render<IrisLoadingButton>(parameters => parameters
                 .Add(p => p.Loading, true)
                 .Add(p => p.LoadingText, loadingText));
 
@@ -53,7 +53,7 @@ namespace Iris.Components.Test
         public void Button_Is_Disabled_When_Loading()
         {
             // Arrange
-            var cut = RenderComponent<IrisLoadingButton>(parameters => parameters
+            var cut = Render<IrisLoadingButton>(parameters => parameters
                 .Add(p => p.Loading, true));
 
             // Act
@@ -68,7 +68,7 @@ namespace Iris.Components.Test
         {
             // Arrange
             var clicked = false;
-            var cut = RenderComponent<IrisLoadingButton>(parameters => parameters
+            var cut = Render<IrisLoadingButton>(parameters => parameters
                 .Add(p => p.OnClick, EventCallback.Factory.Create(this, () => clicked = true)));
 
             // Act
@@ -82,7 +82,7 @@ namespace Iris.Components.Test
         public void Icon_Is_Displayed_When_Set()
         {
             // Arrange
-            var cut = RenderComponent<IrisLoadingButton>(parameters => parameters
+            var cut = Render<IrisLoadingButton>(parameters => parameters
                 .Add(p => p.Icon, IrisIcons.Home));
 
             // Act & Assert - Material Symbols icons render as <span class="material-symbols-rounded">icon_name</span>

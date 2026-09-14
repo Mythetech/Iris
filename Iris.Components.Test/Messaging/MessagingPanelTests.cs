@@ -55,13 +55,13 @@ public class MessagingPanelTests : IrisTestContext
         // The panel's ProviderSelector, EndpointSelector, and Framework fields are
         // MudSelect, which registers a popover on init and throws if none is mounted.
         JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true);
-        RenderComponent<MudPopoverProvider>();
+        Render<MudPopoverProvider>();
     }
 
     [Fact]
     public void Renders_ComposeFields_NotAnOpenPageButton()
     {
-        var cut = RenderComponent<MessagingPanel>();
+        var cut = Render<MessagingPanel>();
 
         cut.Markup.Should().NotContain("New Message");
         cut.Markup.Should().Contain("Select Connection");
@@ -71,7 +71,7 @@ public class MessagingPanelTests : IrisTestContext
     [Fact]
     public void Keeps_TheFooterPageLink()
     {
-        var cut = RenderComponent<MessagingPanel>();
+        var cut = Render<MessagingPanel>();
 
         cut.Markup.Should().Contain("Open Messaging Page");
     }
@@ -79,7 +79,7 @@ public class MessagingPanelTests : IrisTestContext
     [Fact]
     public async Task InvalidJson_BlocksSend_AndShowsAnError()
     {
-        var cut = RenderComponent<MessagingPanel>();
+        var cut = Render<MessagingPanel>();
 
         await SelectProviderAndEndpointAsync(cut);
 
@@ -95,7 +95,7 @@ public class MessagingPanelTests : IrisTestContext
     [Fact]
     public async Task Send_PassesTheComposedJsonToTheOrchestrator()
     {
-        var cut = RenderComponent<MessagingPanel>();
+        var cut = Render<MessagingPanel>();
 
         await SelectProviderAndEndpointAsync(cut);
 
@@ -111,7 +111,7 @@ public class MessagingPanelTests : IrisTestContext
     [Fact]
     public async Task Send_WithNothingSelected_BlocksSend_AndShowsAnError()
     {
-        var cut = RenderComponent<MessagingPanel>();
+        var cut = Render<MessagingPanel>();
 
         await cut.Find("textarea").InputAsync(new() { Value = "{\"orderId\":\"1\"}" });
         await cut.Find("button.messaging-panel-send").ClickAsync(new());
@@ -125,7 +125,7 @@ public class MessagingPanelTests : IrisTestContext
     [Fact]
     public async Task Send_WithProviderButNoEndpoint_BlocksSend_AndShowsAnError()
     {
-        var cut = RenderComponent<MessagingPanel>();
+        var cut = Render<MessagingPanel>();
 
         var provider = new Provider { Name = "RabbitMq", Address = "http://127.0.0.1:15672" };
         await cut.InvokeAsync(() => cut.FindComponent<ProviderSelector>().Instance.ValueChanged.InvokeAsync(provider));
@@ -142,7 +142,7 @@ public class MessagingPanelTests : IrisTestContext
     [Fact]
     public async Task Send_PassesIsolatedRepeatAndDelay_SoADrawerSendNeverInheritsPageState()
     {
-        var cut = RenderComponent<MessagingPanel>();
+        var cut = Render<MessagingPanel>();
 
         await SelectProviderAndEndpointAsync(cut);
 
@@ -158,7 +158,7 @@ public class MessagingPanelTests : IrisTestContext
     [Fact]
     public async Task Framework_ItemsComeFromTheCatalog_AndUnsupportedOnesAreDisabled()
     {
-        var cut = RenderComponent<MessagingPanel>();
+        var cut = Render<MessagingPanel>();
 
         await SelectProviderAndEndpointAsync(cut);
 
@@ -180,7 +180,7 @@ public class MessagingPanelTests : IrisTestContext
         var frameworksWithoutRebus = new List<FrameworkDescriptor> { new("MassTransit", []) };
         _catalog.GetFrameworksAsync(Arg.Any<string?>(), Arg.Any<int>()).Returns(initialFrameworks, frameworksWithoutRebus);
 
-        var cut = RenderComponent<MessagingPanel>();
+        var cut = Render<MessagingPanel>();
 
         await SelectProviderAndEndpointAsync(cut);
 
@@ -200,7 +200,7 @@ public class MessagingPanelTests : IrisTestContext
             .SendAsync(Arg.Any<SendContext>(), Arg.Any<IProgress<Result<bool>>?>(), Arg.Any<CancellationToken>())
             .Returns(new Failure<bool>("Assembly name is required for EasyNetQ."));
 
-        var cut = RenderComponent<MessagingPanel>();
+        var cut = Render<MessagingPanel>();
 
         await SelectProviderAndEndpointAsync(cut);
 

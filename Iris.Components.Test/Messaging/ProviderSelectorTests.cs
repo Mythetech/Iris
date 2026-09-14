@@ -26,7 +26,7 @@ public class ProviderSelectorTests : IrisTestContext
         // that always worked, so nothing caught it.
         var selected = ProviderAt("amqp://second");
 
-        var cut = RenderComponent<ProviderSelector>(p => p
+        var cut = Render<ProviderSelector>(p => p
             .Add(x => x.Providers, [ProviderAt("amqp://first"), selected])
             .Add(x => x.Value, selected));
 
@@ -39,11 +39,11 @@ public class ProviderSelectorTests : IrisTestContext
         var first = ProviderAt("amqp://first");
         var second = ProviderAt("amqp://second");
 
-        var cut = RenderComponent<ProviderSelector>(p => p
+        var cut = Render<ProviderSelector>(p => p
             .Add(x => x.Providers, [first, second])
             .Add(x => x.Value, first));
 
-        await cut.InvokeAsync(() => cut.SetParametersAndRender(p => p.Add(x => x.Value, second)));
+        await cut.InvokeAsync(() => cut.Render(p => p.Add(x => x.Value, second)));
 
         cut.FindComponent<MudSelect<Provider>>().Instance.Value.Should().BeSameAs(second);
     }
