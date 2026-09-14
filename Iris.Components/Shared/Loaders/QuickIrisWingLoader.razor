@@ -1,4 +1,4 @@
-﻿@implements IDisposable
+﻿@implements IAsyncDisposable
 
 <MudContainer Class="d-flex glassmorphic-bg" Style="justify-content:center;align-items:center;flex-direction:column;text-align:center;min-height:75vh;" MaxWidth="MaxWidth.Small">
     <MudStack Class="mud-width-full" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="1" Row="true">
@@ -23,10 +23,12 @@
 
 @code {
     [Parameter] public string LoadingText { get; set; } = "Loading Iris...";
-    private int _counter = 0;
-    private CancellationTokenSource _cts = default!;
 
-    private List<MudBlazor.Animation> Animations { get; } = [
+    private int _counter = 0;
+    private readonly CancellationTokenSource _cts = new();
+    private Task? _animation;
+
+    private List<MudBlazor.Animation> Animations = [
     MudBlazor.Animation.False,
     MudBlazor.Animation.False,
     MudBlazor.Animation.False,
@@ -35,39 +37,33 @@
     MudBlazor.Animation.False
     ];
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        _cts = new CancellationTokenSource();
-        LoopAnimations(_cts.Token);
-
-        await base.OnInitializedAsync();
+        _animation = LoopAnimationsAsync(_cts.Token);
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        await _cts.CancelAsync();
+
+        if (_animation is not null)
+            await _animation;
+
+        _cts.Dispose();
     }
 
-    protected virtual void Dispose(bool disposing)
+    /// <summary>
+    /// Started from OnInitialized and kept, rather than left to run unobserved. It was
+    /// <c>async void</c>, so its exceptions went nowhere, and the cancellation catch sat
+    /// inside the loop rather than around it, which turned a cancelled delay into another
+    /// pass rather than an exit.
+    /// </summary>
+    private async Task LoopAnimationsAsync(CancellationToken token)
     {
-        if (disposing)
+        try
         {
-            _cts.Cancel();
-        }
-    }
-
-    private async void LoopAnimations(CancellationToken token)
-    {
-        while (true)
-        {
-            try
+            while (!token.IsCancellationRequested)
             {
-                if (token.IsCancellationRequested)
-                {
-                    break;
-                }
-
                 if (_counter >= 6)
                 {
                     _counter = 0;
@@ -85,9 +81,10 @@
                 StateHasChanged();
                 _counter += 1;
             }
-            catch (TaskCanceledException)
-            {
-            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Disposal asked it to stop. Nothing to report.
         }
     }
 }
