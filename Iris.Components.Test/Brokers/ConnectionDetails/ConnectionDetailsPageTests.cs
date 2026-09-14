@@ -1,6 +1,7 @@
 using Bunit;
 using FluentAssertions;
 using Iris.Components.Brokers;
+using Iris.Components.Infrastructure;
 using Iris.Components.Brokers.ConnectionDetails;
 using Iris.Components.Messaging;
 using Iris.Contracts.Brokers.Models;
@@ -20,13 +21,11 @@ public class ConnectionDetailsPageTests : IrisTestContext
     {
         Services.AddSingleton(_brokerService);
         Services.AddSingleton(_messageService);
-        Services.AddSingleton(new EndpointsViewRegistry
-        {
-            { "rabbitmq", typeof(RabbitMqEndpointsView) },
-            { "azureservicebus", typeof(AzureServiceBusEndpointsView) },
-        });
-        Services.AddSingleton(new ReadViewRegistry());
-        Services.AddSingleton(new SendViewRegistry());
+        Services.AddSingleton(new ComponentRegistry<IConnectionEndpointsView>()
+            .Register<RabbitMqEndpointsView>("RabbitMq")
+            .Register<AzureServiceBusEndpointsView>("AzureServiceBus"));
+        Services.AddSingleton(new ComponentRegistry<IConnectionReadView>());
+        Services.AddSingleton(new ComponentRegistry<IConnectionSendView>());
         AddPopoverProvider();
     }
 
