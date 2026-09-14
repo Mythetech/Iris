@@ -1,0 +1,24 @@
+{
+  "headers": {
+    "cloudEvents_id": "<guid>",
+    "cloudEvents_source": "iris://broker",
+    "cloudEvents_specversion": "1.0",
+    "cloudEvents_time": "<timestamp>",
+    "cloudEvents_type": "MyApp.Messages.Greeting",
+    "CorrelationId": "<guid>",
+    "HandledCount": "0",
+    "MessageId": "<guid>",
+    "MessageType": "MT_EVENT",
+    "Topic": "Greeting"
+  },
+  "transportProperties": {
+    "MessageId": "<guid>",
+    "ContentType": "application/json",
+    "Type": "application/json",
+    "Timestamp": "<timestamp>"
+  },
+  "body": {
+    "id": 1,
+    "name": "hello"
+  }
+}
