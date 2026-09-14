@@ -32,13 +32,13 @@ namespace Iris.Integration.Tests.Brokers
 
         private string ManagementUrl => $"http://localhost:{_rabbitMqContainer.GetMappedPublicPort(15672)}";
 
-        [Fact(DisplayName = "A named user on a named vhost can send and read its own queue")]
+        [Fact(DisplayName = "A named user on a named vhost can send and read its own queue", Timeout = 120000)]
         public async Task Sends_and_reads_on_a_named_vhost()
         {
             var queueName = $"iris-vhost-send-{Guid.NewGuid():N}";
             await SeedAsync(queueName);
 
-            var connection = await ConnectAsync(VHostName);
+            var connection = await ConnectAsync(VHostName, TestContext.Current.CancellationToken);
 
             await connection.SendAsync(
                 new EndpointDetails
@@ -54,12 +54,12 @@ namespace Iris.Integration.Tests.Brokers
 
             var messages = await Retry(() => peeker.PeekAsync(
                 new EndpointDetails { Provider = "rabbitmq", Address = ManagementUrl, Type = "queue", Name = queueName },
-                count: 10));
+                count: 10), TestContext.Current.CancellationToken);
 
             messages.Should().ContainSingle().Which.Body.Should().Contain("vhost");
         }
 
-        [Fact(DisplayName = "Endpoint discovery lists only the connection's own vhost")]
+        [Fact(DisplayName = "Endpoint discovery lists only the connection's own vhost", Timeout = 120000)]
         public async Task Discovers_only_its_own_vhost()
         {
             var scopedQueue = $"iris-vhost-scoped-{Guid.NewGuid():N}";
@@ -68,7 +68,7 @@ namespace Iris.Integration.Tests.Brokers
             await SeedAsync(scopedQueue);
             await CreateQueueAsync(RabbitMqConnector.DefaultVHost, defaultQueue);
 
-            var connection = await ConnectAsync(VHostName);
+            var connection = await ConnectAsync(VHostName, TestContext.Current.CancellationToken);
 
             var endpoints = await connection.GetEndpointsAsync();
             var names = endpoints.Select(e => e.Name).ToList();
@@ -80,7 +80,7 @@ namespace Iris.Integration.Tests.Brokers
             names.Should().NotContain(defaultQueue);
         }
 
-        [Fact(DisplayName = "A named user with no vhost given still lands on the default vhost")]
+        [Fact(DisplayName = "A named user with no vhost given still lands on the default vhost", Timeout = 120000)]
         public async Task Defaults_to_the_broker_default_rather_than_the_username()
         {
             var queueName = $"iris-default-{Guid.NewGuid():N}";
@@ -89,7 +89,7 @@ namespace Iris.Integration.Tests.Brokers
 
             // The old guess turned user iris-app into vhost "iris-app", which does not exist, so
             // this send 404'd. There is no vhost named for the user here, on purpose.
-            var connection = await ConnectAsync(vhost: null);
+            var connection = await ConnectAsync(vhost: null, TestContext.Current.CancellationToken);
 
             var send = async () => await connection.SendAsync(
                 new EndpointDetails
@@ -104,15 +104,22 @@ namespace Iris.Integration.Tests.Brokers
             await send.Should().NotThrowAsync();
         }
 
-        private async Task<IConnection> ConnectAsync(string? vhost, string username = UserName, string password = Password)
+        private async Task<IConnection> ConnectAsync(
+            string? vhost,
+            CancellationToken cancellationToken,
+            string username = UserName,
+            string password = Password)
         {
-            var connection = await new RabbitMqConnector().ConnectAsync(new ConnectionData
-            {
-                ConnectionString = ManagementUrl,
-                Username = username,
-                Password = password,
-                VHost = vhost,
-            }, discoverEndpoints: false);
+            var connection = await new RabbitMqConnector().ConnectAsync(
+                new ConnectionData
+                {
+                    ConnectionString = ManagementUrl,
+                    Username = username,
+                    Password = password,
+                    VHost = vhost,
+                },
+                cancellationToken,
+                discoverEndpoints: false);
 
             connection.Should().NotBeNull();
             return connection!;
@@ -162,19 +169,16 @@ namespace Iris.Integration.Tests.Brokers
         /// <summary>
         /// The management API's get-messages endpoint reads what has already been routed, and
         /// publishing is asynchronous, so the first read can legitimately come back empty.
+        /// Bounded by the test's own timeout rather than by a fixed attempt count, and it
+        /// now fails saying what it waited for instead of quietly returning nothing.
         /// </summary>
-        private static async Task<IReadOnlyList<ReceivedMessage>> Retry(Func<Task<IReadOnlyList<ReceivedMessage>>> read)
-        {
-            for (var attempt = 0; attempt < 20; attempt++)
-            {
-                var messages = await read();
-                if (messages.Count > 0)
-                    return messages;
-
-                await Task.Delay(250);
-            }
-
-            return Array.Empty<ReceivedMessage>();
-        }
+        private static Task<IReadOnlyList<ReceivedMessage>> Retry(
+            Func<Task<IReadOnlyList<ReceivedMessage>>> read,
+            CancellationToken cancellationToken)
+            => Eventually.NonEmptyAsync(
+                _ => read(),
+                "the published message is readable from the queue",
+                cancellationToken,
+                interval: TimeSpan.FromMilliseconds(250));
     }
 }

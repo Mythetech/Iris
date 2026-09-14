@@ -101,15 +101,11 @@ namespace Iris.Integration.Tests
                 request);
 
             // Assert — the Rebus consumer must deserialize and receive the payload.
-            var completed = await Task.WhenAny(
+            var message = await Eventually.CompletesAsync(
                 _received.Task,
-                Task.Delay(TimeSpan.FromSeconds(30)));
-
-            completed.Should().BeSameAs(
-                _received.Task,
-                "Rebus should consume the Iris-wrapped envelope within 30s — a timeout means the adapter produced a wire format Rebus can't route or deserialize");
-
-            var message = await _received.Task;
+                TimeSpan.FromSeconds(30),
+                "Rebus consumes the Iris-wrapped envelope; a timeout means the adapter produced a wire format Rebus cannot route or deserialize",
+                TestContext.Current.CancellationToken);
             message.Red.Should().Be(1);
             message.Green.Should().Be(2);
             message.Blue.Should().Be(3);

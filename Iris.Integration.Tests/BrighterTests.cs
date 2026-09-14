@@ -90,7 +90,7 @@ namespace Iris.Integration.Tests
             var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
             while (received is null && DateTimeOffset.UtcNow < deadline)
             {
-                var batch = await _consumer!.ReceiveAsync(TimeSpan.FromSeconds(1));
+                var batch = await _consumer!.ReceiveAsync(TimeSpan.FromSeconds(1), TestContext.Current.CancellationToken);
                 received = batch.FirstOrDefault(m => m.Header.MessageType != MessageType.MT_NONE);
             }
 
@@ -101,7 +101,7 @@ namespace Iris.Integration.Tests
             received.Header.ContentType.MediaType.Should().Be("application/json");
             received.Body.Value.Should().Be(Json);
 
-            await _consumer!.AcknowledgeAsync(received);
+            await _consumer!.AcknowledgeAsync(received, TestContext.Current.CancellationToken);
         }
     }
 }
