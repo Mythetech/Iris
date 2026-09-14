@@ -25,6 +25,9 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.12" />
     <PackageVersion Include="NServiceBus" Version="10.1.1" />
+    <!-- Test-only. 14.0.0 is the last ASQ transport that accepts NServiceBus 10.1.1;
+         14.0.1 and later require 10.1.4 or newer. Bump both together or neither. -->
+    <PackageVersion Include="NServiceBus.Transport.AzureStorageQueues" Version="14.0.0" />
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.12" />
     <PackageVersion Include="Rebus" Version="8.9.0" />
     <PackageVersion Include="Rebus.RabbitMq" Version="10.1.1" />
