@@ -1,0 +1,15 @@
+{
+  "headers": {},
+  "transportProperties": {
+    "MessageId": "<guid>",
+    "CorrelationId": "<guid>",
+    "ContentType": "application/json",
+    "Type": "MyApp.Messages.Greeting, MyApp.Contracts",
+    "Timestamp": "<timestamp>",
+    "Persistent": true
+  },
+  "body": {
+    "id": 1,
+    "name": "hello"
+  }
+}

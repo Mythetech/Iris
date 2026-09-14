@@ -1,0 +1,18 @@
+{
+  "headers": {
+    "conversation-id": "<guid>",
+    "sent-at": "<timestamp>",
+    "source": "iris",
+    "wolverine-protocol-version": "1.0"
+  },
+  "transportProperties": {
+    "MessageId": "<guid>",
+    "CorrelationId": "<guid>",
+    "ContentType": "application/json",
+    "Type": "MyApp.Messages.Greeting"
+  },
+  "body": {
+    "id": 1,
+    "name": "hello"
+  }
+}

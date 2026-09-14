@@ -22,35 +22,40 @@ namespace Iris.Brokers.Test;
 /// </summary>
 public class BrokerSenderInterfaceTests
 {
-    private static ConnectionMetadata DummyMetadata()
+    /// <summary>
+    /// The provider name is a parameter because it appears verbatim in every compatibility
+    /// failure message, so a fixture recording what the user is actually told needs the real
+    /// one. Tests that only assert capability do not care and take the default.
+    /// </summary>
+    private static ConnectionMetadata DummyMetadata(string provider = "dummy")
     {
         var connector = Substitute.For<IConnector>();
-        connector.Provider.Returns("dummy");
+        connector.Provider.Returns(provider);
         return new ConnectionMetadata { Connector = connector, Address = "http://localhost/" };
     }
 
-    public static RabbitMqConnection Rabbit()
+    public static RabbitMqConnection Rabbit(string provider = "dummy")
     {
         var client = new EasyNetQ.Management.Client.ManagementClient(
             new Uri("http://localhost:15672"), "guest", "guest");
-        return new RabbitMqConnection(DummyMetadata(), client);
+        return new RabbitMqConnection(DummyMetadata(provider), client);
     }
 
-    public static AzureServiceBusConnection ServiceBus()
+    public static AzureServiceBusConnection ServiceBus(string provider = "dummy")
     {
         var admin = new ServiceBusAdministrationClient(
             "Endpoint=sb://localhost;SharedAccessKeyName=k;SharedAccessKey=k;UseDevelopmentEmulator=true;");
         var client = new ServiceBusClient(
             "Endpoint=sb://localhost;SharedAccessKeyName=k;SharedAccessKey=k;UseDevelopmentEmulator=true;");
-        return new AzureServiceBusConnection(DummyMetadata(), admin, client);
+        return new AzureServiceBusConnection(DummyMetadata(provider), admin, client);
     }
 
-    public static AzureQueueStorageConnection QueueStorage()
-        => new(DummyMetadata(), new QueueServiceClient("UseDevelopmentStorage=true"),
+    public static AzureQueueStorageConnection QueueStorage(string provider = "dummy")
+        => new(DummyMetadata(provider), new QueueServiceClient("UseDevelopmentStorage=true"),
             NullLogger<AzureQueueStorageConnection>.Instance);
 
-    public static AmazonSimpleQueueServiceConnection Sqs()
-        => new(DummyMetadata(), new AmazonSQSClient(
+    public static AmazonSimpleQueueServiceConnection Sqs(string provider = "dummy")
+        => new(DummyMetadata(provider), new AmazonSQSClient(
             new BasicAWSCredentials("test", "test"),
             new AmazonSQSConfig { ServiceURL = "http://localhost:9324" }));
 
