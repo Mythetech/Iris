@@ -28,7 +28,7 @@
         <MudSpacer />
         <MudButton Href="@($"/connections/{Provider.Id}")"
                    Variant="Variant.Text"
-                   StartIcon="@Icons.Material.Outlined.OpenInNew">
+                   StartIcon="@IrisIcons.OpenInNew">
             View details
         </MudButton>
         <DeleteButton Title="Delete Connection" T="Provider" Item="Provider" ItemDeleted="async (_) => await RaiseOnDelete()" />

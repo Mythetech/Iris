@@ -26,10 +26,10 @@ namespace Iris.Components.Test
             var treeViewItems = cut.FindAll(".mud-treeview-item");
             treeViewItems.Should().HaveCount(4);
 
-            treeViewItems[0].InnerHtml.Should().Contain("bi-fonts");
-            treeViewItems[1].InnerHtml.Should().Contain("bi-hash");
-            treeViewItems[2].InnerHtml.Should().Contain("bi-check2");
-            treeViewItems[3].InnerHtml.Should().Contain("bi-calendar");
+            treeViewItems[0].InnerHtml.Should().Contain(">text_fields<");
+            treeViewItems[1].InnerHtml.Should().Contain(">tag<");
+            treeViewItems[2].InnerHtml.Should().Contain(">check<");
+            treeViewItems[3].InnerHtml.Should().Contain(">calendar_today<");
         }
     }
 }
