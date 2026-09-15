@@ -3,7 +3,6 @@ using Azure.Messaging.ServiceBus.Administration;
 using Azure.Storage.Queues;
 using Iris.Brokers.Exceptions;
 using Iris.Brokers.Models;
-using Microsoft.Azure.Amqp.Framing;
 using Microsoft.Extensions.Logging;
 using ConnectorProviders = Iris.Contracts.Brokers.Models.ConnectorProviders;
 

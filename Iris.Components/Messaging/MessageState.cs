@@ -1,13 +1,14 @@
 using Iris.Components.Messaging;
 using Iris.Contracts.Assemblies.Models;
 using Iris.Contracts.Brokers.Models;
+using Iris.Contracts.Messaging;
 using Iris.Contracts.Messaging.Frameworks;
 using Mythetech.Framework.Infrastructure.MessageBus;
 using Mythetech.Framework.Infrastructure.Settings.Events;
 
 public class MessageState : IDisposable
 {
-    private const string IrisHeaderKey = "iris-key";
+    private static readonly string IrisHeaderKey = IrisHeaders.Key;
 
     private const string DefaultIrisKeyMessage = "{{ Generated on Send }}";
 

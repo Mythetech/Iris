@@ -63,7 +63,6 @@
     private string Height { get; set; } = "200px";
 
     private Chart doughnutChart = default!;
-    private static Random rng = new Random();
 
     private static string[] IrisColors =
 {
@@ -84,23 +83,9 @@
     private static readonly string[] IrisBackgroundColors =
         IrisColors.Select(c => Opacity(c, 0.8)).ToArray();
 
-    private string[]? backgroundColors =
-{
-        //"rgba(54, 162, 235, 0.8)",
-        //"rgba(153, 102, 255, 0.8)",
-        "rgba(13,110,253, 0.8)",
-        "rgba(102, 16, 242, 0.8)",
-        "rgba(75, 192, 192, 0.8)",
-        "rgba(255, 99, 132, 0.8)",
-        "rgba(255, 206, 86, 0.8)",
-        "rgba(255, 159, 64, 0.8)",
-    };
-
     private Dictionary<int, string> _dataIndexToProviderLookup = new();
 
     private DoughnutChartConfig _config = default!;
-
-    private Random random = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -151,7 +136,7 @@
             {
                 Label = "Endpoints",
                 Data = decimals,
-                BackgroundColor = IrisBackgroundColors.ToList(), //backgroundColors.OrderBy(_ => rng.Next()).ToList(),
+                BackgroundColor = IrisBackgroundColors.ToList(),
                 HoverOffset = 2,
             });
         }
