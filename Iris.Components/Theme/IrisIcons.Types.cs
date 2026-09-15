@@ -8,6 +8,10 @@ public static partial class IrisIcons
 
         public static string Boolean => Round("check");
 
+        public static string True => Round("check");
+
+        public static string False => Round("close");
+
         public static string Number => Round("tag");
 
         public static string Date => Round("calendar_today");
@@ -15,6 +19,8 @@ public static partial class IrisIcons
         public static string Object => Round("data_object");
 
         public static string Array => Round("data_array");
+
+        public static string ArrayItem => Round("remove");
 
         public static string Key => Round("key");
 
