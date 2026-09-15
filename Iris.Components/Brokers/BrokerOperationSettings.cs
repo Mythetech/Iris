@@ -1,4 +1,4 @@
-using MudBlazor;
+using Iris.Components.Theme;
 using Mythetech.Framework.Infrastructure.Settings;
 
 namespace Iris.Components.Brokers;
@@ -7,7 +7,7 @@ public class BrokerOperationSettings : SettingsBase
 {
     public override string SettingsId => "BrokerOperations";
     public override string DisplayName => "Broker Operations";
-    public override string Icon => Icons.Material.Filled.Warning;
+    public override string Icon => IrisIcons.Warning;
     public override int Order => 20;
 
     [Setting(

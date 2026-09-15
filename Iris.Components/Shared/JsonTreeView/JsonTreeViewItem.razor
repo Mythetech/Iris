@@ -4,9 +4,9 @@
                  @bind-Expanded="@_expanded"
                  T="string"
                  Text="@Key"
-                 Icon="@($"icon-size-small mt-n2 bi {Icon}")"
+                 Icon="@($"icon-size-small mt-n2 {Icon}")"
                  IconColor="@Color.Default"
-                 ExpandButtonIcon="@($"icon-size-xs bi {(_expanded ? "bi-record-circle" : "bi-circle")}")"
+                 ExpandButtonIcon="@($"icon-size-xs {(_expanded ? IrisIcons.NodeExpanded : IrisIcons.NodeCollapsed)}")"
                  ExpandButtonIconColor="@(_expanded ? Color.Primary : Color.Secondary)">
     <BodyContent>
         <MudStack Row="true" Class="mud-width-full" Spacing="2">
