@@ -1,4 +1,4 @@
-﻿using MudBlazor;
+﻿using Iris.Components.Theme;
 using Mythetech.Framework.Infrastructure.Settings;
 
 namespace Iris.Desktop.History;
@@ -7,7 +7,7 @@ public class HistorySettings : SettingsBase
 {
     public override string SettingsId => "History";
     public override string DisplayName => "Local History";
-    public override string Icon => Icons.Material.Filled.History;
+    public override string Icon => IrisIcons.History;
     public override int Order => 20;
 
     [Setting(

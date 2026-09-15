@@ -5,9 +5,8 @@
                  @bind-Expanded="@Expanded"
                  T="AssemblyData"
                  Text="@Assembly?.Name"
-                 Icon="@($"icon-size-small mt-n2 bi {Icon}")"
                  IconColor="@Color.Default"
-                 ExpandButtonIcon="@($"icon-size-xs bi {(Expanded ? "bi-record-circle" : "bi-circle")}")"
+                 ExpandButtonIcon="@($"icon-size-xs {(Expanded ? IrisIcons.NodeExpanded : IrisIcons.NodeCollapsed)}")"
                  ExpandButtonIconColor="@(Expanded ? Color.Primary : Color.Secondary)">
     <BodyContent>
         <MudStack Row="true" Class="mud-width-full" Spacing="12" AlignItems="AlignItems.Center">
@@ -24,9 +23,6 @@
 </MudTreeViewItem>
 
 @code {
-    [Parameter]
-    public string Icon { get; set; } = "";
-
     [Parameter] public AssemblyData Assembly { get; set; } = default!;
 
     [Parameter]

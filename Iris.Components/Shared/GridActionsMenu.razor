@@ -14,7 +14,7 @@
         <MudTooltip Text="@(CanRead ? "Peek or receive messages" : ReadDisabledReason)">
             <MudMenuItem Class="d-flex w-100" OnClick="HandleReadClicked" Disabled="@(!CanRead)">
                 <MudStack Row="true">
-                    <MudText Class="mr-4">Read</MudText> <MudIcon Icon="@Icons.Material.Filled.Inbox"></MudIcon>
+                    <MudText Class="mr-4">Read</MudText> <MudIcon Icon="@IrisIcons.ReadMessages"></MudIcon>
                 </MudStack>
             </MudMenuItem>
         </MudTooltip>
