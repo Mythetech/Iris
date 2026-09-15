@@ -46,13 +46,7 @@
     [Inject]
     public IAdminService AdminService { get; set; } = default!;
 
-    [Parameter]
-    public EventCallback CloseClicked { get; set; }
-
     private void Cancel() => MudDialog.Cancel();
-
-    [Parameter]
-    public EventCallback<Result<bool>> SubmitClicked { get; set; }
 
     private bool _submitting = false;
 

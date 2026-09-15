@@ -44,13 +44,7 @@
     [Inject]
     protected IFileOpenService FileOpenService { get; set; } = default!;
 
-    public override string Identifier { get; set; } = "Packages";
-
-    protected List<TypeData>? Types { get; set; }
-
     protected List<AssemblyData>? Assemblies { get; set; }
-
-    protected bool Loading { get; set; } = false;
 
     private bool Uploading { get; set; } = false;
 
@@ -62,12 +56,7 @@
     {
         if (Assemblies == null || Assemblies.Count < 1)
         {
-            Loading = true;
-            StateHasChanged();
-
             Assemblies = await PackageService.GetLoadedAssembliesAsync();
-            Types = Assemblies.SelectMany(x => x.ExportedTypes).ToList();
-            Loading = false;
             StateHasChanged();
         };
 
@@ -100,12 +89,9 @@
         {
             Snackbar.AddIrisNotification("Uploaded package successfully", Severity.Success);
 
-            // Both lists are only assigned in OnInitializedAsync, so an upload that
-            // finished before the initial load threw on a null Assemblies. The types
-            // table reads its own list, so it has to grow with the assembly or the new
-            // package's types stay invisible until the page is revisited.
+            // Assemblies is only assigned in OnInitializedAsync, so an upload that
+            // finished before the initial load threw on a null list.
             (Assemblies ??= []).Add(result.Value);
-            (Types ??= []).AddRange(result.Value.ExportedTypes ?? []);
 
             StateHasChanged();
         }

@@ -22,7 +22,7 @@ namespace Iris.Brokers.Amazon
             Connector = metadata.Connector;
             _metadata = metadata;
             _client = client;
-            _endpoints = metadata.DiscoveredDetails ?? new();
+            _endpoints = new();
         }
 
         public IConnector Connector { get; set; }

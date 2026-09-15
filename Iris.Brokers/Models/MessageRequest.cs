@@ -1,4 +1,5 @@
 using Iris.Brokers.Frameworks;
+using Iris.Contracts.Messaging;
 
 namespace Iris.Brokers.Models;
 
@@ -22,18 +23,10 @@ public class MessageRequest : IMessageRequest
 
     public TransportProperties TransportProperties { get; set; } = new();
 
-    public IReadOnlyDictionary<string, HeaderDataType> HeaderTypes => _headerTypes;
-
     public HeaderDataType HeaderTypeOf(string key)
         => _headerTypes.TryGetValue(key, out var type) ? type : HeaderDataType.String;
 
     internal void DeclareHeaderType(string key, HeaderDataType type) => _headerTypes[key] = type;
-
-    public void WrapMessage(IFrameworkProvider frameworkProvider)
-    {
-        var framework = frameworkProvider.GetFramework(Framework!);
-        WrapMessage(framework!);
-    }
 
     public void WrapMessage(IFramework framework)
     {
@@ -67,7 +60,7 @@ public class MessageRequest : IMessageRequest
 
         if (generateIrisHeaders)
         {
-            message.Headers["iris-key"] = Guid.NewGuid().ToString();
+            message.Headers[IrisHeaders.Key] = Guid.NewGuid().ToString();
         }
 
         return message;

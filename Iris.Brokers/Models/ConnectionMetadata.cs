@@ -11,24 +11,9 @@
         public IConnector Connector { get; set; } = default!;
 
         /// <summary>
-        /// The endpoint count the connector discovered pre initialization
-        /// </summary>
-        public int DiscoveredEndpoints { get; set; } = 0;
-
-        /// <summary>
-        /// The endpoints converted the connector discovered
-        /// </summary>
-        public List<EndpointDetails>? DiscoveredDetails { get; set; }
-
-        /// <summary>
         /// Address of the target connection
         /// </summary>
         public string Address { get; set; } = "";
-
-        /// <summary>
-        /// When the connection is created
-        /// </summary>
-        public DateTimeOffset Created { get; set; } = DateTimeOffset.Now;
     }
 }
 

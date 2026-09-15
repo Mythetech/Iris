@@ -41,7 +41,7 @@ public class TemplatesStateTests
             store.Add(call.Arg<Template>());
             return Task.CompletedTask;
         });
-        service.UpdateTemplateAsync(Arg.Any<Template>(), Arg.Any<bool>()).Returns(call =>
+        service.UpdateTemplateAsync(Arg.Any<Template>()).Returns(call =>
         {
             var template = call.Arg<Template>();
             var index = store.FindIndex(t => t.TemplateId == template.TemplateId);
@@ -138,9 +138,9 @@ public class TemplatesStateTests
         await state.GetTemplatesAsync();
         var edited = new Template { TemplateId = first.TemplateId, Name = "Renamed", Json = "{\"a\":1}" };
 
-        await state.UpdateTemplateAsync(edited, newVersion: true);
+        await state.UpdateTemplateAsync(edited);
 
-        await service.Received(1).UpdateTemplateAsync(edited, true);
+        await service.Received(1).UpdateTemplateAsync(edited);
         state.Templates!.Should().HaveCount(2);
         state.Templates.Should().Contain(edited);
         state.Templates!.Select(t => t.Name).Should().Equal("Renamed", "Second");

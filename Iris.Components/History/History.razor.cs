@@ -8,8 +8,6 @@ namespace Iris.Components.History
 {
     public partial class History : IrisPageBase
     {
-        public override string Identifier { get; set; } = "History";
-
         private List<AuditRecord>? HistoryRecords { get; set; } = new();
 
         public bool Loading = false;

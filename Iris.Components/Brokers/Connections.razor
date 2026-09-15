@@ -43,8 +43,6 @@
 
     private List<SupportedProvider> SupportedProviders { get; set; } = new();
     
-    public override string Identifier => "Connections";
-
     protected override async Task OnInitializedAsync()
     {
         Providers = await BrokerService.GetProvidersAsync();

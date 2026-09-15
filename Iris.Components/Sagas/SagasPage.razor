@@ -94,8 +94,6 @@
     [Inject] SagaDefinitionState Definitions { get; set; } = default!;
     [Inject] SagaInstanceState Instances { get; set; } = default!;
 
-    public override string Identifier { get; set; } = "Sagas";
-
     private string? _selectedTypeName;
     private Guid? _selectedSagaId;
 

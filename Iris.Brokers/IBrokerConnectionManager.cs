@@ -13,8 +13,6 @@
         public Task<List<IConnection>> GetConnectionsAsync();
 
         public Task<bool> RemoveConnectionAsync(string address);
-
-        public Task<IConnection?> GetActiveConnectionAsync();
     }
 }
 

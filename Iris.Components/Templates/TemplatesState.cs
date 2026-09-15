@@ -77,11 +77,11 @@ public class TemplatesState : ITemplatesState
         TemplateStateChanged?.Invoke();
     }
 
-    public async Task UpdateTemplateAsync(Template template, bool newVersion = false)
+    public async Task UpdateTemplateAsync(Template template)
     {
         var templates = await LoadedTemplatesAsync();
 
-        await _templatesService.UpdateTemplateAsync(template, newVersion);
+        await _templatesService.UpdateTemplateAsync(template);
 
         int index = templates.FindIndex(x => x.TemplateId.Equals(template.TemplateId));
         if(index >= 0)
@@ -141,7 +141,7 @@ public interface ITemplatesState
 
     Task CreateTemplateAsync(Template template);
 
-    Task UpdateTemplateAsync(Template template, bool newVersion = false);
+    Task UpdateTemplateAsync(Template template);
 
     Task DeleteTemplateAsync(Template template);
 

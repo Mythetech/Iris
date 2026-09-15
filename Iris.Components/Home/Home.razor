@@ -52,7 +52,7 @@
                 </MudStack>
                 @if (_endpoints != null && !_loadingEndpoints)
                 {
-                    <ProviderEndpointBarChart @ref="endpointChart" Name="Endpoints" Endpoints="@_endpoints" FilterSelectedProvider="@FilterEndpointsByActiveProvider" SelectedProvider="@_activeProvider?.Address" EndpointFiltersUpdated="EndpointFiltersUpdated" />
+                    <ProviderEndpointBarChart @ref="endpointChart" Name="Endpoints" Endpoints="@_endpoints" SelectedProvider="@_activeProvider?.Address" EndpointFiltersUpdated="EndpointFiltersUpdated" />
                 }
                 else
                 {
@@ -137,10 +137,6 @@
 
     private ProviderCarousel _providerCarousel = default!;
 
-    public override string Identifier => "Home";
-
-    protected bool FilterEndpointsByActiveProvider { get; set; } = false;
-
     protected Dictionary<string, string> FilterToColorLookup { get; set; } = new();
 
     private Func<List<EndpointDetails>, List<Provider>> EndpointsToProviders = (endpoints) =>
@@ -164,17 +160,6 @@
         return providers;
     };
 
-    private Func<List<EndpointDetails>, Provider, List<EndpointDetails>> ActiveEndpoints = (endpoints, provider) =>
-    {
-        if (endpoints == null || endpoints?.Count < 1)
-            return new();
-
-        if (string.IsNullOrWhiteSpace(provider?.Address))
-            return endpoints ?? new();
-
-        return endpoints?.Where(x => x.Address.Equals(provider.Address, StringComparison.OrdinalIgnoreCase)).ToList() ?? new();
-    };
-    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -255,9 +240,6 @@
             StateHasChanged();            
         }
         
-        if (FilterEndpointsByActiveProvider && endpointChart is not null)
-            await endpointChart.RefreshAsync();
-
         int index = -1;
         var p = EndpointsToProviders(_endpoints!);
         for (int i = 0; i < p.Count; i++)
