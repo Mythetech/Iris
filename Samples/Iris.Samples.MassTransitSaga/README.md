@@ -1,6 +1,6 @@
 # Iris MassTransit saga sample
 
-A tiny MassTransit 9.1.0 app with one state machine, `OrderStateMachine`, used to exercise the Sagas page in Iris end to end.
+A tiny MassTransit 8.5.10 app with one state machine, `OrderStateMachine`, used to exercise the Sagas page in Iris end to end.
 
 States: Submitted, Accepted, Shipped, Cancelled, and MassTransit's own Final. Cancelling finalizes the saga, so the graph draws Final with the double border a final state gets. Messages (namespace `Iris.Samples.MassTransitSaga.Contracts`, all carrying `Guid OrderId`):
 

@@ -1,5 +1,10 @@
 # Request-Endpoint-Response Pattern (REPR)
 
+> **Scope.** This document describes the IrisCloud service design and Iris does not
+> implement it. There is no HTTP layer, no endpoints and no FastEndpoints dependency
+> anywhere in the repository. It is kept as background on where the contracts in
+> `Iris.Contracts` came from, and as the shape a future hosted Iris would take.
+
 ## Understanding REPR
 
 The [Request-Endpoint-Response (REPR)](https://deviq.com/design-patterns/repr-design-pattern) design pattern is a highly focused approach to handling application operations. In REPR, each operation is mapped to its own dedicated endpoint, streamlining request handling and enhancing maintainability. This pattern naturally aligns well with **Command Query Responsibility Segregation (CQRS)**, as it encourages separation of concerns by isolating each operation to a single endpoint, reducing the risk of mixing read and write operations in the same context.

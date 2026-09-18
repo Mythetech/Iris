@@ -62,17 +62,15 @@ public class IrisBaseComponent : ComponentBase
 ```
 
 ### IrisPageBase
-For full pages with authorization and common functionality:
+For full pages. There is no authorization: Iris is a desktop app with no user model.
 
 ```csharp
-[Authorize]
 public class IrisPageBase : LayoutComponentBase
 {
     [Inject] public NavigationManager NavigationManager { get; set; }
     [Inject] public ISnackbar Snackbar { get; set; }
-    
+
     public void HandleResult<T>(Result<T> result, string successMessage, string error);
-    public void NotifyError(string message, string title = "Error");
 }
 ```
 

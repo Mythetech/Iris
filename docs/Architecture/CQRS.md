@@ -1,5 +1,12 @@
 # Command Query Responsibility Segregation (CQRS)
 
+> **Scope.** The CQS half of this document applies to Iris, and the event-driven
+> encapsulation it describes is how modules actually talk: `IMessageBus` with
+> `IConsumer<T>` rather than direct references. Full CQRS does not. There are no separate
+> read and write models, no second database and no event sourcing, and the command and
+> query types in `Iris.Contracts` are shared records, not a split model. Read the CQRS
+> section as the shape a hosted Iris might take.
+
 ## Understanding Command Query Separation (CQS)
 
 **CQS Principle**: The [Command Query Separation (CQS)](https://martinfowler.com/bliki/CommandQuerySeparation.html) principle states that every method should either be a **command** (which changes the system’s state) or a **query** (which retrieves information without side effects). This separation helps create a clear boundary between operations that modify the state of an application and those that retrieve data, leading to more predictable, manageable code.

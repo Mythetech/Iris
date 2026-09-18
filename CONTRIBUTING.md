@@ -6,7 +6,7 @@ Thank you for your interest in contributing to Iris! This document provides guid
 
 ### Prerequisites
 
-- **.NET 10 SDK** (10.0.100 or later)
+- **.NET 11 SDK** - the exact prerelease build is pinned in `global.json`
 - **Visual Studio 2022** or **JetBrains Rider** (recommended)
 - **Git** for version control
 
@@ -53,7 +53,9 @@ dotnet test Iris.Integration.Tests
 | `Iris.Components` | Shared Blazor UI components |
 | `Iris.Brokers` | Message broker abstractions and connectors |
 | `Iris.Contracts` | Shared DTOs, commands, and events |
-| `Services/` | Backend services (Assemblies, History, Templates) |
+| `Iris.Contracts.Generators` | Source generator for the audit action lookup |
+| `Services/` | Backend services (Assemblies, History, Sagas, Telemetry, Templates) |
+| `Samples/` | Sample apps used to exercise Iris end to end |
 
 ## 🔧 Development Guidelines
 
@@ -66,11 +68,15 @@ dotnet test Iris.Integration.Tests
 
 ### Architecture Patterns
 
-Iris follows these architectural patterns (see `/docs/Architecture/`):
+`/docs/Architecture/` documents the CQRS, DDD and REPR patterns, written when Iris was a
+hosted service. They have aged unevenly, and each file now opens with a note saying how far
+it applies:
 
-- **CQRS** - Command Query Responsibility Segregation
-- **DDD** - Domain-Driven Design
-- **REPR** - Request-Endpoint-Response Pattern
+- **DDD** still holds. `Iris.Brokers` is a bounded context with its own vocabulary and no
+  dependency on the UI, the host or Mythetech.Framework, and the typed repositories are real.
+- **CQS** holds, and modules communicate through `IMessageBus` events rather than direct
+  references. Full CQRS, with split read and write models, does not.
+- **REPR** does not apply at all. There is no HTTP layer and no FastEndpoints here.
 
 ### Adding New Broker Support
 

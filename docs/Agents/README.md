@@ -10,9 +10,9 @@ Context and guidance for AI coding assistants working on the Iris codebase.
 
 | Layer | Technology |
 |-------|------------|
-| **Runtime** | .NET 10, C# 14 |
+| **Runtime** | .NET 11, C# 14 (prerelease SDK pinned in `global.json`) |
 | **Desktop** | Hermes (cross-platform native window + WebView) |
-| **UI** | Blazor + MudBlazor 8 |
+| **UI** | Blazor + MudBlazor 9 |
 | **Infrastructure** | Mythetech Framework (message bus, settings, desktop services) |
 | **Local Storage** | LiteDB (embedded NoSQL) |
 | **Package Management** | Central package versions in `Directory.Packages.props` |
@@ -31,12 +31,11 @@ Iris.Desktop (main app)
 ├── Iris.Brokers (broker connections)
 │   └── Iris.Contracts
 ├── Mythetech.Framework.Desktop (desktop services, settings storage)
-├── Mythetech.Hermes.Blazor (cross-platform window + WebView)
+│   └── Mythetech.Hermes.Blazor (window + WebView, arrives transitively)
 └── Services/
     ├── Iris.Assemblies (dynamic type loading)
-    ├── Iris.History (message history)
-    ├── Iris.Brokers.Frameworks (MassTransit/NServiceBus/etc. adapters)
-    └── Iris.Templates (saved templates)
+    ├── Iris.Sagas (saga discovery and state machine graphs)
+    └── Iris.Telemetry (OTLP span ingestion)
 ```
 
 ### Key Interfaces
@@ -45,7 +44,7 @@ Iris.Desktop (main app)
 |-----------|---------|----------|
 | `IConnector` | Creates broker connections | `Iris.Brokers/IConnector.cs` |
 | `IConnection` | Represents an active broker connection | `Iris.Brokers/IConnection.cs` |
-| `IFramework` | Wraps messages for frameworks (MassTransit, etc.) | `Services/Iris.Brokers.Frameworks/IFramework.cs` |
+| `IFramework` | Wraps messages for frameworks (MassTransit, etc.) | `Iris.Brokers/Frameworks/IFramework.cs` |
 | `IBrokerService` | UI service for broker operations | `Iris.Components/Brokers/IBrokerService.cs` |
 | `IMessageBus` | Internal pub/sub for component communication | `Mythetech.Framework` (NuGet) |
 
@@ -86,7 +85,7 @@ Settings classes in this project:
 
 ### Adding a New Framework Adapter
 
-1. Create adapter in `Services/Iris.Brokers.Frameworks/`:
+1. Create adapter in `Iris.Brokers/Frameworks/`:
    ```csharp
    public class NewFrameworkAdapter : IFramework
    {
@@ -104,7 +103,7 @@ Settings classes in this project:
    {
        public override string SettingsId => "MyFeature";
        public override string DisplayName => "My Feature";
-       public override string Icon => Icons.Material.Filled.Settings;
+       public override string Icon => IrisIcons.Settings;
        public override int Order => 30;
 
        [Setting(Label = "Enable Feature", Description = "...")]
@@ -177,7 +176,7 @@ public class BrokerTests : IAsyncLifetime
 | Desktop entry point | `Iris.Desktop/Program.cs` |
 | Component DI registration | `Iris.Components/IrisComponentRegistrationExtensions.cs` |
 | Broker connectors | `Iris.Brokers/{Provider}/` |
-| Framework adapters | `Services/Iris.Brokers.Frameworks/` |
+| Framework adapters | `Iris.Brokers/Frameworks/` |
 | Shared UI components | `Iris.Components/Shared/` |
 | Feature components | `Iris.Components/{Feature}/` |
 | Local DB context | `Iris.Desktop/Infrastructure/IrisLiteDbContext.cs` |
@@ -193,11 +192,11 @@ public class BrokerTests : IAsyncLifetime
 
 ## Areas Needing Future Work
 
-1. **Project Consolidation**: Currently ~14 projects; could be simplified to ~5
-2. **Connection Persistence**: Connections are currently in-memory only
-3. **Template Persistence**: `LocalTemplateService` needs LiteDB-backed storage
-4. **Retry/Resilience**: `Microsoft.Extensions.Resilience` is available but not wired up
-5. **Cancellation Tokens**: Many async methods don't accept `CancellationToken`
+1. **Project Consolidation**: 18 projects in the solution; `Services/Iris.Templates` and
+   `Services/History/Iris.History` are empty or near-empty and should go
+2. **Retry/Resilience**: `Microsoft.Extensions.Resilience` is available but not wired up
+3. **Cancellation Tokens**: Many async methods don't accept `CancellationToken`
+4. **Subscribe mode**: reading is peek and receive only; there is no live listen
 
 ## Debugging Tips
 

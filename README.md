@@ -19,12 +19,13 @@ Messages can be wrapped in framework-specific envelopes:
 - **EasyNetQ**
 - **Wolverine**
 - **Rebus**
+- **Brighter**
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Runtime | .NET 10, C# 14 |
+| Runtime | .NET 11, C# 14 |
 | Desktop | [Hermes](https://github.com/Mythetech/Hermes) (cross-platform native window + WebView) |
 | UI | Blazor + [MudBlazor](https://mudblazor.com/) |
 | Infrastructure | [Mythetech Framework](https://github.com/Mythetech) (message bus, settings, desktop services) |
@@ -38,20 +39,25 @@ Iris/
 ├── Iris.Desktop/              # Main desktop application entry point
 ├── Iris.Components/           # Shared Blazor UI components
 ├── Iris.Contracts/            # Shared DTOs and interfaces
+├── Iris.Contracts.Generators/ # Source generator for the audit action lookup
 ├── Iris.Brokers/              # Message broker connectors
+│   └── Frameworks/            # Framework envelope adapters
 ├── Services/
 │   ├── Assemblies/            # Dynamic assembly loading for message types
-│   ├── History/               # Message history persistence
-│   ├── Iris.Brokers.Frameworks/  # Framework envelope adapters
+│   ├── History/               # Message history records
+│   ├── Sagas/                 # Saga discovery and state machine graphs
+│   ├── Telemetry/             # OTLP span ingestion
 │   └── Iris.Templates/        # Reusable message templates
+├── Samples/                   # Sample apps used to exercise Iris end to end
 ├── Iris.Components.Test/      # bUnit component tests
+├── Iris.Desktop.Test/         # Desktop host and pipeline tests
 ├── Iris.Integration.Tests/    # Testcontainers integration tests
 └── docs/                      # Architecture documentation
 ```
 
 ## Prerequisites
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/) (10.0.100 or later)
+- [.NET 11 SDK](https://dotnet.microsoft.com/) - the exact prerelease build is pinned in `global.json`, so `dotnet restore` will tell you if yours is older
 - **Message Brokers** (optional): RabbitMQ, Azure Service Bus, etc. for testing
 
 ## Getting Started
@@ -81,7 +87,7 @@ dotnet test Iris.Integration.Tests
 
 - **Broker Connections**: connect to local or cloud broker instances
 - **Message Publishing**: send messages to queues and topics with framework wrapping
-- **Message Consumption**: listen to and inspect incoming messages
+- **Message Reading**: peek queues non-destructively, or receive messages off them, including dead-letter sub-queues
 - **Auto-Discovery**: automatically detects local RabbitMQ and Azure Storage Emulator
 - **Message History**: persists sent/received messages locally via LiteDB
 - **Templates**: save and reuse common message patterns
