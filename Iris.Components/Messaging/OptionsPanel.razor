@@ -4,20 +4,20 @@
 @using Iris.Components.Shared.DynamicTabs
 @implements IDisposable
 
-<TabDropContainer @ref="_tabDropContainer" Style="max-height:82dvh;" Items="@_tabs" ItemsSelector="(view, s) => view.AreaIdentifier.Equals(s)" DropEventHandled="UpdateLayoutState">
+<TabDropContainer @ref="_tabDropContainer" Class="options-panel-tabs" Items="@_tabs" ItemsSelector="(view, s) => view.AreaIdentifier.Equals(s)" DropEventHandled="UpdateLayoutState">
     <ChildContent>
         <IrisSplitter Class="mud-height-full">
             <Panel1>
                 <div class="mud-height-full">
                     <IrisCard Height="100%" Class="flex-grow-1">
-                        <TabDropZone Class="flex-grow-1 mt-4 pa-2" Style="height:86%" Identifier="top-dropzone" Items="@_tabs" />
+                        <TabDropZone Class="flex-grow-1 mt-4 pa-2 tab-drop-zone-fill" Identifier="top-dropzone" Items="@_tabs" />
                     </IrisCard>
                 </div>
             </Panel1>
             <Panel2>
                 <div class="mud-height-full">
                     <IrisCard Height="100%" Class="flex-grow-1">
-                        <TabDropZone Class="flex-grow-1 mt-4 pa-2" Style="height:86%" Identifier="bottom-dropzone" Items="@_tabs"/>
+                        <TabDropZone Class="flex-grow-1 mt-4 pa-2 tab-drop-zone-fill" Identifier="bottom-dropzone" Items="@_tabs"/>
                     </IrisCard>
                 </div>
             </Panel2>

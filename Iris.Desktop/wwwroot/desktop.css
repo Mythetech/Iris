@@ -8,3 +8,16 @@
     -o-user-select: all;
     user-select: all!important;
 }
+/* Replacing inline Style literals. MudDrawer, MudBreadcrumbs and MudDivider are
+   component tags, so a scoped MainLayout.razor.css rule would never match. */
+.breadcrumbs-bare {
+    background-color: transparent;
+}
+
+.drawer-divider {
+    width: 75%;
+}
+
+.account-popover-blur {
+    backdrop-filter: blur(8px) brightness(0.2);
+}

@@ -5,7 +5,7 @@
     <MudTooltip Text="Account">
         <MudIconButton Size="MudBlazor.Size.Small" class="toggle-btn" Icon="@($"{IrisIcons.Account} fs-6")" OnClick="ToggleMenu" />
     </MudTooltip>
-    <MudPopover Open="@_open" Class="iris-rainbow-shadow glassmorphic-bg" Style="backdrop-filter: blur(8px) brightness(0.2);" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+    <MudPopover Open="@_open" Class="iris-rainbow-shadow glassmorphic-bg account-popover-blur" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
         <MudStack Row="true">
             <span class="text-muted" style="font-size:0.75em;">@($"Version {AppVersion.ToString()}")</span>
             <FlexSpacer/>

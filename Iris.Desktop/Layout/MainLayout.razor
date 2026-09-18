@@ -34,13 +34,13 @@
            Style="@((_drawerOpen ? "width: calc(100vw - var(--mud-drawer-width-left));" : "width: calc(100vw - var(--mud-drawer-width-mini-left));") + "  transition: width 225ms cubic-bezier(0, 0, 0.2, 1);")">
     <Hermes.Blazor.Components.HermesTitleBar Height="38">
         <div class="iris-title-bar-content">
-            <MudText Typo="Typo.subtitle1" Class="no-drag app-header-font" Style="white-space:nowrap;">Iris</MudText>
+            <MudText Typo="Typo.subtitle1" Class="no-drag app-header-font text-nowrap">Iris</MudText>
             <div class="no-drag" style="flex:1;min-width:0;">
-                <MudBreadcrumbs Style="background-color:transparent;" Items="BreadcrumbService.Breadcrumbs" />
+                <MudBreadcrumbs Class="breadcrumbs-bare" Items="BreadcrumbService.Breadcrumbs" />
             </div>
         </div>
     </Hermes.Blazor.Components.HermesTitleBar>
-    <MudDrawer @bind-Open="@_drawerOpen" Variant="DrawerVariant.Mini" Style="overflow: hidden;">
+    <MudDrawer @bind-Open="@_drawerOpen" Variant="DrawerVariant.Mini" Class="overflow-hidden">
         <AppContextDrawer @bind-IsOpen="_drawerOpen">
             <IconBarHeader>
                 <MudTooltip Text="About Iris">
@@ -48,7 +48,7 @@
                                    OnClick="OpenAboutDialog" />
                 </MudTooltip>
                 <HomeNavButton />
-                <MudDivider DividerType="DividerType.Middle" Class="my-1" Style="width:75%" />
+                <MudDivider DividerType="DividerType.Middle" Class="my-1 drawer-divider" />
             </IconBarHeader>
             <PanelNavContent>
                 <ContextPanelItem Id="messaging" Icon="@IrisIcons.Send" Title="Messaging" RoutePrefix="Messaging"
@@ -101,7 +101,7 @@
             </PanelFooterContent>
         </AppContextDrawer>
     </MudDrawer>
-    <MudMainContent Class="mud-height-full mud-width-full px-4" Style="overflow:hidden;">
+    <MudMainContent Class="mud-height-full mud-width-full px-4 overflow-hidden">
         @Body
     </MudMainContent>
     <NativeMenuDispatcher />

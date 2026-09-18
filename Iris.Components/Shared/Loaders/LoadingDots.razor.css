@@ -1,17 +1,13 @@
 .lds-ellipsis {
-    color: var(--mud-palette-primary);
-}
-.lds-ellipsis,
-.lds-ellipsis div {
-    box-sizing: border-box;
-}
-.lds-ellipsis {
     display: inline-block;
     position: relative;
+    box-sizing: border-box;
     width: 40px;
     height: 40px;
+    color: var(--mud-palette-primary);
 }
 .lds-ellipsis div {
+    box-sizing: border-box;
     position: absolute;
     top: 16.66667px;
     width: 6.66667px;

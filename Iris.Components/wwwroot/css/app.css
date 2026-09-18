@@ -689,3 +689,136 @@ main {
     word-break: break-word;
     max-width: 60%;
 }
+/* ---------------------------------------------------------------------------
+   Classes replacing inline Style literals.
+
+   These live here rather than in a scoped .razor.css because almost every
+   target is a component tag (MudContainer, MudDialog, MudPaper, IconButton).
+   Blazor stamps the scope attribute onto literal HTML elements only, so a
+   scoped rule compiles to .thing[b-xxxxx] and never matches the element the
+   component renders. IrisSplitter is the proof: its .razor.css had the median
+   rule and a duplicate <style> block beside it, and only the block worked.
+   --------------------------------------------------------------------------- */
+
+.bg-transparent {
+    background-color: transparent;
+}
+
+.text-bold {
+    font-weight: bold;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.text-nowrap {
+    white-space: nowrap;
+}
+
+/* FluentSplitter renders a <split-panels> custom element, out of reach of both
+   scoped CSS and any class we could pass down. */
+split-panels {
+    --neutral-stroke-rest: var(--mud-palette-lines-default);
+    --neutral-stroke-hover: rgb(66 165 245 / 50%);
+    --neutral-stroke-active: rgb(66 165 245 / 100%);
+    --neutral-stroke-strong-rest: var(--mud-palette-lines-default);
+}
+
+split-panels::part(median) {
+    border-radius: 0.25em;
+    box-shadow: 0 0 0.3em 0.1em var(--iris-primary);
+}
+
+/* Page shells. dvh rather than vh so the desktop webview's chrome is excluded. */
+.iris-page-scroll {
+    max-height: 80dvh;
+}
+
+.messaging-page {
+    height: 82dvh;
+}
+
+.template-editor-page {
+    height: 90dvh;
+}
+
+.send-view-pane {
+    height: 65dvh;
+}
+
+.iris-empty-state {
+    height: 300px;
+}
+
+.iris-dialog-wide {
+    width: 33dvw;
+}
+
+.iris-dialog-narrow {
+    width: 30dvw;
+}
+
+.provider-carousel {
+    height: 220px;
+}
+
+.connection-doughnut {
+    margin-top: -0.5rem;
+}
+
+/* The grid draws its own padding, so the surface pulls back over it. */
+.endpoints-grid-surface {
+    margin-top: -1em;
+    margin-bottom: -1em;
+    overflow: hidden;
+}
+
+.skeleton-pill {
+    border-radius: 1rem;
+}
+
+/* Keeps the provider glyph column aligned when names vary in width. */
+.select-item-icon {
+    min-width: 24px;
+}
+
+.loading-dots-inline {
+    margin-left: -0.5em;
+}
+
+.tab-drop-zone {
+    background-color: rgba(var(--mud-palette-primary-rgb), 0.08);
+}
+
+.tab-drop-zone-fill {
+    height: 86%;
+}
+
+.options-panel-tabs {
+    max-height: 82dvh;
+}
+
+.layout-zone-label {
+    width: 100px;
+}
+
+.json-preview-surface {
+    background: var(--mud-palette-background-dark);
+}
+
+.json-preview-label {
+    letter-spacing: 0.1em;
+}
+
+.template-array-section {
+    border-left: 3px solid var(--mud-palette-warning);
+}
+
+.template-object-section {
+    border-left: 3px solid var(--mud-palette-info);
+}
+
+.read-count-field {
+    width: 110px;
+}

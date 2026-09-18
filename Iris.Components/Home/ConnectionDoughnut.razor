@@ -9,7 +9,7 @@
 @using Size = MudBlazor.Size
 @inject IJSRuntime JSRuntime
 
-<MudStack Spacing="1" Style="margin-top:-0.5rem;">
+<MudStack Spacing="1" Class="connection-doughnut">
     <MudStack Row="true">
         <h1>@Connections.Select(x => x.Address).Distinct().Count()</h1>
         <MudSpacer />
