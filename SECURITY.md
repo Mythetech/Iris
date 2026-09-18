@@ -4,7 +4,9 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.x     | :white_check_mark: |
+| 0.x     | :white_check_mark: |
+
+Iris has not reached 1.0. Only the latest 0.x build is supported.
 
 ## Reporting a Vulnerability
 

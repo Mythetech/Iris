@@ -1,5 +1,13 @@
 # Domain-Driven Design (DDD)
 
+> **Scope.** The principles here apply to Iris, but the examples are written for the
+> IrisCloud service rather than the desktop app. `Iris.Brokers` is the clearest bounded
+> context: it owns the broker vocabulary (`IConnector`, `IConnection`, `EndpointDetails`,
+> `ReadSource`), it depends on no UI or host, and it deliberately takes no dependency on
+> Mythetech.Framework, so the domain language cannot leak into it. The typed repositories
+> described below are real: see `ConnectionRepository`, `TemplateRepository`,
+> `HistoryRepository`, `PackageRepository` and `MessageLayoutRepository`.
+
 ## Overview
 
 Domain-Driven Design (DDD) is a software design approach popularized by Eric Evans in his book *Domain-Driven Design: Tackling Complexity in the Heart of Software*. DDD emphasizes **modeling the core domain and its business logic** in a way that directly reflects the problem domain. For a detailed introduction, see this [DDD overview on DevIQ](https://deviq.com/domain-driven-design/ddd-overview).
