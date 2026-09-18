@@ -20,7 +20,7 @@ namespace Iris.Components.Test.Messaging
             Services.AddSingleton<MessagingSettings>();
             Services.AddScoped<MessageState>();
 
-            JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true);
+            JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true).SetResult(1);
             Render<MudPopoverProvider>();
         }
 

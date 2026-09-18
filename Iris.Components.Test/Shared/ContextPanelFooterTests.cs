@@ -37,7 +37,7 @@ public class ContextPanelFooterTests : IrisTestContext
 
         // MessagingPanel's selectors are MudSelect, which registers a popover on
         // init and throws if none is mounted.
-        JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true);
+        JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true).SetResult(1);
         Render<MudPopoverProvider>();
     }
 

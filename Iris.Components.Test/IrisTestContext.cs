@@ -21,10 +21,15 @@ namespace Iris.Components.Test
         /// MudTooltip. MudBlazor builds the popover during initialization and throws
         /// without a provider in the tree, and it renders popover content into that
         /// fragment rather than under the component itself.
+        ///
+        /// SetResult is not optional. An explicit Setup takes precedence over Loose mode,
+        /// so a handler without a result matches the call and then hangs rather than
+        /// returning a default, which surfaced as a five second timeout in whichever test
+        /// happened to await MudPopoverProvider.OnAfterRenderAsync under load.
         /// </summary>
         protected IRenderedComponent<MudPopoverProvider> AddPopoverProvider()
         {
-            JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true);
+            JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true).SetResult(1);
             return Render<MudPopoverProvider>();
         }
     }
