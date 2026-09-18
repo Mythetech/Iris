@@ -1,0 +1,40 @@
+# Build and launch Iris on each platform without signing or publishing
+#
+# Manual only. Publishes the same unsigned Velopack packages as publish-desktop.yml and
+# launches them, which catches what the unit suite cannot: a missing WebView2 assembly, a
+# malformed macOS app bundle, a broken AppImage. It asserts that the binary starts and a
+# window appears, not that the app works: index.html paints the splash screen before Blazor
+# boots, so a failed boot still shows a window. Treat a pass as "it launches".
+#
+# Uses shared workflows from mythetech/workflows
+
+name: Smoke Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: 'Platforms to smoke test'
+        type: choice
+        options: [all, windows, macos, linux]
+        default: all
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    uses: mythetech/workflows/.github/workflows/desktop-smoke-test.yml@main
+    with:
+      app_name: "Iris"
+      project_path: "Iris.Desktop/Iris.Desktop.csproj"
+      global_json_file: "global.json"
+      icon_windows: "Iris.Desktop/wwwroot/icon.ico"
+      icon_linux: "Iris.Desktop/wwwroot/icon.png"
+      icon_macos: "Iris.Desktop/wwwroot/iris.icns"
+      platforms: ${{ inputs.platforms }}
+      # ci.yml already gates every PR, and the shared test job runs beside the matrix rather
+      # than before it, so it would not block a launch. Enabling it here would also need
+      # test_command to carry --filter-not-trait "Category=Container": the Testcontainers
+      # tests would otherwise try to start Docker on the Windows and macOS runners.
+      enable_tests: false
