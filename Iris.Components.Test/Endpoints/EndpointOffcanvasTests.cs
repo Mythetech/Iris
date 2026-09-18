@@ -39,7 +39,7 @@ public class EndpointOffcanvasTests : IrisTestContext
         var cut = Render<EndpointOffcanvas>(p => p
             .Add(x => x.Endpoint, Sample()));
 
-        // The bare <h6>orders</h6> bug — markup must NOT contain it.
+        // The bare <h6>orders</h6> bug: markup must NOT contain it.
         cut.Markup.Should().NotContain("<h6>orders</h6>");
         // MudText with Typo.h5 renders as h5 by default; the endpoint-name class
         // is the durable hook regardless of MudBlazor's chosen tag.

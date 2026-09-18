@@ -84,7 +84,7 @@ namespace Iris.Brokers.Azure
         public async Task<IReadOnlyList<ReceivedMessage>> ReceiveAsync(
             EndpointDetails endpoint, int count, CancellationToken cancellationToken = default)
         {
-            // Azure Queue Storage has no atomic ReceiveAndDelete — synthesize it
+            // Azure Queue Storage has no atomic ReceiveAndDelete, so synthesize it
             // by receiving with a 30s visibility window, then deleting each
             // message before returning. The visibility window is the "honor
             // visibility timeout" requirement: during the delete window, a

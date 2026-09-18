@@ -62,7 +62,7 @@ namespace Iris.Integration.Tests
 
             try
             {
-                // Arrange — wrap a message exactly as LocalConnectionManager.SendMessageAsync does.
+                // Arrange: wrap a message exactly as LocalConnectionManager.SendMessageAsync does.
                 var adapter = new MassTransitAdapter();
 
                 var request = MessageRequest.Create(
@@ -86,7 +86,7 @@ namespace Iris.Integration.Tests
                 var connection = await connector.ConnectAsync(connectionData, false);
                 connection.Should().NotBeNull("RabbitMqConnector must connect to the management API");
 
-                // Act — publish the wrapped envelope to the queue MassTransit is consuming from.
+                // Act: publish the wrapped envelope to the queue MassTransit is consuming from.
                 await connection!.SendAsync(
                     new EndpointDetails
                     {
@@ -97,7 +97,7 @@ namespace Iris.Integration.Tests
                     },
                     request);
 
-                // Assert — the MassTransit consumer must deserialize and receive the payload.
+                // Assert: the MassTransit consumer must deserialize and receive the payload.
                 var context = await Eventually.CompletesAsync(
                     consumer.Received.Task,
                     TimeSpan.FromSeconds(30),

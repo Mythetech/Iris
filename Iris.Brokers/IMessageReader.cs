@@ -4,7 +4,7 @@ namespace Iris.Brokers;
 
 /// <summary>
 /// Marker base for broker connections that expose any read capability.
-/// Not useful on its own — probe for one of the operation-specific
+/// Not useful on its own: probe for one of the operation-specific
 /// sub-interfaces (<see cref="IMessagePeeker"/>, <see cref="IMessageReceiver"/>,
 /// <see cref="IDeadLetterPeeker"/>, <see cref="IDeadLetterReceiver"/>).
 /// </summary>
@@ -19,7 +19,7 @@ namespace Iris.Brokers;
 /// </para>
 /// <para>
 /// <b>Semantics.</b> <c>Receive</c> methods are destructive and
-/// irrevocable — Iris uses auto-ack (ReceiveAndDelete) semantics across
+/// irrevocable: Iris uses auto-ack (ReceiveAndDelete) semantics across
 /// all brokers so the service/UI layers don't have to care about lock
 /// tokens or visibility timeouts. Native per-broker handles are retained
 /// on <see cref="ReceivedMessage.Native"/> for diagnostic display only.

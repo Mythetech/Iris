@@ -4,7 +4,7 @@ Context and guidance for AI coding assistants working on the Iris codebase.
 
 ## Project Identity
 
-**Iris** is a desktop application for testing distributed systems — "Postman for message brokers." Developers visually connect to message brokers (RabbitMQ, Azure Service Bus, AWS SQS) and send/receive messages without writing code.
+**Iris** is a desktop application for testing distributed systems: "Postman for message brokers." Developers visually connect to message brokers (RabbitMQ, Azure Service Bus, AWS SQS) and send/receive messages without writing code.
 
 ## Technology Stack
 
@@ -53,13 +53,13 @@ Iris.Desktop (main app)
 
 Iris delegates infrastructure concerns to the framework:
 
-- **Message Bus** — `IMessageBus` / `IConsumer<T>` for internal component pub/sub. Registered via `AddMessageBus()` / `UseMessageBus()`.
-- **Settings** — `SettingsBase` subclasses with `[Setting]` attributes, rendered by `<SettingsPanel />`. Registered via `AddSettingsFramework()` / `RegisterSettingsFromAssembly()`.
-- **Desktop Services** — Settings persistence via LiteDB, registered with `AddDesktopSettingsStorage("Iris")` and `AddDesktopServices(DesktopHost.Hermes)`.
+- **Message Bus**: `IMessageBus` / `IConsumer<T>` for internal component pub/sub. Registered via `AddMessageBus()` / `UseMessageBus()`.
+- **Settings**: `SettingsBase` subclasses with `[Setting]` attributes, rendered by `<SettingsPanel />`. Registered via `AddSettingsFramework()` / `RegisterSettingsFromAssembly()`.
+- **Desktop Services**: Settings persistence via LiteDB, registered with `AddDesktopSettingsStorage("Iris")` and `AddDesktopServices(DesktopHost.Hermes)`.
 
 Settings classes in this project:
-- `Iris.Components/Messaging/MessagingSettings.cs` — SendIrisHeader toggle, layout settings
-- `Iris.Desktop/History/HistorySettings.cs` — History management panel
+- `Iris.Components/Messaging/MessagingSettings.cs`: SendIrisHeader toggle, layout settings
+- `Iris.Desktop/History/HistorySettings.cs`: History management panel
 
 ## Common Tasks
 
@@ -186,23 +186,23 @@ public class BrokerTests : IAsyncLifetime
 
 ## Known Patterns to Preserve
 
-1. **Auto-discovery of local connections** — `AutoDiscovery.cs` tries to connect to local RabbitMQ and Azure Storage Emulator on startup
-2. **Framework message wrapping** — Messages can be wrapped in MassTransit/NServiceBus envelopes via `IFramework`
-3. **Internal message bus** — Components communicate via `IMessageBus` pub/sub (from Mythetech Framework), not direct references
-4. **Dynamic type generation** — `CodeGenerator` uses `System.Reflection.Emit` to create runtime types from loaded assemblies
+1. **Auto-discovery of local connections**: `AutoDiscovery.cs` tries to connect to local RabbitMQ and Azure Storage Emulator on startup
+2. **Framework message wrapping**: Messages can be wrapped in MassTransit/NServiceBus envelopes via `IFramework`
+3. **Internal message bus**: Components communicate via `IMessageBus` pub/sub (from Mythetech Framework), not direct references
+4. **Dynamic type generation**: `CodeGenerator` uses `System.Reflection.Emit` to create runtime types from loaded assemblies
 
 ## Areas Needing Future Work
 
-1. **Project Consolidation** — Currently ~14 projects; could be simplified to ~5
-2. **Connection Persistence** — Connections are currently in-memory only
-3. **Template Persistence** — `LocalTemplateService` needs LiteDB-backed storage
-4. **Retry/Resilience** — `Microsoft.Extensions.Resilience` is available but not wired up
-5. **Cancellation Tokens** — Many async methods don't accept `CancellationToken`
+1. **Project Consolidation**: Currently ~14 projects; could be simplified to ~5
+2. **Connection Persistence**: Connections are currently in-memory only
+3. **Template Persistence**: `LocalTemplateService` needs LiteDB-backed storage
+4. **Retry/Resilience**: `Microsoft.Extensions.Resilience` is available but not wired up
+5. **Cancellation Tokens**: Many async methods don't accept `CancellationToken`
 
 ## Debugging Tips
 
-1. **Broker connection issues** — Check `AutoDiscovery.cs` for local connection logic
-2. **Message not sending** — Verify `LocalConnectionManager.SendMessageAsync()` flow
-3. **UI not updating** — Check if `StateHasChanged()` is being called, or if using `IMessageBus`
-4. **Template/History issues** — Check `IrisLiteDbContext` and repository implementations
-5. **Settings not persisting** — Verify `AddDesktopSettingsStorage("Iris")` is registered and `LoadPersistedSettingsAsync()` is called at startup
+1. **Broker connection issues**: Check `AutoDiscovery.cs` for local connection logic
+2. **Message not sending**: Verify `LocalConnectionManager.SendMessageAsync()` flow
+3. **UI not updating**: Check if `StateHasChanged()` is being called, or if using `IMessageBus`
+4. **Template/History issues**: Check `IrisLiteDbContext` and repository implementations
+5. **Settings not persisting**: Verify `AddDesktopSettingsStorage("Iris")` is registered and `LoadPersistedSettingsAsync()` is called at startup

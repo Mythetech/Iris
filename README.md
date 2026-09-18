@@ -4,11 +4,11 @@ A desktop testing tool for distributed applications. Think Postman, but for mess
 
 ## Overview
 
-Iris lets developers visually connect to message brokers, send and receive messages, and debug event flows — without writing boilerplate test code.
+Iris lets developers visually connect to message brokers, send and receive messages, and debug event flows, without writing boilerplate test code.
 
 ### Supported Message Brokers
-- **RabbitMQ** — queues, exchanges, and routing
-- **Azure Service Bus** — queues and topics
+- **RabbitMQ**: queues, exchanges, and routing
+- **Azure Service Bus**: queues and topics
 - **Azure Storage Queues**
 - **AWS SQS**
 
@@ -52,7 +52,7 @@ Iris/
 ## Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/) (10.0.100 or later)
-- **Message Brokers** (optional) — RabbitMQ, Azure Service Bus, etc. for testing
+- **Message Brokers** (optional): RabbitMQ, Azure Service Bus, etc. for testing
 
 ## Getting Started
 
@@ -79,14 +79,14 @@ dotnet test Iris.Integration.Tests
 
 ## Key Capabilities
 
-- **Broker Connections** — connect to local or cloud broker instances
-- **Message Publishing** — send messages to queues and topics with framework wrapping
-- **Message Consumption** — listen to and inspect incoming messages
-- **Auto-Discovery** — automatically detects local RabbitMQ and Azure Storage Emulator
-- **Message History** — persists sent/received messages locally via LiteDB
-- **Templates** — save and reuse common message patterns
-- **Dynamic Type Loading** — load assemblies to use your own message contracts
-- **Settings** — configurable via Mythetech Framework settings panel with local persistence
+- **Broker Connections**: connect to local or cloud broker instances
+- **Message Publishing**: send messages to queues and topics with framework wrapping
+- **Message Consumption**: listen to and inspect incoming messages
+- **Auto-Discovery**: automatically detects local RabbitMQ and Azure Storage Emulator
+- **Message History**: persists sent/received messages locally via LiteDB
+- **Templates**: save and reuse common message patterns
+- **Dynamic Type Loading**: load assemblies to use your own message contracts
+- **Settings**: configurable via Mythetech Framework settings panel with local persistence
 
 ## Contributing
 
@@ -98,4 +98,4 @@ dotnet test Iris.Integration.Tests
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT. See [LICENSE](LICENSE) for details.

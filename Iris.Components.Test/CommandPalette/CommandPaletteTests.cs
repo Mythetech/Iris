@@ -163,7 +163,7 @@ public class CommandPaletteTests : IrisTestContext
         // typing should reset selection to first matching command
         await input.InputAsync(new ChangeEventArgs { Value = "h" });
 
-        // both home and history match — selection should land on home (index 0 of filtered)
+        // both home and history match, so selection should land on home (index 0 of filtered)
         input.GetAttribute("aria-activedescendant").Should().Be("cmd-home");
     }
 

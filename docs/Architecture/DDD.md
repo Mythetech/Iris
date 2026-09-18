@@ -11,7 +11,7 @@ At its core, DDD helps us **encapsulate behaviors** and **hide internal details*
 ## Core Principles
 
 ### 1. Ubiquitous Language
-DDD encourages the development of a **Ubiquitous Language**—a shared vocabulary that the team uses consistently in discussions, code, and documentation. This language bridges the gap between technical and non-technical team members and is a key factor in creating software that accurately reflects the problem domain.
+DDD encourages the development of a **Ubiquitous Language**: a shared vocabulary that the team uses consistently in discussions, code, and documentation. This language bridges the gap between technical and non-technical team members and is a key factor in creating software that accurately reflects the problem domain.
 
 ### 2. Encapsulation and Information Hiding
 
@@ -56,7 +56,7 @@ Event Storming is especially useful for identifying Bounded Contexts, building a
 
 ## DDD in Practice
 
-DDD isn't a one-size-fits-all solution—it provides guidelines for modeling software to mirror the business problem. Key practices include:
+DDD isn't a one-size-fits-all solution; it provides guidelines for modeling software to mirror the business problem. Key practices include:
 - **Using the Ubiquitous Language** across code and discussions.
 - **Encapsulating behavior** within domain models, using entities, value objects, and domain services as appropriate.
 - **Leveraging Bounded Contexts** to manage complexity and avoid model conflicts.

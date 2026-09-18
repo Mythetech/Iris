@@ -33,7 +33,7 @@ public partial class TemplateFieldModel
     /// <summary>Child fields for nested complex objects.</summary>
     public List<TemplateFieldModel>? Children { get; set; }
 
-    /// <summary>Array items for complex collections — each item is a list of fields.</summary>
+    /// <summary>Array items for complex collections; each item is a list of fields.</summary>
     public List<List<TemplateFieldModel>>? Items { get; set; }
 
     /// <summary>Array items for primitive collections such as <c>List&lt;string&gt;</c>.</summary>
@@ -248,7 +248,7 @@ public partial class TemplateFieldModel
         }
         else
         {
-            // Primitive collection — collect as strings
+            // Primitive collection: collect as strings
             model.PrimitiveItems = arr
                 .Select(item => item?.GetValue<object>()?.ToString() ?? "")
                 .ToList();

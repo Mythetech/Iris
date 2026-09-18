@@ -1,7 +1,7 @@
 <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="@($"key-value-row w-100 {Class}")">
     <MudText Typo="Typo.body2" Class="text-muted">@Key</MudText>
     <FlexSpacer/>
-    <MudText Typo="Typo.body2" Class="key-value-row-value">@(Value ?? "—")</MudText>
+    <MudText Typo="Typo.body2" Class="key-value-row-value">@(Value ?? "-")</MudText>
 </MudStack>
 
 @code {

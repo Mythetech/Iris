@@ -234,7 +234,7 @@ namespace Iris.Brokers.Azure
                 Native = new NativeMessageMetadata
                 {
                     // LockToken is populated by SB even under ReceiveAndDelete mode;
-                    // we retain it for diagnostic display only — it's not used for ack flow.
+                    // we retain it for diagnostic display only; it's not used for ack flow.
                     LockToken = m.LockToken,
                 },
             };

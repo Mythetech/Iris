@@ -6,7 +6,7 @@ namespace Iris.Brokers.Frameworks;
 
 /// <summary>
 /// Wraps a message in a Rebus-accurate envelope. Unlike MassTransit / NServiceBus / Wolverine,
-/// Rebus does not put a JSON envelope object in the body — it puts metadata in transport headers
+/// Rebus does not put a JSON envelope object in the body; it puts metadata in transport headers
 /// (the rbs2-* keys) and the raw user JSON in the body. This adapter therefore mutates
 /// <see cref="IMessageRequest.Headers"/> in place and returns <see cref="IMessageRequest.Json"/>
 /// unchanged. The headers flow through to the transport layer (e.g. RabbitMQ basic-properties)
@@ -46,7 +46,7 @@ public class RebusAdapter : IFramework
         var messageId = Guid.NewGuid().ToString();
         var typeName = BuildRebusTypeName(request);
 
-        // TryAdd everywhere — any header the caller already set wins.
+        // TryAdd everywhere: any header the caller already set wins.
         request.Headers.TryAdd(RebusHeaders.MessageId, messageId);
         request.Headers.TryAdd(RebusHeaders.CorrelationId, messageId);
         request.Headers.TryAdd(RebusHeaders.CorrelationSequence, "0");

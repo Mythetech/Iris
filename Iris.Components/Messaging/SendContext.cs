@@ -4,7 +4,7 @@ namespace Iris.Components.Messaging;
 
 /// <summary>
 /// Input to <see cref="IMessageSendOrchestrator.SendAsync"/>. All fields are optional
-/// except Json — the orchestrator tolerates null provider/endpoint values the same
+/// except Json; the orchestrator tolerates null provider/endpoint values the same
 /// way the existing Messaging page does (the call to IMessageService will fail and
 /// HandleResult will surface the error).
 /// </summary>

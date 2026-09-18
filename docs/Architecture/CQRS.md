@@ -6,7 +6,7 @@
 
 In CQS:
 - **Queries**: These methods are *free of side effects* and return data without altering the system’s state. They are “safe” operations that can be used freely across different parts of an application.
-- **Commands**: These methods perform actions that change the system’s state. Commands are intentional actions—changes that are isolated and controlled within their bounded contexts, especially relevant in **event-driven architectures**.
+- **Commands**: These methods perform actions that change the system’s state. Commands are intentional actions, changes that are isolated and controlled within their bounded contexts, especially relevant in **event-driven architectures**.
 
 ## Applying CQS in Practice
 

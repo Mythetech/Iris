@@ -62,7 +62,7 @@ namespace Iris.Integration.Tests
         [Fact(DisplayName = "Iris Rebus-wrapped message round-trips to a real Rebus consumer on RabbitMQ")]
         public async Task Can_Consume_Rebus_Message()
         {
-            // Arrange — wrap a message exactly as LocalConnectionManager.SendMessageAsync does.
+            // Arrange: wrap a message exactly as LocalConnectionManager.SendMessageAsync does.
             var adapter = new RebusAdapter();
 
             var messageType = typeof(IrisRebusTestMessage);
@@ -89,7 +89,7 @@ namespace Iris.Integration.Tests
             var connection = await connector.ConnectAsync(connectionData, false);
             connection.Should().NotBeNull("RabbitMqConnector must connect to the management API");
 
-            // Act — publish the wrapped envelope to the queue Rebus is consuming from.
+            // Act: publish the wrapped envelope to the queue Rebus is consuming from.
             await connection!.SendAsync(
                 new EndpointDetails
                 {
@@ -100,7 +100,7 @@ namespace Iris.Integration.Tests
                 },
                 request);
 
-            // Assert — the Rebus consumer must deserialize and receive the payload.
+            // Assert: the Rebus consumer must deserialize and receive the payload.
             var message = await Eventually.CompletesAsync(
                 _received.Task,
                 TimeSpan.FromSeconds(30),
