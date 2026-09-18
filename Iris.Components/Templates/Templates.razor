@@ -22,16 +22,16 @@
 </IrisPageHeader>
 
 <IrisCard Height="var(--iris-page-body-height)">
-    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex gap-4 mt-2 overflow-auto" Style="flex-direction:column;">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="d-flex gap-4 mt-2 overflow-auto flex-column">
         @if (_loading)
         {
-            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100" Style="height:300px;">
+            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 iris-empty-state">
                 <MudProgressCircular Indeterminate="true" />
             </MudStack>
         }
         else if (FilteredTemplates.Count == 0)
         {
-            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100" Style="height:300px;">
+            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="w-100 iris-empty-state">
                 <MudIcon Icon="@IrisIcons.Templates" Size="Size.Large" Class="mud-text-secondary mb-2" />
                 <MudText Typo="Typo.h6">No Templates</MudText>
                 <MudText Typo="Typo.body2" Class="mud-text-secondary">Create a template to get started</MudText>

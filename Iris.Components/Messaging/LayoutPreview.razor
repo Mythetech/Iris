@@ -1,14 +1,14 @@
 <MudStack Spacing="1">
-    <MudText Style="align-self: center;" Class="mud-text-secondary">@LayoutName</MudText>
+    <MudText Class="mud-text-secondary align-self-center">@LayoutName</MudText>
     <MudStack Row AlignItems="AlignItems.Center">
-        <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="width:100px">Top Zone</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary layout-zone-label">Top Zone</MudText>
         @foreach (var tab in Layout.Where(x => x is { AreaIdentifier: LayoutZones.TopZone }).OrderBy(y => y.AreaIndex))
         {
             <MudText>@tab.Name</MudText>
         }
     </MudStack>
     <MudStack Row AlignItems="AlignItems.Center">
-        <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="width:100px">Bottom Zone</MudText>
+        <MudText Typo="Typo.body2" Class="mud-text-secondary layout-zone-label">Bottom Zone</MudText>
         @foreach (var tab in Layout.Where(x => x is { AreaIdentifier: LayoutZones.BottomZone }).OrderBy(y => y.AreaIndex))
         {
             <MudText>@tab.Name</MudText>

@@ -1,11 +1,11 @@
-<MudDialog Class="glassmorphic-bg pa-4 mud-width-full box-shadow-primary" Style="width:33dvw;">
+<MudDialog Class="glassmorphic-bg pa-4 mud-width-full box-shadow-primary iris-dialog-wide">
     <DialogContent>
         <MudSelect @ref="_providerSelector" Required="true" @bind-Value="@_selectedProvider" T="SupportedProvider" Label="Connection Provider">
             @foreach (var context in SupportedProviders)
             {
                 <MudSelectItem T="SupportedProvider" Value="@context">
                     <MudStack Row="true">
-                        <MudIcon Style="min-width:24px;" Icon="@context.Icon"/>
+                        <MudIcon Class="select-item-icon" Icon="@context.Icon"/>
                         @context.Name
                         @if (!string.IsNullOrWhiteSpace(context.Product))
                         {
