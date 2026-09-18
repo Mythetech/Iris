@@ -6,7 +6,7 @@ namespace Iris.Brokers.Frameworks;
 
 /// <summary>
 /// Wraps a message in a Paramore.Brighter v10-accurate envelope. Brighter does not put a JSON
-/// envelope object in the body — it puts metadata in transport headers (CloudEvents 1.0
+/// envelope object in the body; it puts metadata in transport headers (CloudEvents 1.0
 /// attributes plus a small set of Brighter-native keys) and the raw user JSON in the body.
 /// This adapter therefore mutates <see cref="IMessageRequest.Headers"/> in place and returns
 /// <see cref="IMessageRequest.Json"/> unchanged. The headers flow through to the transport
@@ -15,7 +15,7 @@ namespace Iris.Brokers.Frameworks;
 /// </summary>
 /// <remarks>
 /// Header key spelling matches <c>Paramore.Brighter.MessagingGateway.RMQ.Async/HeaderNames.cs</c>
-/// from Brighter v10.3.3 — note <c>cloudEvents_*</c> (camelCase E), not <c>ce_*</c>. We hard-code
+/// from Brighter v10.3.3; note <c>cloudEvents_*</c> (camelCase E), not <c>ce_*</c>. We hard-code
 /// the strings rather than reference Paramore.Brighter so that Iris.Brokers does not pull in a
 /// transport pipeline it never hosts.
 /// </remarks>
@@ -84,7 +84,7 @@ public class BrighterAdapter : IFramework
             ? cid
             : messageId;
 
-        // CloudEvents 1.0 attributes — Brighter v10 reads these from the AMQP application
+        // CloudEvents 1.0 attributes: Brighter v10 reads these from the AMQP application
         // headers / Azure SB application properties.
         request.Headers["cloudEvents_id"] = messageId;
         request.Headers["cloudEvents_specversion"] = "1.0";

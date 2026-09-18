@@ -17,7 +17,7 @@ namespace Iris.Brokers.Test;
 
 /// <summary>
 /// These tests encode the per-broker read-capability contract in the type
-/// system. They deliberately avoid any I/O — instantiating the connection
+/// system. They deliberately avoid any I/O: instantiating the connection
 /// classes with dummy clients is enough to assert which <c>IMessage*</c>
 /// interfaces each broker does (and does not) implement. If someone removes
 /// a capability by mistake, or sneaks in a God-interface implementation on
@@ -46,7 +46,7 @@ public class BrokerReaderInterfaceTests
         // the DLQ is just another named queue discovered through the source queue's
         // x-dead-letter-exchange argument and the bindings on that exchange. Unlike
         // ASB's first-class $DeadLetterQueue sub-entity, it's a per-queue runtime
-        // configuration — but from the caller's perspective the capability is the
+        // configuration, but from the caller's perspective the capability is the
         // same, so the interfaces are implemented.
         connection.Should().BeAssignableTo<IMessagePeeker>();
         connection.Should().BeAssignableTo<IMessageReceiver>();
@@ -96,7 +96,7 @@ public class BrokerReaderInterfaceTests
 
         var connection = new AmazonSimpleQueueServiceConnection(metadata, client);
 
-        // SQS has no true peek — ReceiveMessage always starts a visibility timer.
+        // SQS has no true peek: ReceiveMessage always starts a visibility timer.
         // Encoding that in the type system: no IMessagePeeker / no IDeadLetterPeeker.
         connection.Should().NotBeAssignableTo<IMessagePeeker>();
         connection.Should().NotBeAssignableTo<IDeadLetterPeeker>();

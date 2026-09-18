@@ -113,7 +113,7 @@ namespace Iris.Brokers.Amazon
                 || !attrs.Attributes.TryGetValue("RedrivePolicy", out var policyJson)
                 || string.IsNullOrWhiteSpace(policyJson))
             {
-                // No DLQ configured for this queue — the honest answer to
+                // No DLQ configured for this queue, so the honest answer to
                 // "what's in the DLQ?" is "nothing, because there isn't one."
                 // This is a runtime state, not an architectural limitation.
                 return Array.Empty<ReceivedMessage>();
@@ -124,7 +124,7 @@ namespace Iris.Brokers.Amazon
             if (string.IsNullOrWhiteSpace(arn))
                 return Array.Empty<ReceivedMessage>();
 
-            // ARN format: arn:aws:sqs:region:account:queuename — the queue
+            // ARN format: arn:aws:sqs:region:account:queuename; the queue
             // name is after the last ':'.
             var dlqName = arn[(arn.LastIndexOf(':') + 1)..];
             var dlqUrl = (await _client.GetQueueUrlAsync(dlqName, cancellationToken)).QueueUrl;

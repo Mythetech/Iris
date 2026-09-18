@@ -93,7 +93,7 @@ namespace Iris.Integration.Tests.Brokers
             var connection = await connector.ConnectAsync(data, TestContext.Current.CancellationToken, discoverEndpoints: false);
 
             // Ensure queue exists by declaring via management client used under the hood.
-            // Easiest path: publish a message — the RabbitMQ management publish-to-default-exchange
+            // Easiest path: publish a message; the RabbitMQ management publish-to-default-exchange
             // requires the queue to exist already, so we create it first by publishing through
             // SendAsync which routes via amq.default and relies on an existing queue.
             // To create the queue idempotently we publish count messages AFTER declaring it via
@@ -155,19 +155,19 @@ namespace Iris.Integration.Tests.Brokers
                 new Uri($"http://localhost:{port}"), "guest", "guest");
             var vhost = await mgmt.GetVhostAsync("/");
 
-            // 1) DLX — a fanout exchange is fine; we only bind one DLQ to it.
+            // 1) DLX: a fanout exchange is fine; we only bind one DLQ to it.
             await mgmt.CreateExchangeAsync(vhost, dlxExchange,
                 new EasyNetQ.Management.Client.Model.ExchangeInfo(
                     Type: "fanout", AutoDelete: false, Durable: true),
                 CancellationToken.None);
 
-            // 2) DLQ target — plain queue, no args.
+            // 2) DLQ target: plain queue, no args.
             await mgmt.CreateQueueAsync(vhost, dlqQueue,
                 new EasyNetQ.Management.Client.Model.QueueInfo(
                     AutoDelete: false, Durable: true, Arguments: null),
                 CancellationToken.None);
 
-            // 3) Bind DLQ to DLX — fanout ignores routing key.
+            // 3) Bind DLQ to DLX: fanout ignores routing key.
             await mgmt.CreateQueueBindingAsync(vhost, dlxExchange, dlqQueue,
                 new EasyNetQ.Management.Client.Model.BindingInfo(RoutingKey: ""),
                 CancellationToken.None);
@@ -262,7 +262,7 @@ namespace Iris.Integration.Tests.Brokers
         [Fact(DisplayName = "ReceiveDeadLetter returns empty when no DLX configured", Timeout = 120000)]
         public async Task ReceiveDeadLetter_returns_empty_when_no_DLX_configured()
         {
-            // CreateAndSeedAsync declares a plain queue with null Arguments — no
+            // CreateAndSeedAsync declares a plain queue with null Arguments, so no
             // x-dead-letter-exchange. The honest answer to "what's in the DLQ?" is
             // "nothing, because there isn't one." No exception.
             const string queue = "iris-dlq-none";

@@ -2,7 +2,7 @@ namespace Iris.Brokers.Models;
 
 /// <summary>
 /// Provider-specific diagnostic metadata retained on a received message.
-/// These values are informational only — Iris uses <c>ReceiveAndDelete</c>
+/// These values are informational only: Iris uses <c>ReceiveAndDelete</c>
 /// semantics so lock tokens and receipt handles are not used for ack flow.
 /// </summary>
 public sealed class NativeMessageMetadata

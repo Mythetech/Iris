@@ -23,7 +23,7 @@ namespace Iris.Components.Messaging
 
         /// <summary>
         /// Destructively consume up to <paramref name="count"/> messages from the main queue.
-        /// This is irrevocable — messages are auto-acknowledged before return.
+        /// This is irrevocable: messages are auto-acknowledged before return.
         /// Returns a failure result if the broker does not implement destructive receive.
         /// </summary>
         public Task<Result<IReadOnlyList<ReceivedMessageDto>>> ReceiveMessagesAsync(
@@ -44,7 +44,7 @@ namespace Iris.Components.Messaging
 
         /// <summary>
         /// Destructively consume up to <paramref name="count"/> messages from the dead-letter sub-queue.
-        /// This is irrevocable — messages are auto-acknowledged before return.
+        /// This is irrevocable: messages are auto-acknowledged before return.
         /// Returns a failure result if the broker does not expose a receivable DLQ.
         /// </summary>
         public Task<Result<IReadOnlyList<ReceivedMessageDto>>> ReceiveDeadLetterMessagesAsync(

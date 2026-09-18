@@ -15,7 +15,7 @@ namespace Iris.Brokers;
 /// </para>
 /// <para>
 /// Adapters are responsible for flattening their native types into
-/// strings — bindings get joined, timestamps get formatted, dictionaries
+/// strings: bindings get joined, timestamps get formatted, dictionaries
 /// get rendered. This keeps broker-specific types out of
 /// <c>Iris.Contracts</c> and lets the UI stay dumb.
 /// </para>

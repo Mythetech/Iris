@@ -86,7 +86,7 @@ public class ConnectionDetailsPageTests : IrisTestContext
     public void Uses_rabbitmq_view_when_provider_name_matches()
     {
         var id = Guid.NewGuid();
-        // Transport mutates to "Docker" on localhost in real life — that's the case
+        // Transport mutates to "Docker" on localhost in real life; that's the case
         // where Transport-key misses and Provider.Name fallback is the only thing keeping
         // the right view selected. Reproduce that exact shape here.
         var provider = new Provider { Id = id, Name = "RabbitMq", Address = "amqp://x", Transport = "Docker" };
@@ -106,7 +106,7 @@ public class ConnectionDetailsPageTests : IrisTestContext
     public void Uses_azure_service_bus_view_when_transport_matches()
     {
         var id = Guid.NewGuid();
-        // Both Azure adapters share Provider.Name = "Azure" — Transport is the only
+        // Both Azure adapters share Provider.Name = "Azure", so Transport is the only
         // thing distinguishing SB from Queue Storage.
         var provider = new Provider { Id = id, Name = "Azure", Address = "sb://x", Transport = "AzureServiceBus" };
         _brokerService.GetConnectionByIdAsync(id).Returns(provider);

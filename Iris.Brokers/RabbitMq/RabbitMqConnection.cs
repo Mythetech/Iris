@@ -188,7 +188,7 @@ namespace Iris.Brokers.RabbitMQ
         /// (2) asking the broker which queues are bound to that exchange, and
         /// (3) picking the binding whose routing key matches the source queue's
         /// <c>x-dead-letter-routing-key</c> if set, otherwise the first queue binding.
-        /// Returns <c>null</c> when the source queue has no DLX configured —
+        /// Returns <c>null</c> when the source queue has no DLX configured,
         /// i.e. when dead-lettering is simply not set up for this queue. That's
         /// a runtime configuration state, not an architectural limitation, and
         /// is mirrored by the SQS RedrivePolicy path in
@@ -253,7 +253,7 @@ namespace Iris.Brokers.RabbitMQ
 
         private ReceivedMessage Map(Message msg)
         {
-            // Message.Properties is IReadOnlyDictionary<string, object> — a loosely
+            // Message.Properties is IReadOnlyDictionary<string, object>, a loosely
             // typed bag of AMQP basic-properties. Pull well-known fields out into
             // strongly-typed slots; keep the rest as headers.
             var allProperties = msg.Properties;

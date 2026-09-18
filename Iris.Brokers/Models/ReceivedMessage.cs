@@ -8,7 +8,7 @@ namespace Iris.Brokers.Models;
 /// </summary>
 public sealed record ReceivedMessage
 {
-    /// <summary>Payload as a string — JSON in the common case, raw text otherwise.</summary>
+    /// <summary>Payload as a string: JSON in the common case, raw text otherwise.</summary>
     public required string Body { get; init; }
 
     public string? MessageId { get; init; }

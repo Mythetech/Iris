@@ -59,7 +59,7 @@
 
         string json = await _editor.GetTextAsync() ?? "";
 
-        // Surface every iteration's result through the snackbar — mirrors how
+        // Surface every iteration's result through the snackbar; mirrors how
         // /Messaging handles its own send via IrisPageBase.HandleResult.
         var progress = new Progress<Result<bool>>(ReportResult);
 

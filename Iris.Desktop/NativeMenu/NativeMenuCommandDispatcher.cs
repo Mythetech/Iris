@@ -105,7 +105,7 @@ public class NativeMenuCommandDispatcher : INativeMenuCommandDispatcher
 
     private static string UnsanitizeAddress(string sanitized)
     {
-        // Best-effort reverse of SanitizeId — works for common broker URLs
+        // Best-effort reverse of SanitizeId; works for common broker URLs
         // e.g. "amqp.localhost.5672" → "amqp://localhost:5672"
         var parts = sanitized.Split('.');
         if (parts.Length >= 3)
