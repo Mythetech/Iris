@@ -7,11 +7,9 @@ namespace Iris.Components.Templates
     {
         public Task<List<Template>> GetTemplatesAsync();
 
-        public Task<List<VersionedTemplate>> GetTemplatesAndVersionsAsync();
-
         public Task CreateTemplateAsync(Template template);
 
-        public Task UpdateTemplateAsync(Template template, bool newVersion = false);
+        public Task UpdateTemplateAsync(Template template);
 
         public Task DeleteTemplateAsync(Template template);
     }

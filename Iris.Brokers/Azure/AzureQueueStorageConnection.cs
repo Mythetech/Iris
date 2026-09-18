@@ -12,18 +12,16 @@ namespace Iris.Brokers.Azure
         public int MaxPeekBatchSize => 32;
         public int MaxReceiveBatchSize => 32;
 
-        private readonly ConnectionMetadata _metadata;
         private readonly QueueServiceClient _queueClient;
         private List<EndpointDetails> _endpoints;
         private ILogger<AzureQueueStorageConnection> _logger;
 
         public AzureQueueStorageConnection(ConnectionMetadata metadata, QueueServiceClient queueClient, ILogger<AzureQueueStorageConnection> logger)
         {
-            _metadata = metadata;
             _queueClient = queueClient;
             Connector = metadata.Connector;
             _logger = logger;
-            _endpoints = metadata.DiscoveredDetails ?? new();
+            _endpoints = new();
         }
 
         public IConnector Connector { get; set; }

@@ -88,8 +88,6 @@ else
     [Inject] private ComponentRegistry<IConnectionReadView> ReadRegistry { get; set; } = default!;
     [Inject] private ComponentRegistry<IConnectionSendView> SendRegistry { get; set; } = default!;
 
-    public override string Identifier { get; set; } = "ConnectionDetails";
-
     private bool _loading = true;
     private Provider? _provider;
     private ReaderCapabilitiesDto? _capabilities;

@@ -83,8 +83,6 @@
     [Inject] public IPackageService PackageService { get; set; } = default!;
     [Inject] public IJsApiService JsApi { get; set; } = default!;
 
-    public override string Identifier => "Template Editor";
-
     private List<TemplateFieldModel> _fields = [];
     private string _templateName = "Untitled";
     private string _jsonPreview = "{\n\n}";

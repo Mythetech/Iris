@@ -16,7 +16,6 @@ namespace Iris.Brokers.RabbitMQ
         public int MaxPeekBatchSize => 100;
         public int MaxReceiveBatchSize => 100;
 
-        private readonly ConnectionMetadata _metadata;
         private readonly EasyNetQ.Management.Client.ManagementClient _client;
         private readonly string _address = "";
         private readonly string _vhost;
@@ -36,9 +35,8 @@ namespace Iris.Brokers.RabbitMQ
             // discover anything. The client only ever uses the name to build its request path.
             _vhostRef = new Vhost(_vhost, Tracing: false);
             _address = client.Endpoint.GetLeftPart(UriPartial.Authority);
-            _metadata = metadata;
             _client = client;
-            _endpoints = metadata.DiscoveredDetails ?? new();
+            _endpoints = new();
 
             if (_address.Contains("localhost"))
                 Name = "Docker";

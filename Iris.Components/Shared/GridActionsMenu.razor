@@ -24,16 +24,10 @@
 
 @code {
 
-    [Parameter] public EventCallback OnViewClicked { get; set; }
     [Parameter] public EventCallback OnSendClicked { get; set; }
     [Parameter] public EventCallback OnReadClicked { get; set; }
     [Parameter] public bool CanRead { get; set; }
     [Parameter] public string ReadDisabledReason { get; set; } = "Broker does not support reading messages";
-
-    private async Task HandleViewClicked()
-    {
-        await OnViewClicked.InvokeAsync(null);
-    }
 
     private async Task HandleSendClicked()
     {
