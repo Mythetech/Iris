@@ -15,7 +15,7 @@
     </MudAlert>
 
     <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
-        <MudNumericField T="int" @bind-Value="_count" Label="Count" Min="1" Max="@MaxBatch" Style="width:110px" />
+        <MudNumericField T="int" @bind-Value="_count" Label="Count" Min="1" Max="@MaxBatch" Class="read-count-field" />
         @if (Capabilities.CanPeekDeadLetter || Capabilities.CanReceiveDeadLetter)
         {
             <MudSwitch T="bool" @bind-Value="_dlq" Label="Dead-letter queue" Color="Color.Warning" />

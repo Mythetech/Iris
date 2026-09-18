@@ -28,7 +28,7 @@
                 }
                 @if (prop.Kind == TypeKind.Enum && prop.EnumValues is { Count: > 0 })
                 {
-                    <MudText Typo="Typo.caption" Class="ml-10 mt-1" Style="color: var(--mud-palette-text-secondary);">
+                    <MudText Typo="Typo.caption" Class="ml-10 mt-1 mud-text-secondary">
                         Values: @string.Join(", ", prop.EnumValues)
                     </MudText>
                 }

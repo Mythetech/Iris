@@ -8,7 +8,7 @@
         {
             <MudSelectItem T="Provider" Value="@context">
                 <MudStack Row="true">
-                    <MudIcon Style="min-width:24px;" Icon="@($"icon-{context.Name}")" />
+                    <MudIcon Class="select-item-icon" Icon="@($"icon-{context.Name}")" />
                     @if (!string.IsNullOrWhiteSpace(context.Address))
                     {
                         <span class="mud-typography-subtitle2 grey-text text-darken-1">@context.Address</span>
