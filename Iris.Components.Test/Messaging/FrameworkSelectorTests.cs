@@ -21,7 +21,7 @@ public class FrameworkSelectorTests : IrisTestContext
     public FrameworkSelectorTests()
     {
         Services.AddSingleton(_state);
-        JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true);
+        JSInterop.Setup<int>("mudpopoverHelper.countProviders", _ => true).SetResult(1);
         _popoverProvider = Render<MudPopoverProvider>();
 
         _state.SetAvailableFrameworks(
