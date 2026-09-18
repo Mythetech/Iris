@@ -24,7 +24,7 @@ namespace Iris.Brokers.Azure
             _metadata = metadata;
             _adminClient = adminClient;
             _client = client;
-            _endpoints = metadata.DiscoveredDetails ?? new();
+            _endpoints = new();
         }
 
         public IConnector Connector { get; set; }

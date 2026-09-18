@@ -62,8 +62,6 @@
     [Inject] IDialogService DialogService { get; set; } = default!;
     [Inject] IJsApiService JsApi { get; set; } = default!;
 
-    public override string Identifier => "Templates";
-
     private List<Template> _templates = [];
     private bool _loading = true;
     private string _searchString = "";

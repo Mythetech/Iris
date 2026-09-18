@@ -23,8 +23,5 @@ public interface IMessageRequest
     /// <summary>Native message properties. Carriers map these to AMQP basic properties, Service Bus system properties.</summary>
     TransportProperties TransportProperties { get; set; }
 
-    /// <summary>Declared data type per header key, recorded when a framework wraps the request. Undeclared keys are strings.</summary>
-    IReadOnlyDictionary<string, HeaderDataType> HeaderTypes { get; }
-
     HeaderDataType HeaderTypeOf(string key);
 }

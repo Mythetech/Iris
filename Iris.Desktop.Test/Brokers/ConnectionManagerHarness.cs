@@ -33,7 +33,6 @@ public sealed class ConnectionManagerHarness : IDisposable
         // null the real manager returns for an address nobody is connected to. Left alone,
         // every "not connected" case in this suite would silently test the connected path.
         Connections.GetConnectionAsync(Arg.Any<string>()).Returns(Task.FromResult<IConnection?>(null));
-        Connections.GetActiveConnectionAsync().Returns(Task.FromResult<IConnection?>(null));
         Connections.GetConnectionsAsync().Returns(Task.FromResult<List<IConnection>>([]));
         Connections.GetEndpointsAsync().Returns(Task.FromResult<List<EndpointDetails>>([]));
         Connections.GetProviders().Returns([]);

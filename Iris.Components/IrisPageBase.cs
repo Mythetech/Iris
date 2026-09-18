@@ -15,14 +15,6 @@ namespace Iris.Components
         [Inject]
         public ISnackbar Snackbar { get; set; } = default!;
 
-        public virtual string Identifier { get; set; } = "";
-
-        public void NotifyError(string message, string title = "Error")
-        {
-            Snackbar.Add(message, Severity.Error);
-            
-        }
-
         public void HandleResult<T>(Result<T> result, string successMessage = "Success", string error = "Error")
         {
             if (result == null || result.Error || (result.Value is bool success && !success))

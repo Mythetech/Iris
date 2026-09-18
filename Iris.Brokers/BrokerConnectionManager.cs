@@ -6,16 +6,12 @@ namespace Iris.Brokers
 
         private List<IConnection> _connections = new();
 
-        private IConnection? _active = default!;
-
         public BrokerConnectionManager(IEnumerable<IConnector> connectors)
         {
             _connectors = connectors.ToList();
         }
 
         public List<IConnector> Connectors => _connectors;
-
-        public IConnection? Active => _active;
 
         public List<IConnection> Connections => _connections;
 
@@ -25,19 +21,12 @@ namespace Iris.Brokers
                 return Task.CompletedTask;
 
             _connections.Add(connection);
-            _active = connection;
             return Task.CompletedTask;
-        }
-
-        public Task<IConnection?> GetActiveConnectionAsync()
-        {
-            return Task.FromResult(Active);
         }
 
         public Task<IConnection?> GetConnectionAsync(string address)
         {
-            _active = _connections.FirstOrDefault(x => x.Address.Equals(address));
-            return Task.FromResult(_active);
+            return Task.FromResult(_connections.FirstOrDefault(x => x.Address.Equals(address)));
         }
 
         public Task<List<IConnection>> GetConnectionsAsync()
