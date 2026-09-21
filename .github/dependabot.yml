@@ -3,7 +3,9 @@ updates:
   - package-ecosystem: "nuget"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "cron"
+      cronjob: "0 7 * * *"
+      timezone: "America/Denver"
     allow:
       - dependency-name: "Mythetech.*"
     groups:
