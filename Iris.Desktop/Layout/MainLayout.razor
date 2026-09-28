@@ -14,7 +14,7 @@
 @using Iris.Components.Sagas
 @using Iris.Components.Settings
 @using Mythetech.Framework.Components.AppContextDrawer
-@using Mythetech.Framework.Desktop.Updates
+@using Iris.Desktop.Infrastructure
 @using Mythetech.Framework.Infrastructure.MessageBus
 
 @inherits LayoutComponentBase
@@ -117,7 +117,7 @@
     IDialogService DialogService { get; set; } = default!;
 
     [Inject]
-    IUpdateService UpdateService { get; set; } = default!;
+    StartupUpdateCheck StartupUpdateCheck { get; set; } = default!;
 
     [Inject]
     IMessageBus Bus { get; set; } = default!;
@@ -133,7 +133,7 @@
     {
         if (firstRender)
         {
-            await UpdateService.CheckForUpdatesOnStartupAsync();
+            await StartupUpdateCheck.RunAsync();
         }
     }
 

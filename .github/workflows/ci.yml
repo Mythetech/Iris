@@ -113,3 +113,22 @@ jobs:
           --configuration Release
           --filter-trait "Category=Container"
           --minimum-expected-tests 40
+
+  # Packages Iris unsigned on every platform and fails the PR unless each build reports a passing
+  # Hermes smoke verdict. PRs only, as in the other desktop apps: unit tests already ran above, and
+  # three packaged builds on every push to main would repeat what the PR already proved.
+  smoke-test:
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      packages: read
+    uses: mythetech/workflows/.github/workflows/desktop-smoke-test.yml@main
+    with:
+      app_name: "Iris"
+      project_path: "Iris.Desktop/Iris.Desktop.csproj"
+      global_json_file: "global.json"
+      icon_windows: "Iris.Desktop/wwwroot/icon.ico"
+      icon_linux: "Iris.Desktop/wwwroot/icon.png"
+      icon_macos: "Iris.Desktop/wwwroot/iris.icns"
+      enable_tests: false
+      require_verdict: true

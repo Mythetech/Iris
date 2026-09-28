@@ -14,6 +14,7 @@ using Iris.Desktop.History;
 using Iris.Desktop.Infrastructure;
 using Iris.Desktop.NativeMenu;
 using Iris.Desktop.PackageManagement;
+using Iris.Desktop.Smoke;
 using Iris.Desktop.Templates;
 using Iris.Components.NativeMenu;
 using Iris.Desktop.Telemetry;
@@ -31,6 +32,7 @@ using Mythetech.Framework.Infrastructure.Plugins;
 using Mythetech.Framework.Infrastructure.MessageBus;
 using Mythetech.Framework.Infrastructure.Initialization;
 using Mythetech.Framework.Infrastructure.Settings;
+using Mythetech.Framework.Infrastructure.Smoke;
 using Velopack;
 
 namespace Iris.Desktop;
@@ -117,6 +119,7 @@ public class Program
             options.UpdateUrl = $"{IrisDownloadConfiguration.UpdateBaseUrl}/{platform}";
             options.Channel = channel;
         });
+        builder.Services.AddSingleton<StartupUpdateCheck>();
         builder.Services.AddJsGuards();
         builder.Services.AddPluginStateProvider("Iris");
         builder.Services.AddPluginFramework();
@@ -125,6 +128,9 @@ public class Program
         builder.Services.AddInitializationHook<AutoDiscoveryInitializationHook>();
         builder.Services.AddInitializationHook<RestorePackagesInitializationHook>();
         builder.Services.AddInitializationHook<SagaTelemetryInitializationHook>();
+
+        builder.Services.AddSmokeChecks()
+            .WithSmokeCheck<ScriptsSmokeCheck>();
 
         try
         {
