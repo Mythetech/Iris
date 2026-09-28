@@ -175,6 +175,23 @@ window.irisSplash = {
             setTimeout(function() { canvas.remove(); }, 1000);
         }
     }
+};
+
+// Called by the iris/scripts smoke check. It imports the module by the path PSC's interop uses: a publish
+// that clobbers it with the UMD bundle still loads, it just exports no chartSetup.
+window.irisSmoke = {
+    missingChartScripts: async function() {
+        var missing = [];
+        if (typeof Chart === 'undefined') missing.push('chart.js');
+        if (typeof ChartDataLabels === 'undefined') missing.push('chartjs-plugin-datalabels');
+        try {
+            var chartModule = await import('./_content/PSC.Blazor.Components.Chartjs/Chart.js');
+            if (typeof chartModule.chartSetup !== 'function') missing.push('PSC Chart.js module');
+        } catch (e) {
+            missing.push('PSC Chart.js module');
+        }
+        return missing;
+    }
 };</script>
 </body>
 

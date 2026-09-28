@@ -21,6 +21,8 @@ jobs:
       icon_macos: "Iris.Desktop/wwwroot/iris.icns"
       storage_account: "stmythetechglobal"
       storage_container: "preview"
+      # Iris reports a Hermes smoke verdict, so a build that only stays alive no longer passes
+      require_verdict: true
     secrets:
       # Windows Signing (org-level)
       AZURE_TRUSTED_SIGNING_ENDPOINT: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
