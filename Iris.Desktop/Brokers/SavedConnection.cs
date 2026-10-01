@@ -20,6 +20,12 @@ public class SavedConnection : ILocalEntity
 
     public string? Region { get; set; }
 
+    public string? ProjectId { get; set; }
+
+    public string? CredentialsPath { get; set; }
+
+    public string? CredentialSource { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
 
     public Iris.Brokers.Models.ConnectionData ToConnectionData()
@@ -30,7 +36,10 @@ public class SavedConnection : ILocalEntity
             Username = Username,
             Password = Password,
             ConnectionString = ConnectionString,
-            Region = Region
+            Region = Region,
+            ProjectId = ProjectId,
+            CredentialsPath = CredentialsPath,
+            CredentialSource = CredentialSource
         };
     }
 
@@ -44,7 +53,10 @@ public class SavedConnection : ILocalEntity
             Username = data.Username,
             Password = data.Password,
             ConnectionString = data.ConnectionString,
-            Region = data.Region
+            Region = data.Region,
+            ProjectId = data.ProjectId,
+            CredentialsPath = data.CredentialsPath,
+            CredentialSource = data.CredentialSource
         };
     }
 }

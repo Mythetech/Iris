@@ -4,7 +4,7 @@ Context and guidance for AI coding assistants working on the Iris codebase.
 
 ## Project Identity
 
-**Iris** is a desktop application for testing distributed systems: "Postman for message brokers." Developers visually connect to message brokers (RabbitMQ, Azure Service Bus, AWS SQS) and send/receive messages without writing code.
+**Iris** is a desktop application for testing distributed systems: "Postman for message brokers." Developers visually connect to message brokers (RabbitMQ, Azure Service Bus, AWS SQS, Google Cloud Pub/Sub) and send/receive messages without writing code.
 
 ## Technology Stack
 

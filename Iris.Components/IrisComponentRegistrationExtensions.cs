@@ -67,7 +67,8 @@ namespace Iris.Components
             // so adding one needs no change to the components that dispatch on these.
             services.AddSingleton(new ComponentRegistry<Brokers.IConnectionDataProvider>()
                 .Register<Brokers.RabbitMqConnectionData>(ConnectorProviders.RabbitMq)
-                .Register<Brokers.AmazonConnectionData>(ConnectorProviders.Amazon));
+                .Register<Brokers.AmazonConnectionData>(ConnectorProviders.Amazon)
+                .Register<Brokers.GoogleConnectionData>(ConnectorProviders.Google));
 
             services.AddSingleton(new ComponentRegistry<Brokers.ConnectionDetails.IConnectionEndpointsView>()
                 .Register<Brokers.ConnectionDetails.RabbitMqEndpointsView>(ConnectorProviders.RabbitMq)

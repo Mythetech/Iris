@@ -4,8 +4,11 @@ using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 using Azure.Storage.Queues;
 using FluentAssertions;
+using Google.Cloud.PubSub.V1;
+using Grpc.Core;
 using Iris.Brokers.Amazon;
 using Iris.Brokers.Azure;
+using Iris.Brokers.Google;
 using Iris.Brokers.Models;
 using Iris.Brokers.RabbitMQ;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -59,6 +62,26 @@ public class BrokerSenderInterfaceTests
             new BasicAWSCredentials("test", "test"),
             new AmazonSQSConfig { ServiceURL = "http://localhost:9324" }));
 
+    public static PubSubConnection PubSub(string provider = "dummy")
+    {
+        var settings = new GoogleConnectionSettings(
+            GoogleCredentialSource.Emulator, "iris", "localhost:8085/projects/iris", EmulatorHost: "localhost:8085");
+
+        // Building a client opens no connection, so these are as inert as the dummies above.
+        var publisher = new PublisherServiceApiClientBuilder
+        {
+            Endpoint = "localhost:8085",
+            ChannelCredentials = ChannelCredentials.Insecure,
+        }.Build();
+        var subscriber = new SubscriberServiceApiClientBuilder
+        {
+            Endpoint = "localhost:8085",
+            ChannelCredentials = ChannelCredentials.Insecure,
+        }.Build();
+
+        return new PubSubConnection(DummyMetadata(provider), settings, publisher, subscriber);
+    }
+
     [Fact]
     public void RabbitMq_carries_headers_of_every_type_and_all_transport_properties()
     {
@@ -111,6 +134,28 @@ public class BrokerSenderInterfaceTests
         headers.IsValidHeaderKey("bad key").Should().BeFalse();
         headers.IsValidHeaderKey("AWS.reserved").Should().BeFalse();
         headers.SupportedDataTypes.Should().BeEquivalentTo(new[] { HeaderDataType.String, HeaderDataType.Integer });
+    }
+
+    [Fact]
+    public void PubSub_carries_a_hundred_string_attributes_and_no_transport_properties()
+    {
+        var connection = PubSub();
+
+        connection.Should().BeAssignableTo<IHeaderCarrier>();
+        connection.Should().NotBeAssignableTo<ITransportPropertyCarrier>();
+
+        var headers = (IHeaderCarrier)connection;
+        headers.MaxHeaderCount.Should().Be(100);
+        headers.IsValidHeaderKey("rbs2-msg-id").Should().BeTrue();
+        headers.IsValidHeaderKey("cloudEvents_type").Should().BeTrue();
+        headers.IsValidHeaderKey("a key with spaces").Should().BeTrue();
+        headers.IsValidHeaderKey("").Should().BeFalse();
+        headers.IsValidHeaderKey("googclient_deliveryattempt").Should().BeFalse();
+        headers.IsValidHeaderKey("Google").Should().BeTrue("the reserved prefix is lower case");
+        headers.IsValidHeaderKey(new string('k', 256)).Should().BeTrue();
+        headers.IsValidHeaderKey(new string('k', 257)).Should().BeFalse();
+        headers.IsValidHeaderKey(new string('é', 129)).Should().BeFalse("the limit is 256 bytes, and é is two");
+        headers.SupportedDataTypes.Should().BeEquivalentTo(new[] { HeaderDataType.String });
     }
 
     [Fact]

@@ -127,6 +127,8 @@ public static partial class IrisIcons
 
     public static string OpenInNew => Round("open_in_new");
 
+    public static string BrowseFile => Round("folder_open");
+
     public static string Search => Round("search");
 
     public static string Filter => Round("filter_alt");

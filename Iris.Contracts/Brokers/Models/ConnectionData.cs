@@ -22,6 +22,26 @@ namespace Iris.Contracts.Brokers.Models
         /// </summary>
         public string? VHost { get; set; }
 
+        /// <summary>
+        /// The Google Cloud project that owns the topics and subscriptions.
+        /// </summary>
+        public string? ProjectId { get; set; }
+
+        /// <summary>
+        /// Path to a Google credentials JSON file. Blank means Application Default Credentials,
+        /// or no credentials at all when <see cref="Uri"/> names an emulator. A path is stored
+        /// rather than the file's contents so that no key is ever written to Iris's database.
+        /// </summary>
+        public string? CredentialsPath { get; set; }
+
+        /// <summary>
+        /// Which of Google's credential sources was chosen: <c>ApplicationDefault</c>,
+        /// <c>CredentialsFile</c> or <c>Emulator</c>. Stated rather than left to be guessed from
+        /// which field is filled in, so that an emulator host left blank is an error and never a
+        /// connection to a real project.
+        /// </summary>
+        public string? CredentialSource { get; set; }
+
         public string ToJson()
         {
             return JsonSerializer.Serialize(this);

@@ -9,9 +9,13 @@ namespace Iris.Components.Endpoints;
 /// </summary>
 public static class EndpointReadPolicy
 {
+    // The kinds of endpoint a consumer reads from. A queue is one on every broker that has
+    // them. A subscription is Pub/Sub's: there a topic can only be published to.
+    private static readonly string[] ReadableTypes = ["Queue", "Subscription"];
+
     public static bool CanRead(EndpointDetails? endpoint, ReaderCapabilitiesDto? capabilities) =>
         endpoint is not null
-        && string.Equals(endpoint.Type, "Queue", StringComparison.OrdinalIgnoreCase)
+        && IsReadable(endpoint)
         && capabilities?.CanReceive == true;
 
     public static string DisabledReason(EndpointDetails? endpoint)
@@ -19,9 +23,12 @@ public static class EndpointReadPolicy
         if (endpoint is null)
             return "Unknown endpoint";
 
-        if (!string.Equals(endpoint.Type, "Queue", StringComparison.OrdinalIgnoreCase))
-            return "Reading is only supported for queue endpoints";
+        if (!IsReadable(endpoint))
+            return "Reading is only supported for queue and subscription endpoints";
 
         return "Broker does not support reading messages";
     }
+
+    private static bool IsReadable(EndpointDetails endpoint) =>
+        ReadableTypes.Contains(endpoint.Type, StringComparer.OrdinalIgnoreCase);
 }

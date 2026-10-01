@@ -11,6 +11,7 @@ Iris lets developers visually connect to message brokers, send and receive messa
 - **Azure Service Bus**: queues and topics
 - **Azure Storage Queues**
 - **AWS SQS**
+- **Google Cloud Pub/Sub**: topics and subscriptions
 
 ### Framework Adapters
 Messages can be wrapped in framework-specific envelopes:

@@ -103,4 +103,19 @@ public class BrokerReaderInterfaceTests
         connection.Should().BeAssignableTo<IMessageReceiver>();
         connection.Should().BeAssignableTo<IDeadLetterReceiver>();
     }
+
+    [Fact]
+    public void PubSubConnection_implements_receive_and_dlq_receive_only_no_peek()
+    {
+        var connection = BrokerSenderInterfaceTests.PubSub();
+
+        // Pub/Sub has no non-destructive read: a pull that is not acknowledged is redelivered
+        // and counts as a delivery attempt, which can push the message to dead-letter.
+        connection.Should().NotBeAssignableTo<IMessagePeeker>();
+        connection.Should().NotBeAssignableTo<IDeadLetterPeeker>();
+        connection.Should().BeAssignableTo<IMessageReceiver>();
+        connection.Should().BeAssignableTo<IDeadLetterReceiver>();
+        connection.Should().BeAssignableTo<IEndpointInspector>();
+        ((IMessageReceiver)connection).MaxReceiveBatchSize.Should().Be(100);
+    }
 }

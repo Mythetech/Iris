@@ -95,10 +95,12 @@
     [Inject]
     public IBrokerService BrokerService { get; set; } = default!;
 
-    private readonly Dictionary<(string Address, string Name), EndpointPropertiesDto?> _propertiesCache = new();
+    // The type is part of the key because a name is only unique per kind of endpoint: a
+    // Pub/Sub topic and subscription, or a RabbitMQ exchange and queue, can share one.
+    private readonly Dictionary<(string Address, string Name, string? Type), EndpointPropertiesDto?> _propertiesCache = new();
     private EndpointPropertiesDto? _currentProperties;
     private bool _propertiesLoading;
-    private (string Address, string Name)? _loadedKey;
+    private (string Address, string Name, string? Type)? _loadedKey;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -109,7 +111,7 @@
             return;
         }
 
-        var key = (Endpoint.Address, Endpoint.Name);
+        var key = (Endpoint.Address, Endpoint.Name, Endpoint.Type);
         if (_loadedKey == key)
             return;
 
@@ -129,7 +131,7 @@
         if (Endpoint is null)
             return;
 
-        var key = (Endpoint.Address, Endpoint.Name);
+        var key = (Endpoint.Address, Endpoint.Name, Endpoint.Type);
         if (!forceRefresh && _propertiesCache.TryGetValue(key, out var cached))
         {
             _currentProperties = cached;

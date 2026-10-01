@@ -289,6 +289,16 @@ code {
     content: url(https://cdn-endpnt-stmythetechglobal.azureedge.net/assets/aws.svg);
 }
 
+.icon-Google {
+    background: url(https://cdn-endpnt-stmythetechglobal.azureedge.net/assets/googlecloud.svg);
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.icon-google {
+    content: url(https://cdn-endpnt-stmythetechglobal.azureedge.net/assets/googlecloud.svg);
+}
+
 .icon-AmazonWebServices {
     background: url(https://cdn-endpnt-stmythetechglobal.azureedge.net/assets/aws.svg);
     background-size: contain;

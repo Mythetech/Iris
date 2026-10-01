@@ -21,6 +21,24 @@ namespace Iris.Brokers.Models
         /// </summary>
         public string? VHost { get; set; }
 
+        /// <summary>
+        /// The Google Cloud project that owns the topics and subscriptions.
+        /// </summary>
+        public string? ProjectId { get; set; }
+
+        /// <summary>
+        /// Path to a Google credentials JSON file. Blank means Application Default Credentials,
+        /// or no credentials at all when <see cref="Uri"/> names an emulator.
+        /// </summary>
+        public string? CredentialsPath { get; set; }
+
+        /// <summary>
+        /// Which of Google's credential sources was chosen: <c>ApplicationDefault</c>,
+        /// <c>CredentialsFile</c> or <c>Emulator</c>. Blank means it is inferred from which of
+        /// <see cref="Uri"/> and <see cref="CredentialsPath"/> is filled in.
+        /// </summary>
+        public string? CredentialSource { get; set; }
+
         public static ConnectionData FromContract(Iris.Contracts.Brokers.Models.ConnectionData data)
         {
             return new ConnectionData
@@ -30,7 +48,10 @@ namespace Iris.Brokers.Models
                 Password = data.Password,
                 ConnectionString = data.ConnectionString,
                 Region = data.Region,
-                VHost = data.VHost
+                VHost = data.VHost,
+                ProjectId = data.ProjectId,
+                CredentialsPath = data.CredentialsPath,
+                CredentialSource = data.CredentialSource
             };
         }
     }
