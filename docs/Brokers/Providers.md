@@ -26,6 +26,31 @@ Amazon offers their own sets of solutions we look to integrate with.
 
 ### Simple Queue Service (SQS) (Supported)
 
+There are three ways to authenticate, chosen in the Add Connection dialog:
+
+| Authentication | What Iris uses | What is saved |
+|---|---|---|
+| Access keys | The access key and secret access key you enter | The keys and the region |
+| AWS profile | A named profile from your AWS config and credentials files | The profile name and the region |
+| Default credentials | AWS environment variables, then the `default` profile | The region |
+
+Iris does not sign you in. Create or refresh the profile with the AWS CLI first, then connect:
+
+- `aws configure` for a profile with static keys
+- `aws configure sso`, then `aws sso login --profile <name>`, for IAM Identity Center
+- `aws login --profile <name>` for console sign-in (AWS CLI 2.32 or later)
+- a `role_arn` with `source_profile`, or a `credential_process`, written into `~/.aws/config` by hand
+
+In the profile and default modes Region can be left blank to use the profile's own region.
+
+On macOS and Linux an app started from the Dock or a launcher does not inherit your shell's environment. At startup Iris runs your login shell once and copies the `AWS_` variables and any missing `PATH` entries into its own process, so `AWS_PROFILE` and `credential_process` helpers behave as they do in a terminal. Variables Iris was started with are never overwritten.
+
+Iris sets `AWS_EC2_METADATA_DISABLED=true` for itself unless the variable is already set, so that a connection with no credentials configured fails at once. To use an EC2 instance role, start Iris with it set to `false`.
+
+### In-app sign-in (Future)
+
+Signing in to IAM Identity Center from inside Iris, without the AWS CLI. Planned together with Microsoft Entra sign-in for Azure.
+
 ## Google Cloud
 
 ### Pub/Sub (Supported)

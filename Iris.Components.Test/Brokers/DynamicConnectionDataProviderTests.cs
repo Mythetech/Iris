@@ -4,9 +4,11 @@ using FluentAssertions;
 using Iris.Components.Brokers;
 using Iris.Components.Infrastructure;
 using Iris.Contracts.Brokers.Models;
+using Iris.Contracts.Brokers.Models.Amazon;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
+using NSubstitute;
 
 namespace Iris.Components.Test.Brokers
 {
@@ -19,7 +21,72 @@ namespace Iris.Components.Test.Brokers
             Services.AddSingleton(new ComponentRegistry<IConnectionDataProvider>()
                 .Register<RabbitMqConnectionData>("RabbitMq")
                 .Register<AmazonConnectionData>("Amazon"));
+
+            var catalog = Substitute.For<IAwsProfileCatalog>();
+            catalog.GetProfiles().Returns(new AwsProfileListing([new AwsProfile("dev", "us-east-1")], Readable: true));
+            Services.AddSingleton(catalog);
+
             AddPopoverProvider();
+        }
+
+        private IRenderedComponent<DynamicConnectionDataProvider> RenderFor(string provider)
+            => Render<DynamicConnectionDataProvider>(parameters => parameters
+                .Add(p => p.Provider, new SupportedProvider { Name = provider }));
+
+        private static Task SwitchToAsync(IRenderedComponent<DynamicConnectionDataProvider> cut, string provider)
+            => cut.InvokeAsync(() => cut.Render(parameters => parameters
+                .Add(p => p.Provider, new SupportedProvider { Name = provider })));
+
+        private static async Task ChooseAwsProfileAsync(IRenderedComponent<DynamicConnectionDataProvider> cut)
+        {
+            foreach (var (label, value) in new[] { ("Authentication", AwsAuthModes.Profile), ("Profile", "dev") })
+            {
+                var select = cut.FindComponents<MudSelect<string>>().Single(s => s.Instance.Label == label);
+                await cut.InvokeAsync(() => select.Instance.ValueChanged.InvokeAsync(value));
+            }
+        }
+
+        [Fact(DisplayName = "What was chosen for one provider does not ride along to the next")]
+        public async Task Switching_provider_starts_from_fresh_data()
+        {
+            var cut = RenderFor("Amazon");
+            await ChooseAwsProfileAsync(cut);
+
+            await SwitchToAsync(cut, "RabbitMq");
+
+            var data = cut.Instance.GetData();
+            data.AuthMode.Should().BeNull();
+            data.Profile.Should().BeNull();
+            data.Region.Should().BeNull();
+        }
+
+        [Fact(DisplayName = "Data already handed out is not changed when the form is switched away")]
+        public async Task Handed_out_data_survives_a_provider_switch()
+        {
+            // A connect call that is still running holds this object, and the connection is
+            // saved from it when the broker answers.
+            var cut = RenderFor("Amazon");
+            await ChooseAwsProfileAsync(cut);
+            var handedOut = cut.Instance.GetData();
+
+            await SwitchToAsync(cut, "RabbitMq");
+
+            handedOut.AuthMode.Should().Be(AwsAuthModes.Profile);
+            handedOut.Profile.Should().Be("dev");
+            handedOut.Region.Should().Be("us-east-1");
+        }
+
+        [Fact(DisplayName = "Re-rendering for the same provider keeps what was chosen")]
+        public async Task The_same_provider_keeps_its_data()
+        {
+            // The dialog re-renders this component whenever its own state changes, with a
+            // provider of the same name. That must not count as a switch.
+            var cut = RenderFor("Amazon");
+            await ChooseAwsProfileAsync(cut);
+
+            await SwitchToAsync(cut, "Amazon");
+
+            cut.Instance.GetData().Profile.Should().Be("dev");
         }
 
         [Fact(DisplayName = "Dynamic connection data component provider can render rabbitmq")]

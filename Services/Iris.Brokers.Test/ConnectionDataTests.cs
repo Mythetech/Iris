@@ -3,15 +3,42 @@ using Iris.Brokers.Models;
 using Xunit;
 using ConnectorProviders = Iris.Contracts.Brokers.Models.ConnectorProviders;
 using ConnectorTransports = Iris.Contracts.Brokers.Models.ConnectorTransports;
+using ContractConnectionData = Iris.Contracts.Brokers.Models.ConnectionData;
 
 namespace Iris.Brokers.Test;
 
 public class ConnectionDataTests
 {
+    public static TheoryData<string> BrokerProperties()
+    {
+        var names = new TheoryData<string>();
+
+        foreach (var property in typeof(ConnectionData).GetProperties().Where(p => p.CanWrite))
+            names.Add(property.Name);
+
+        return names;
+    }
+
+    [Theory(DisplayName = "FromContract carries every field the broker reads")]
+    [MemberData(nameof(BrokerProperties))]
+    public void Carries_every_broker_field(string propertyName)
+    {
+        var contractProperty = typeof(ContractConnectionData).GetProperty(propertyName);
+        contractProperty.Should().NotBeNull($"the contract has to carry {propertyName} for the broker to receive it");
+
+        var contract = new ContractConnectionData();
+        contractProperty!.SetValue(contract, $"value-of-{propertyName}");
+
+        var mapped = ConnectionData.FromContract(contract);
+
+        typeof(ConnectionData).GetProperty(propertyName)!.GetValue(mapped)
+            .Should().Be($"value-of-{propertyName}");
+    }
+
     [Fact]
     public void FromContract_carries_the_google_fields_across()
     {
-        var contract = new Iris.Contracts.Brokers.Models.ConnectionData
+        var contract = new ContractConnectionData
         {
             Provider = ConnectorProviders.Google,
             Uri = "localhost:8085",

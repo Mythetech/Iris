@@ -39,6 +39,17 @@ namespace Iris.Brokers.Models
         /// </summary>
         public string? CredentialSource { get; set; }
 
+        /// <summary>
+        /// How the connection authenticates. The values are provider-specific; Amazon's are
+        /// in <c>AwsAuthModes</c>. Blank means the provider's original scheme.
+        /// </summary>
+        public string? AuthMode { get; set; }
+
+        /// <summary>
+        /// The named AWS profile credentials come from when <see cref="AuthMode"/> is Profile.
+        /// </summary>
+        public string? Profile { get; set; }
+
         public static ConnectionData FromContract(Iris.Contracts.Brokers.Models.ConnectionData data)
         {
             return new ConnectionData
@@ -51,7 +62,9 @@ namespace Iris.Brokers.Models
                 VHost = data.VHost,
                 ProjectId = data.ProjectId,
                 CredentialsPath = data.CredentialsPath,
-                CredentialSource = data.CredentialSource
+                CredentialSource = data.CredentialSource,
+                AuthMode = data.AuthMode,
+                Profile = data.Profile
             };
         }
     }

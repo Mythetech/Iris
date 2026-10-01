@@ -79,6 +79,9 @@ public class PersistedDocumentShapeTests
                 ProjectId = "my-project",
                 CredentialsPath = "/keys/service-account.json",
                 CredentialSource = "CredentialsFile",
+                VHost = "/",
+                AuthMode = "Profile",
+                Profile = "default",
                 CreatedAt = new DateTimeOffset(2026, 9, 13, 10, 0, 0, TimeSpan.Zero),
             });
 

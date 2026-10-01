@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   transport/framework pairs it cannot satisfy, with a reason
 - Open source community files (SECURITY.md, CHANGELOG.md, GitHub templates)
 - GitHub Actions CI workflow
+- Amazon SQS connections can authenticate with a named AWS profile or the default
+  credential chain, alongside access keys. SSO, `aws login`, assume-role and
+  `credential_process` profiles all work once you have signed in with the AWS CLI
+- On macOS and Linux, `AWS_` environment variables and `PATH` are read from the login shell
+  at startup, so Iris started from the Dock sees what a terminal sees
 
 ### Changed
 - Desktop host moved from Photino to Hermes
@@ -30,10 +35,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test stack moved to xUnit v3 on Microsoft.Testing.Platform
 - Icons consolidated behind `IrisIcons`; every icon is a Material Symbols ligature
 - Replaced example credentials in integration tests with placeholders
+- The Add Connection dialog stays open when a connection fails and shows the reason, for
+  every provider and from every place it is opened
+- Switching provider in the Add Connection dialog starts from empty fields; values typed
+  for one provider are no longer carried into the next
 
 ### Removed
 - The IrisCloud-era contract surface, the unused `Navigation/` components and the dead
   members the repo review found
+
+### Fixed
+- A saved RabbitMQ connection on a non-default virtual host restored against `/`
+- A failed Amazon SQS connection threw instead of reporting why; the dialog now says what
+  to do next
+- Connecting to an AWS account with no queues failed
 
 ## [0.3.0] - 2025-01-11
 

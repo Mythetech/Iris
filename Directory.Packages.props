@@ -7,7 +7,15 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </GlobalPackageVersion>
-    <PackageVersion Include="AWSSDK.SQS" Version="4.0.2.24" />
+    <PackageVersion Include="AWSSDK.SQS" Version="4.0.100.15" />
+    <!-- No Iris code names a type from these four. The AWS SDK loads them by reflection when a
+         profile needs them and throws at runtime when one is missing: SSO and SSOOIDC for IAM
+         Identity Center profiles, SecurityToken for role_arn profiles, Signin for 'aws login'
+         profiles. Removing one as unused breaks that kind of profile. -->
+    <PackageVersion Include="AWSSDK.SSO" Version="4.0.100.17" />
+    <PackageVersion Include="AWSSDK.SSOOIDC" Version="4.0.100.16" />
+    <PackageVersion Include="AWSSDK.SecurityToken" Version="4.0.101.1" />
+    <PackageVersion Include="AWSSDK.Signin" Version="4.0.101.12" />
     <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.20.1" />
     <PackageVersion Include="Azure.Storage.Queues" Version="12.25.0" />
     <PackageVersion Include="Google.Cloud.PubSub.V1" Version="3.38.0" />

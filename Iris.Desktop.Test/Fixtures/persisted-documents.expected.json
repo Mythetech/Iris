@@ -1,16 +1,19 @@
 {
   "connections": {
     "Address": "String",
+    "AuthMode": "String",
     "ConnectionString": "String",
     "CreatedAt": "DateTime",
     "CredentialSource": "String",
     "CredentialsPath": "String",
     "Password": "String",
+    "Profile": "String",
     "ProjectId": "String",
     "Provider": "String",
     "Region": "String",
     "Uri": "String",
     "Username": "String",
+    "VHost": "String",
     "_id": "Int32"
   },
   "history": {
