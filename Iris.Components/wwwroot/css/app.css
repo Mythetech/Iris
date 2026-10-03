@@ -289,14 +289,15 @@ code {
     content: url(https://cdn-endpnt-stmythetechglobal.azureedge.net/assets/aws.svg);
 }
 
+/* Served from the app's own static assets rather than the CDN, so it shows offline. */
 .icon-Google {
-    background: url(https://cdn-endpnt-stmythetechglobal.azureedge.net/assets/googlecloud.svg);
+    background: url(../icons/googlecloud.svg);
     background-size: contain;
     background-repeat: no-repeat;
 }
 
 .icon-google {
-    content: url(https://cdn-endpnt-stmythetechglobal.azureedge.net/assets/googlecloud.svg);
+    content: url(../icons/googlecloud.svg);
 }
 
 .icon-AmazonWebServices {
