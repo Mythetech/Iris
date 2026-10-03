@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Google Cloud Pub/Sub: connect with Application Default Credentials, a credentials file, or
+  the emulator; publish to topics, receive and read dead letters from subscriptions, and
+  inspect endpoints. Iris stores a project ID and a file path, never a key
 - Saga visualisation: discovery of MassTransit state machines from loaded assemblies, with
   a state graph and instance view
 - OTLP telemetry ingestion so spans emitted by a system under test can be inspected in Iris

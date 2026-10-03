@@ -21,5 +21,7 @@ public static class ConnectorProviders
 
     public const string Amazon = "Amazon";
 
-    public static IReadOnlyList<string> All { get; } = [RabbitMq, Azure, Amazon];
+    public const string Google = "Google";
+
+    public static IReadOnlyList<string> All { get; } = [RabbitMq, Azure, Amazon, Google];
 }

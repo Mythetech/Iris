@@ -76,6 +76,9 @@ public class PersistedDocumentShapeTests
                 Password = "guest",
                 ConnectionString = "Endpoint=sb://localhost;",
                 Region = "eu-west-1",
+                ProjectId = "my-project",
+                CredentialsPath = "/keys/service-account.json",
+                CredentialSource = "CredentialsFile",
                 CreatedAt = new DateTimeOffset(2026, 9, 13, 10, 0, 0, TimeSpan.Zero),
             });
 

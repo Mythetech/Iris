@@ -82,6 +82,15 @@ public class ConnectionIdentityTests
     }
 
     [Fact]
+    public void PubSubConnection_assigns_a_non_empty_Id_and_reports_its_transport()
+    {
+        var connection = BrokerSenderInterfaceTests.PubSub();
+
+        connection.Id.Should().NotBe(Guid.Empty);
+        connection.Name.Should().Be("PubSub");
+    }
+
+    [Fact]
     public void Two_RabbitMqConnections_get_different_Ids()
     {
         var client = new EasyNetQ.Management.Client.ManagementClient(

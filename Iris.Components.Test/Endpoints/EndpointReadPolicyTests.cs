@@ -51,18 +51,32 @@ public class EndpointReadPolicyTests
         EndpointReadPolicy.CanRead(Queue(), Capabilities(canReceive: true)).Should().BeTrue();
     }
 
+    [Fact(DisplayName = "CanRead is true for a subscription whose broker can receive")]
+    public void CanRead_true_for_readable_subscription()
+    {
+        var subscription = new EndpointDetails
+        {
+            Name = "orders-sub",
+            Address = "pubsub.googleapis.com/projects/p",
+            Provider = "Google",
+            Type = "Subscription",
+        };
+
+        EndpointReadPolicy.CanRead(subscription, Capabilities(canReceive: true)).Should().BeTrue();
+    }
+
     [Fact(DisplayName = "DisabledReason reports an unknown endpoint when null")]
     public void DisabledReason_for_null_endpoint()
     {
         EndpointReadPolicy.DisabledReason(null).Should().Be("Unknown endpoint");
     }
 
-    [Fact(DisplayName = "DisabledReason reports queue-only support for non-queue endpoints")]
+    [Fact(DisplayName = "DisabledReason names both readable kinds for an endpoint that is neither")]
     public void DisabledReason_for_non_queue_endpoint()
     {
         var topic = new EndpointDetails { Name = "n", Address = "a", Provider = "p", Type = "Topic" };
 
-        EndpointReadPolicy.DisabledReason(topic).Should().Be("Reading is only supported for queue endpoints");
+        EndpointReadPolicy.DisabledReason(topic).Should().Be("Reading is only supported for queue and subscription endpoints");
     }
 
     [Fact(DisplayName = "DisabledReason reports broker support for queue endpoints")]

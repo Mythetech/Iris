@@ -1,0 +1,87 @@
+@using Mythetech.Framework.Infrastructure.Files
+@implements IConnectionDataProvider
+
+<MudTextField Label="Project ID" @bind-Value="@Data!.ProjectId" />
+<MudSelect T="GoogleCredentialsChoice" Label="Credentials" Value="@_choice" ValueChanged="OnChoiceChanged"
+           HelperText="@ChoiceHelperText">
+    <MudSelectItem T="GoogleCredentialsChoice" Value="GoogleCredentialsChoice.ApplicationDefault">Application Default Credentials</MudSelectItem>
+    <MudSelectItem T="GoogleCredentialsChoice" Value="GoogleCredentialsChoice.CredentialsFile">Credentials file</MudSelectItem>
+    <MudSelectItem T="GoogleCredentialsChoice" Value="GoogleCredentialsChoice.Emulator">Emulator</MudSelectItem>
+</MudSelect>
+@* One slot for the field the chosen source needs. Application Default Credentials needs
+   none, so the slot is hidden rather than removed: the dialog's buttons stay where they are. *@
+<div class="@SlotClass">
+    @if (_choice == GoogleCredentialsChoice.Emulator)
+    {
+        <MudTextField Label="Emulator host" Placeholder="localhost:8085" @bind-Value="@Data!.Uri" />
+    }
+    else
+    {
+        <MudTextField Label="Credentials file" @bind-Value="@Data!.CredentialsPath"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@IrisIcons.BrowseFile"
+                      AdornmentAriaLabel="Browse for a credentials file"
+                      OnAdornmentClick="BrowseAsync" />
+    }
+</div>
+
+@code {
+    [Inject]
+    protected IFileOpenService FileOpenService { get; set; } = default!;
+
+    [Parameter]
+    public ConnectionData? Data { get; set; }
+
+    public string ProviderName { get => "google"; }
+
+    // Built fresh rather than handing back Data. The dialog gives every provider's form the
+    // same object, so Data can still hold what another provider's form put in it, a secret
+    // included, and a host left over from one choice must not travel with another.
+    public ConnectionData Payload => new()
+    {
+        ProjectId = Data!.ProjectId,
+        CredentialSource = _choice.ToString(),
+        Uri = _choice == GoogleCredentialsChoice.Emulator ? Data.Uri : string.Empty,
+        CredentialsPath = _choice == GoogleCredentialsChoice.CredentialsFile ? Data.CredentialsPath : null,
+    };
+
+    private GoogleCredentialsChoice _choice;
+
+    private string SlotClass => _choice == GoogleCredentialsChoice.ApplicationDefault ? "invisible" : string.Empty;
+
+    private string ChoiceHelperText => _choice switch
+    {
+        GoogleCredentialsChoice.CredentialsFile => "A Google credentials JSON file. Iris stores its path, not the key.",
+        GoogleCredentialsChoice.Emulator => "A running Pub/Sub emulator. No credentials are used.",
+        _ => "Uses the login from gcloud auth application-default login.",
+    };
+
+    protected override void OnInitialized()
+    {
+        // Only a choice this form recorded. A Uri on its own may be another provider's.
+        if (Enum.TryParse<GoogleCredentialsChoice>(Data?.CredentialSource, out var recorded)
+            && Enum.IsDefined(recorded))
+        {
+            _choice = recorded;
+        }
+    }
+
+    private void OnChoiceChanged(GoogleCredentialsChoice choice)
+    {
+        _choice = choice;
+
+        Data!.CredentialSource = choice.ToString();
+        Data.Uri = string.Empty;
+        Data.CredentialsPath = null;
+    }
+
+    private async Task BrowseAsync()
+    {
+        var files = await FileOpenService.OpenFileAsync(
+            title: "Select credentials file",
+            filters: [new FileFilter("JSON", ["json"])]);
+
+        if (files.Length > 0)
+            Data!.CredentialsPath = files[0];
+    }
+}

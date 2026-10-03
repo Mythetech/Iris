@@ -26,6 +26,14 @@ Amazon offers their own sets of solutions we look to integrate with.
 
 ### Simple Queue Service (SQS) (Supported)
 
+## Google Cloud
+
+### Pub/Sub (Supported)
+
+Messages are published to topics and read from subscriptions, so both are listed as endpoints. Pub/Sub has no non-destructive read, so there is no peek. Dead letters live on a separate topic named in a subscription's policy; Iris reads them when exactly one subscription is attached to that topic.
+
+Credentials are one of: Application Default Credentials (the login from `gcloud auth application-default login`), a credentials JSON file on disk, or none for the emulator. Iris stores the project ID and the file path, never the file's contents.
+
 ## RabbitMQ
 
 A popular open source transport that can run hosted or out of docker.
@@ -41,6 +49,7 @@ A popular open source transport that can run hosted or out of docker.
 | RabbitMQ | `int.MaxValue`, any key, all four data types (management API `properties.headers` takes JSON strings, numbers, booleans; timestamps sent as ISO 8601 strings) | all six |
 | Azure Service Bus | `int.MaxValue`, any key, all four (`ApplicationProperties` accepts string, int, bool, `DateTimeOffset`) | `MessageId`, `CorrelationId`, `ContentType` (`Subject` is the AMQP subject field, not the `type` property, so `Type` is not carried; EasyNetQ and Wolverine are unsupported here) |
 | Amazon SQS | 10, `^[A-Za-z0-9_.-]+$`, `String` and `Integer` (attribute `DataType` String / Number) | not implemented |
+| Google Pub/Sub | 100, any key up to 256 bytes that does not start with `goog`, `String` only (attributes are string to string) | not implemented |
 | Azure Queue Storage | not implemented | not implemented |
 | Emulated (tests) | `int.MaxValue`, any key, all four; records what it was handed | all six; records what it was handed |
 

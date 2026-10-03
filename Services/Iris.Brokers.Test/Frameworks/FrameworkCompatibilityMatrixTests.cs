@@ -17,9 +17,9 @@ namespace Iris.Brokers.Test.Frameworks;
 /// <para>
 /// <see cref="FrameworkCompatibilityTests"/> covers fifteen combinations chosen because each
 /// demonstrates a specific rule, and each carries the explanation of that rule. This covers
-/// all ninety-six, which is the half those cannot: the combinations nobody thought to write
-/// a case for. A change to a key declaration, a carrier limit or a reason string shows up
-/// here as an exact diff of which cells moved.
+/// all one hundred and twenty, which is the half those cannot: the combinations nobody
+/// thought to write a case for. A change to a key declaration, a carrier limit or a reason
+/// string shows up here as an exact diff of which cells moved.
 /// </para>
 ///
 /// <para>
@@ -55,6 +55,7 @@ public class FrameworkCompatibilityMatrixTests
         (ConnectorTransports.AzureServiceBus, BrokerSenderInterfaceTests.ServiceBus(ConnectorProviders.Azure)),
         (ConnectorTransports.AzureQueueStorage, BrokerSenderInterfaceTests.QueueStorage(ConnectorProviders.Azure)),
         (ConnectorTransports.SimpleQueueService, BrokerSenderInterfaceTests.Sqs(ConnectorProviders.Amazon)),
+        (ConnectorTransports.PubSub, BrokerSenderInterfaceTests.PubSub(ConnectorProviders.Google)),
     ];
 
     [Fact(DisplayName = "The whole compatibility matrix matches the committed snapshot")]
@@ -100,7 +101,7 @@ public class FrameworkCompatibilityMatrixTests
 
         fixture.Should().HaveCount(cells);
         Adapters().Should().HaveCount(6, "six adapters is the shipped set");
-        Connections().Should().HaveCount(4, "four brokers is the shipped set");
+        Connections().Should().HaveCount(5, "five brokers is the shipped set");
     }
 
     private static string Describe(CompatibilityResult result)

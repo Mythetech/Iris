@@ -27,4 +27,6 @@ public static class ConnectorTransports
     public const string AzureQueueStorage = "AzureQueueStorage";
 
     public const string SimpleQueueService = "SimpleQueueService";
+
+    public const string PubSub = "PubSub";
 }
