@@ -1,0 +1,51 @@
+@using Mythetech.Framework.Desktop.Updates
+@using Mythetech.Framework.Desktop.Updates.Components
+@using Mythetech.Framework.Desktop.Updates.Events
+@using Mythetech.Framework.Infrastructure.MessageBus
+
+@inherits ComponentConsumer<UpdateCheckCompleted, UpdateDownloadCompleted>
+
+@if (UpdateService.AvailableUpdate is { } update)
+{
+    <MudBadge Color="Color.Primary" Dot="true" Overlap="true" Class="no-drag">
+        <IconButton Name="@IrisIcons.SystemUpdate" Size="Size.Small" Title="@Describe(update)"
+                    ButtonClicked="OpenUpdateDialog" />
+    </MudBadge>
+}
+
+@code {
+    [Inject]
+    private IUpdateService UpdateService { get; set; } = default!;
+
+    [Inject]
+    private IDialogService DialogService { get; set; } = default!;
+
+    private static string Describe(UpdateInfo update) => update.IsDownloaded
+        ? $"Restart to update to v{update.TargetVersion}"
+        : $"Update available: v{update.TargetVersion}";
+
+    // Every check ends with UpdateCheckCompleted, whether it found an update, found none or failed,
+    // so it covers the indicator appearing and disappearing. The update itself is always read from
+    // the service, which keeps the last one found when a later check fails.
+    protected override Task Consume(UpdateCheckCompleted message, CancellationToken cancellationToken)
+    {
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    protected override Task Consume(UpdateDownloadCompleted message, CancellationToken cancellationToken)
+    {
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task OpenUpdateDialog()
+    {
+        await DialogService.ShowAsync<UpdateProgressDialog>("Update Available", new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            BackgroundClass = "iris-dialog",
+            MaxWidth = MaxWidth.Medium
+        });
+    }
+}

@@ -15,6 +15,7 @@
 @using Iris.Components.Settings
 @using Mythetech.Framework.Components.AppContextDrawer
 @using Iris.Desktop.Infrastructure
+@using Iris.Desktop.Updates
 @using Mythetech.Framework.Infrastructure.MessageBus
 
 @inherits LayoutComponentBase
@@ -38,6 +39,7 @@
             <div class="no-drag" style="flex:1;min-width:0;">
                 <MudBreadcrumbs Class="breadcrumbs-bare" Items="BreadcrumbService.Breadcrumbs" />
             </div>
+            <UpdateIndicator />
         </div>
     </Hermes.Blazor.Components.HermesTitleBar>
     <MudDrawer @bind-Open="@_drawerOpen" Variant="DrawerVariant.Mini" Class="overflow-hidden">
