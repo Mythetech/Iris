@@ -4,7 +4,6 @@
     "AuthMode": "String",
     "ConnectionString": "String",
     "CreatedAt": "DateTime",
-    "CredentialSource": "String",
     "CredentialsPath": "String",
     "Password": "String",
     "Profile": "String",

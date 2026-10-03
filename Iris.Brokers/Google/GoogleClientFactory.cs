@@ -191,7 +191,7 @@ public static partial class GoogleClientFactory
     /// </summary>
     private static GoogleCredentialSource ChosenSource(ConnectionData data)
     {
-        if (string.IsNullOrWhiteSpace(data.CredentialSource))
+        if (string.IsNullOrWhiteSpace(data.AuthMode))
         {
             if (!string.IsNullOrWhiteSpace(data.Uri))
                 return GoogleCredentialSource.Emulator;
@@ -203,7 +203,7 @@ public static partial class GoogleClientFactory
 
         // Names only. Enum.TryParse would also accept "2".
         var name = Enum.GetNames<GoogleCredentialSource>()
-            .FirstOrDefault(n => n.Equals(data.CredentialSource.Trim(), StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(n => n.Equals(data.AuthMode.Trim(), StringComparison.OrdinalIgnoreCase));
 
         return name is null
             ? throw new InvalidConnectionException(PubSubErrors.CredentialSourceUnknown)

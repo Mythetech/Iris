@@ -40,7 +40,7 @@ public class GoogleConnectionDataTests : IrisTestContext
         cut.Markup.Should().Contain("Uses the login from gcloud auth application-default login.");
         cut.Find("div.invisible").Should().NotBeNull();
         var payload = cut.Instance.Payload;
-        payload.CredentialSource.Should().Be("ApplicationDefault");
+        payload.AuthMode.Should().Be("ApplicationDefault");
         payload.Uri.Should().BeEmpty();
         payload.CredentialsPath.Should().BeNull();
     }
@@ -68,7 +68,7 @@ public class GoogleConnectionDataTests : IrisTestContext
         await host.Find("input").ChangeAsync(new() { Value = "localhost:8085" });
 
         var payload = cut.Instance.Payload;
-        payload.CredentialSource.Should().Be("Emulator");
+        payload.AuthMode.Should().Be("Emulator");
         payload.Uri.Should().Be("localhost:8085");
         payload.CredentialsPath.Should().BeNull();
     }
@@ -85,7 +85,7 @@ public class GoogleConnectionDataTests : IrisTestContext
         await path.Find("input").ChangeAsync(new() { Value = "/keys/sa.json" });
 
         var payload = cut.Instance.Payload;
-        payload.CredentialSource.Should().Be("CredentialsFile");
+        payload.AuthMode.Should().Be("CredentialsFile");
         payload.CredentialsPath.Should().Be("/keys/sa.json");
         payload.Uri.Should().BeEmpty();
     }
@@ -141,7 +141,7 @@ public class GoogleConnectionDataTests : IrisTestContext
     [Fact(DisplayName = "A payload that already chose the emulator opens on the emulator")]
     public void Existing_emulator_payload_opens_on_emulator()
     {
-        var cut = RenderForm(new ConnectionData { CredentialSource = "Emulator", Uri = "localhost:8085", ProjectId = "p" });
+        var cut = RenderForm(new ConnectionData { AuthMode = "Emulator", Uri = "localhost:8085", ProjectId = "p" });
 
         cut.FindAll("div.invisible").Should().BeEmpty();
         cut.FindComponents<MudTextField<string>>().Should().Contain(f => f.Instance.Label == "Emulator host");
@@ -158,7 +158,7 @@ public class GoogleConnectionDataTests : IrisTestContext
         // The broker picks real credentials when nothing says otherwise, so the choice has to
         // travel in the payload rather than be guessed from which field was filled in.
         var payload = cut.Instance.Payload;
-        payload.CredentialSource.Should().Be("Emulator");
+        payload.AuthMode.Should().Be("Emulator");
         payload.Uri.Should().BeEmpty();
     }
 
@@ -181,7 +181,7 @@ public class GoogleConnectionDataTests : IrisTestContext
         cut.Find("div.invisible").Should().NotBeNull();
         var payload = cut.Instance.Payload;
         payload.ProjectId.Should().Be("my-project");
-        payload.CredentialSource.Should().Be("ApplicationDefault");
+        payload.AuthMode.Should().Be("ApplicationDefault");
         payload.Uri.Should().BeEmpty();
         payload.Username.Should().BeNull();
         payload.Password.Should().BeNull();

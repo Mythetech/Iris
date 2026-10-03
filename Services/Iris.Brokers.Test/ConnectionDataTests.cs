@@ -44,7 +44,7 @@ public class ConnectionDataTests
             Uri = "localhost:8085",
             ProjectId = "my-project",
             CredentialsPath = "/keys/service-account.json",
-            CredentialSource = "CredentialsFile",
+            AuthMode = "CredentialsFile",
         };
 
         var data = ConnectionData.FromContract(contract);
@@ -52,7 +52,7 @@ public class ConnectionDataTests
         data.Uri.Should().Be("localhost:8085");
         data.ProjectId.Should().Be("my-project");
         data.CredentialsPath.Should().Be("/keys/service-account.json");
-        data.CredentialSource.Should().Be("CredentialsFile");
+        data.AuthMode.Should().Be("CredentialsFile");
     }
 
     [Fact]

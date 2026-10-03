@@ -32,7 +32,7 @@ public class GooglePubSubContainerTests
 
     private async Task<PubSubConnection> ConnectAsync(CancellationToken cancellation)
         => (PubSubConnection)(await new GoogleConnector().ConnectAsync(
-            new ConnectionData { CredentialSource = "Emulator", Uri = _emulator.Host, ProjectId = _project }, cancellation))!;
+            new ConnectionData { AuthMode = "Emulator", Uri = _emulator.Host, ProjectId = _project }, cancellation))!;
 
     private PublisherServiceApiClient Publisher() => new PublisherServiceApiClientBuilder
     {

@@ -78,7 +78,6 @@ public class PersistedDocumentShapeTests
                 Region = "eu-west-1",
                 ProjectId = "my-project",
                 CredentialsPath = "/keys/service-account.json",
-                CredentialSource = "CredentialsFile",
                 VHost = "/",
                 AuthMode = "Profile",
                 Profile = "default",

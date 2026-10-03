@@ -35,16 +35,13 @@ namespace Iris.Contracts.Brokers.Models
         public string? CredentialsPath { get; set; }
 
         /// <summary>
-        /// Which of Google's credential sources was chosen: <c>ApplicationDefault</c>,
-        /// <c>CredentialsFile</c> or <c>Emulator</c>. Stated rather than left to be guessed from
-        /// which field is filled in, so that an emulator host left blank is an error and never a
-        /// connection to a real project.
-        /// </summary>
-        public string? CredentialSource { get; set; }
-
-        /// <summary>
-        /// How the connection authenticates. The values are provider-specific; Amazon's are
-        /// in <c>AwsAuthModes</c>. Blank means the provider's original scheme.
+        /// How the connection authenticates. The values are provider-specific: Amazon's are in
+        /// <c>AwsAuthModes</c>; Google's are <c>ApplicationDefault</c>, <c>CredentialsFile</c>
+        /// and <c>Emulator</c>. The mode is stated rather than guessed from which fields are
+        /// filled in, so that, for example, a Google emulator host left blank is an error and
+        /// never a connection to a real project. Blank, as on connections saved before a
+        /// provider had modes, means access keys for Amazon and is inferred from the other
+        /// fields for Google.
         /// </summary>
         public string? AuthMode { get; set; }
 

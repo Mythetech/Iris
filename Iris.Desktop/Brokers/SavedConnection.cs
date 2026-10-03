@@ -24,8 +24,6 @@ public class SavedConnection : ILocalEntity
 
     public string? CredentialsPath { get; set; }
 
-    public string? CredentialSource { get; set; }
-
     public string? VHost { get; set; }
 
     public string? AuthMode { get; set; }
@@ -45,7 +43,6 @@ public class SavedConnection : ILocalEntity
             Region = Region,
             ProjectId = ProjectId,
             CredentialsPath = CredentialsPath,
-            CredentialSource = CredentialSource,
             VHost = VHost,
             AuthMode = AuthMode,
             Profile = Profile
@@ -65,7 +62,6 @@ public class SavedConnection : ILocalEntity
             Region = data.Region,
             ProjectId = data.ProjectId,
             CredentialsPath = data.CredentialsPath,
-            CredentialSource = data.CredentialSource,
             VHost = data.VHost,
             AuthMode = data.AuthMode,
             Profile = data.Profile

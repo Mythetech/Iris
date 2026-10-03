@@ -34,13 +34,12 @@
 
     public string ProviderName { get => "google"; }
 
-    // Built fresh rather than handing back Data. The dialog gives every provider's form the
-    // same object, so Data can still hold what another provider's form put in it, a secret
-    // included, and a host left over from one choice must not travel with another.
+    // A copy of Data holding only the fields the chosen mode uses, so a host or file path
+    // left over from an earlier choice is never sent.
     public ConnectionData Payload => new()
     {
         ProjectId = Data!.ProjectId,
-        CredentialSource = _choice.ToString(),
+        AuthMode = _choice.ToString(),
         Uri = _choice == GoogleCredentialsChoice.Emulator ? Data.Uri : string.Empty,
         CredentialsPath = _choice == GoogleCredentialsChoice.CredentialsFile ? Data.CredentialsPath : null,
     };
@@ -59,7 +58,7 @@
     protected override void OnInitialized()
     {
         // Only a choice this form recorded. A Uri on its own may be another provider's.
-        if (Enum.TryParse<GoogleCredentialsChoice>(Data?.CredentialSource, out var recorded)
+        if (Enum.TryParse<GoogleCredentialsChoice>(Data?.AuthMode, out var recorded)
             && Enum.IsDefined(recorded))
         {
             _choice = recorded;
@@ -70,7 +69,7 @@
     {
         _choice = choice;
 
-        Data!.CredentialSource = choice.ToString();
+        Data!.AuthMode = choice.ToString();
         Data.Uri = string.Empty;
         Data.CredentialsPath = null;
     }

@@ -47,7 +47,7 @@ public class SavedConnectionTests
             Provider = "Google",
             ProjectId = "my-project",
             CredentialsPath = "/keys/service-account.json",
-            CredentialSource = "CredentialsFile",
+            AuthMode = "CredentialsFile",
         };
 
         var restored = SavedConnection
@@ -56,6 +56,6 @@ public class SavedConnectionTests
 
         restored.ProjectId.Should().Be("my-project");
         restored.CredentialsPath.Should().Be("/keys/service-account.json");
-        restored.CredentialSource.Should().Be("CredentialsFile");
+        restored.AuthMode.Should().Be("CredentialsFile");
     }
 }

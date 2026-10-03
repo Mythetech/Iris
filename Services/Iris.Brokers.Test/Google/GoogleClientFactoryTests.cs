@@ -262,7 +262,7 @@ public class GoogleClientFactoryTests : IDisposable
     [Fact]
     public async Task Choosing_the_emulator_and_leaving_the_host_blank_is_refused_rather_than_reaching_real_pubsub()
     {
-        var act = () => Resolve(new ConnectionData { CredentialSource = "Emulator", Uri = "  ", ProjectId = "my-real-project" });
+        var act = () => Resolve(new ConnectionData { AuthMode = "Emulator", Uri = "  ", ProjectId = "my-real-project" });
 
         (await act.Should().ThrowAsync<InvalidConnectionException>()).WithMessage(PubSubErrors.EmulatorHostInvalid);
     }
@@ -270,7 +270,7 @@ public class GoogleClientFactoryTests : IDisposable
     [Fact]
     public async Task Choosing_a_credentials_file_and_leaving_the_path_blank_is_refused_rather_than_using_the_machine_login()
     {
-        var act = () => Resolve(new ConnectionData { CredentialSource = "CredentialsFile", ProjectId = "my-project" });
+        var act = () => Resolve(new ConnectionData { AuthMode = "CredentialsFile", ProjectId = "my-project" });
 
         (await act.Should().ThrowAsync<InvalidConnectionException>()).WithMessage(PubSubErrors.CredentialsFileMissing);
     }
@@ -280,7 +280,7 @@ public class GoogleClientFactoryTests : IDisposable
     {
         var settings = await Resolve(new ConnectionData
         {
-            CredentialSource = "ApplicationDefault",
+            AuthMode = "ApplicationDefault",
             Uri = "localhost:8085",
             CredentialsPath = "/no/such/file.json",
             ProjectId = "my-project",
@@ -296,7 +296,7 @@ public class GoogleClientFactoryTests : IDisposable
     [InlineData("2")]
     public async Task A_credential_source_this_version_does_not_know_is_refused(string source)
     {
-        var act = () => Resolve(new ConnectionData { CredentialSource = source, Uri = "localhost:8085", ProjectId = "my-project" });
+        var act = () => Resolve(new ConnectionData { AuthMode = source, Uri = "localhost:8085", ProjectId = "my-project" });
 
         (await act.Should().ThrowAsync<InvalidConnectionException>()).WithMessage(PubSubErrors.CredentialSourceUnknown);
     }
