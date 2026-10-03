@@ -80,6 +80,7 @@ public class Program
         // Iris domain services
         builder.Services.AddIrisComponentServices<LocalConnectionManager, LocalConnectionManager, LocalTemplateService, LocalPackageService, LocalHistoryService, AdminClient, MessageLayoutRepository>();
         builder.Services.AddSingleton<IBrokerConnectionManager, BrokerConnectionManager>();
+        builder.Services.AddAwsProfileSupport();
         builder.Services.AddFrameworkProvider();
         builder.Services.AddScoped<IFrameworkCatalog, LocalFrameworkCatalog>();
 

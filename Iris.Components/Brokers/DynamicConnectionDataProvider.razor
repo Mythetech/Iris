@@ -45,8 +45,20 @@
 
     private IDictionary<string, object>? _parameters;
 
+    private string? _providerName;
+
     protected override void OnParametersSet()
     {
+        // Each provider gets its own data object. Reusing one meant a field filled in for
+        // one provider (an AWS profile, a region) was sent and saved with the next, and
+        // clearing it on the way out changed an object a running connect call still held.
+        // Compared by name because the dialog re-renders this with the same provider often.
+        if (Provider?.Name != _providerName)
+        {
+            _providerName = Provider?.Name;
+            Data = new() { ConnectionString = string.Empty };
+        }
+
         if (DataProviderRegistry.TryResolve(out var providerDataType, Provider?.Name))
         {
             _providerDataType = providerDataType;

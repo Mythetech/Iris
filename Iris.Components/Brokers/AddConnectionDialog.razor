@@ -22,6 +22,11 @@
                 <DynamicConnectionDataProvider @ref="@_providerConnectionData" Provider="@_selectedProvider"/>
             }
         </MudStack>
+
+        @if (_error is not null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2">@_error</MudAlert>
+        }
     </DialogContent>
 <DialogActions>
     <MudStack Row="true" AlignItems="AlignItems.End" Justify="Justify.FlexEnd">
@@ -70,30 +75,45 @@
 
     private bool _connecting = false;
 
+    private string? _error;
+
     protected async Task ConnectAsync()
     {
         await _providerSelector.ValidateAsync();
-        
+
         if (_providerSelector.HasErrors)
             return;
-        
+
         _connecting = true;
+        _error = null;
 
         var data = _providerConnectionData.GetData();
-        
+
         _data = data;
 
         _data.Provider = _selectedProvider?.Name ?? "";
 
         StateHasChanged();
 
-        var result = await BrokerService.CreateConnectionAsync(_data);
+        try
+        {
+            var result = await BrokerService.CreateConnectionAsync(_data);
 
-        _connecting = false;
+            // A failure stays here rather than closing with the result. Not every caller
+            // reads the result, so closing lost the message, and it lost what was typed just
+            // when the fix is often to sign in again and press Connect once more.
+            if (result.Error)
+            {
+                _error = result.Message;
+                return;
+            }
 
-        StateHasChanged();
-
-        MudDialog.Close(DialogResult.Ok(result));
+            MudDialog.Close(DialogResult.Ok(result));
+        }
+        finally
+        {
+            _connecting = false;
+        }
     }
 
 }

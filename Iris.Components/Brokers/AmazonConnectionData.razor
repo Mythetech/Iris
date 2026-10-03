@@ -1,16 +1,59 @@
-﻿@using Iris.Contracts.Brokers.Models.Amazon
+@using Iris.Contracts.Brokers.Models.Amazon
 @implements IConnectionDataProvider
 
-<MudAutocomplete T="RegionEndpoint" Label="Region" Value="@_regionEndpoint" ValueChanged="(x) => { _regionEndpoint = x; if (Data != null && x?.SystemName != null) { Data.Region = x.SystemName; } }" SearchFunc="@RegionSearch"
-                 ToStringFunc="(x => x.DisplayName)"
+<MudSelect T="string" Label="Authentication" Dense="true"
+           Value="@_authMode" ValueChanged="@OnAuthModeChanged"
+           HelperText="@AuthModeHelperText">
+    <MudSelectItem T="string" Value="@AwsAuthModes.AccessKeys">Access keys</MudSelectItem>
+    <MudSelectItem T="string" Value="@AwsAuthModes.Profile">AWS profile</MudSelectItem>
+    <MudSelectItem T="string" Value="@AwsAuthModes.DefaultChain">Default credentials</MudSelectItem>
+</MudSelect>
+
+@if (_authMode == AwsAuthModes.Profile)
+{
+    if (!_profilesReadable)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true">
+            Iris could not read your AWS profiles. Check your AWS config and credentials files for errors, or type a profile name.
+        </MudAlert>
+        <MudTextField T="string" Label="Profile" Value="@Data!.Profile" ValueChanged="@OnProfileTyped"></MudTextField>
+    }
+    else if (_profiles.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Dense="true">
+            No AWS profiles found. Create one in a terminal with 'aws configure', 'aws configure sso', or 'aws login'.
+        </MudAlert>
+    }
+    else
+    {
+        <MudSelect T="string" Label="Profile" Dense="true"
+                   Value="@Data!.Profile" ValueChanged="@OnProfileChanged">
+            @foreach (var profile in _profiles)
+            {
+                <MudSelectItem T="string" Value="@profile.Name" @key="profile.Name">@profile.Name</MudSelectItem>
+            }
+        </MudSelect>
+    }
+}
+
+<MudAutocomplete T="RegionEndpoint" Label="Region" Value="@_regionEndpoint" ValueChanged="@OnRegionChanged" SearchFunc="@RegionSearch"
+                 ToStringFunc="(x => x?.DisplayName ?? string.Empty)"
                  ResetValueOnEmptyText="@true"
                  CoerceText="@false"
                  Dense="true"
+                 HelperText="@RegionHelperText"
                  AdornmentIcon="@IrisIcons.Search" AdornmentColor="Color.Primary" />
-<ProtectedTextField Dense="true" Label="Access Key" @bind-Value="@Data!.Username"></ProtectedTextField>
-<ProtectedTextField Dense="true" Label="Secret Access Key" @bind-Value="@Data!.Password"></ProtectedTextField>
+
+@if (_authMode == AwsAuthModes.AccessKeys)
+{
+    <ProtectedTextField Dense="true" Label="Access Key" @bind-Value="@Data!.Username"></ProtectedTextField>
+    <ProtectedTextField Dense="true" Label="Secret Access Key" @bind-Value="@Data!.Password"></ProtectedTextField>
+}
 
 @code {
+    [Inject]
+    private IAwsProfileCatalog ProfileCatalog { get; set; } = default!;
+
     public string ProviderName { get => "amazon"; }
 
     public ConnectionData Payload { get => Data!; }
@@ -18,12 +61,86 @@
     [Parameter]
     public ConnectionData? Data { get; set; }
 
-    private RegionEndpoint _regionEndpoint { get; set; } = new();
+    private RegionEndpoint _regionEndpoint = new();
+
+    private string _authMode = AwsAuthModes.AccessKeys;
+
+    private IReadOnlyList<AwsProfile> _profiles = [];
+
+    private bool _profilesReadable = true;
+
+    private string? AuthModeHelperText => _authMode == AwsAuthModes.DefaultChain
+        ? "Uses AWS environment variables, then the default profile"
+        : null;
+
+    private string? RegionHelperText => _authMode == AwsAuthModes.AccessKeys
+        ? null
+        : "Leave blank to use the profile's region";
 
     protected override void OnInitialized()
     {
-        if (Data != null)
-            Data.Region = _regionEndpoint.SystemName;
+        var listing = ProfileCatalog.GetProfiles();
+        _profiles = listing.Profiles;
+        _profilesReadable = listing.Readable;
+
+        if (Data is null)
+            return;
+
+        Data.AuthMode = _authMode;
+        Data.Profile = null;
+        Data.Region = null;
+    }
+
+    private void OnAuthModeChanged(string mode)
+    {
+        _authMode = mode;
+
+        if (Data is null)
+            return;
+
+        Data.AuthMode = mode;
+
+        // Values typed for one mode must not be sent, or saved, with another.
+        if (mode != AwsAuthModes.AccessKeys)
+        {
+            Data.Username = null;
+            Data.Password = null;
+        }
+
+        if (mode != AwsAuthModes.Profile)
+            Data.Profile = null;
+    }
+
+    private void OnProfileChanged(string profileName)
+    {
+        if (Data is null)
+            return;
+
+        Data.Profile = profileName;
+
+        // Iris lists a subset of AWS regions. A profile in one it does not list cannot be
+        // shown in the autocomplete, so the field is left blank and the connector falls back
+        // to the profile's own region.
+        var region = _profiles.FirstOrDefault(p => p.Name == profileName)?.Region;
+        SetRegion(region is not null && RegionEndpoint.Regions.TryGetValue(region, out var known) ? known : null);
+    }
+
+    // A typed name is only offered when the list could not be read, so nothing is known about
+    // the profile's region and whatever region was chosen is left as it is.
+    private void OnProfileTyped(string profileName)
+    {
+        if (Data is not null)
+            Data.Profile = string.IsNullOrWhiteSpace(profileName) ? null : profileName.Trim();
+    }
+
+    private void OnRegionChanged(RegionEndpoint? region) => SetRegion(region);
+
+    private void SetRegion(RegionEndpoint? region)
+    {
+        _regionEndpoint = region ?? new();
+
+        if (Data is not null)
+            Data.Region = string.IsNullOrEmpty(region?.SystemName) ? null : region.SystemName;
     }
 
     public Task<IEnumerable<RegionEndpoint>> RegionSearch(string value, CancellationToken token)
@@ -38,4 +155,3 @@
         return Task.FromResult(regions);
     }
 }
-

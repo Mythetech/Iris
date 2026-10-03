@@ -22,6 +22,12 @@
 		<PackageReference Include="System.Security.Cryptography.Xml" />
 		<PackageReference Include="Rebus" />
 		<PackageReference Include="AWSSDK.SQS" />
+		<!-- Loaded by the AWS SDK by reflection for SSO, role_arn and 'aws login' profiles.
+		     See the note in Directory.Packages.props before removing any of them. -->
+		<PackageReference Include="AWSSDK.SSO" />
+		<PackageReference Include="AWSSDK.SSOOIDC" />
+		<PackageReference Include="AWSSDK.SecurityToken" />
+		<PackageReference Include="AWSSDK.Signin" />
 		<PackageReference Include="Azure.Storage.Queues" />
 		<PackageReference Include="Google.Cloud.PubSub.V1" />
 	</ItemGroup>

@@ -33,11 +33,17 @@ namespace Iris.Brokers.Models
         public string? CredentialsPath { get; set; }
 
         /// <summary>
-        /// Which of Google's credential sources was chosen: <c>ApplicationDefault</c>,
-        /// <c>CredentialsFile</c> or <c>Emulator</c>. Blank means it is inferred from which of
-        /// <see cref="Uri"/> and <see cref="CredentialsPath"/> is filled in.
+        /// How the connection authenticates. The values are provider-specific: Amazon's are in
+        /// <c>AwsAuthModes</c>; Google's are <c>ApplicationDefault</c>, <c>CredentialsFile</c>
+        /// and <c>Emulator</c>. Blank means access keys for Amazon, and for Google is inferred
+        /// from which of <see cref="Uri"/> and <see cref="CredentialsPath"/> is filled in.
         /// </summary>
-        public string? CredentialSource { get; set; }
+        public string? AuthMode { get; set; }
+
+        /// <summary>
+        /// The named AWS profile credentials come from when <see cref="AuthMode"/> is Profile.
+        /// </summary>
+        public string? Profile { get; set; }
 
         public static ConnectionData FromContract(Iris.Contracts.Brokers.Models.ConnectionData data)
         {
@@ -51,7 +57,8 @@ namespace Iris.Brokers.Models
                 VHost = data.VHost,
                 ProjectId = data.ProjectId,
                 CredentialsPath = data.CredentialsPath,
-                CredentialSource = data.CredentialSource
+                AuthMode = data.AuthMode,
+                Profile = data.Profile
             };
         }
     }
