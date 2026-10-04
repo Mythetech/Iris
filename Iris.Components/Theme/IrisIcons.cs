@@ -119,6 +119,8 @@ public static partial class IrisIcons
 
     public static string Refresh => Round("directory_sync");
 
+    public static string SystemUpdate => Round("system_update");
+
     public static string Copy => Round("content_copy");
 
     public static string Help => Round("help");
