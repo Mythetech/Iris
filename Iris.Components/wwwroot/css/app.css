@@ -50,7 +50,9 @@ h1:focus {
     background: none;
 }
 
-.context-panel-active {
+/* The page you are on has the tint alone. The panel you opened keeps .context-item-active,
+   the tint and the edge. */
+.context-page-active {
     border-radius: 0%;
     background-color: color-mix(in srgb, var(--mud-palette-primary) 15%, transparent 85%);
 }
