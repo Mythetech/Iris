@@ -21,7 +21,6 @@
     <PackageVersion Include="Google.Cloud.PubSub.V1" Version="3.38.0" />
     <PackageVersion Include="EasyNetQ" Version="8.1.7" />
     <PackageVersion Include="EasyNetQ.Management.Client" Version="3.0.1" />
-    <PackageVersion Include="LiteDB" Version="5.0.21" />
     <!-- MassTransit 9.x is commercially licensed and refuses to build a bus without a license key.
          Stay on the 8.x line. The saga sample and the reflector both depend on this. -->
     <PackageVersion Include="MassTransit" Version="8.5.10" />
@@ -31,15 +30,11 @@
     <!-- 4.x, not the latest: the only consumer is a netstandard2.0 source generator,
          which has to load into the compiler's own Roslyn. -->
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.12" />
     <PackageVersion Include="NServiceBus" Version="10.1.1" />
     <!-- Test-only. 14.0.0 is the last ASQ transport that accepts NServiceBus 10.1.1;
          14.0.1 and later require 10.1.4 or newer. Bump both together or neither. -->
     <PackageVersion Include="NServiceBus.Transport.AzureStorageQueues" Version="14.0.0" />
-    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.12" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.13" />
     <PackageVersion Include="Rebus" Version="8.9.0" />
     <PackageVersion Include="Rebus.RabbitMq" Version="10.1.1" />
     <PackageVersion Include="WolverineFx.RabbitMQ" Version="5.29.0" />
@@ -65,14 +60,14 @@
     <PackageVersion Include="Testcontainers.RabbitMq" Version="4.0.0" />
     <PackageVersion Include="Testcontainers.Azurite" Version="4.0.0" />
     <PackageVersion Include="Docker.DotNet" Version="3.125.15" />
-    <PackageVersion Include="Mythetech.Framework" Version="0.21.8" />
-    <PackageVersion Include="Mythetech.Framework.Desktop" Version="0.21.8" />
+    <PackageVersion Include="Mythetech.Framework" Version="0.22.1" />
+    <PackageVersion Include="Mythetech.Framework.Desktop" Version="0.22.1" />
     <PackageVersion Include="Google.Protobuf" Version="3.36.1" />
     <PackageVersion Include="Grpc.Tools" Version="2.83.0" />
     <PackageVersion Include="OpenTelemetry" Version="1.18.0" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.18.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.18.0" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.13" />
     <PackageVersion Include="Paramore.Brighter.MessagingGateway.RMQ.Async" Version="10.3.3" />
   </ItemGroup>
 </Project>
