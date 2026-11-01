@@ -24,7 +24,6 @@
     <PackageReference Include="EasyNetQ" />
     <PackageReference Include="WolverineFx.RabbitMQ" />
     <PackageReference Include="Paramore.Brighter.MessagingGateway.RMQ.Async" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
 

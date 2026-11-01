@@ -21,7 +21,6 @@
     <PackageVersion Include="Google.Cloud.PubSub.V1" Version="3.38.0" />
     <PackageVersion Include="EasyNetQ" Version="8.1.7" />
     <PackageVersion Include="EasyNetQ.Management.Client" Version="3.0.1" />
-    <PackageVersion Include="LiteDB" Version="5.0.21" />
     <!-- MassTransit 9.x is commercially licensed and refuses to build a bus without a license key.
          Stay on the 8.x line. The saga sample and the reflector both depend on this. -->
     <PackageVersion Include="MassTransit" Version="8.5.10" />
@@ -31,10 +30,6 @@
     <!-- 4.x, not the latest: the only consumer is a netstandard2.0 source generator,
          which has to load into the compiler's own Roslyn. -->
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.13" />
     <PackageVersion Include="NServiceBus" Version="10.1.1" />
     <!-- Test-only. 14.0.0 is the last ASQ transport that accepts NServiceBus 10.1.1;
          14.0.1 and later require 10.1.4 or newer. Bump both together or neither. -->
