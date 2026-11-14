@@ -53,6 +53,12 @@
             font-family: Helvetica-Neue, Helvetica, Arial, sans-serif;
         }
 
+        #iris-splash .splash-logo {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+        }
+
         #iris-splash .loader {
             width: 75%;
             height: 4.8px;
@@ -95,7 +101,7 @@
 <body>
 <div id="particle-canvas" class="canvas-bg-container"></div>
 <div id="iris-splash">
-    <img alt="Iris Logo" src="_content/Iris.Components/icon-512.png" style="width:150px;height:150px;object-fit:contain;margin-bottom:-2rem;" />
+    <img class="splash-logo" alt="Iris Logo" src="_content/Iris.Components/icons/iris.png" />
     <h3>Initializing Iris...</h3>
         <span class="loader mt-4"></span>
 </div>

@@ -321,7 +321,7 @@ code {
 }
 
 .icon-iris {
-    background: url(https://cdn-endpnt-stmythetechglobal.azureedge.net/assets/iris.png);
+    background: url(../icons/iris.png);
     background-size: contain;
     background-repeat: no-repeat;
 }
